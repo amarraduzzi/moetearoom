@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moë Tea Room — Écran caisse/cuisine</title>
+<!--
+  Separate deploy from the marketing site (moerabat repo) — see that
+  project's SUPABASE_SETUP.md, step 5. Deliberately a single static HTML
+  file with no build step or framework: this runs on one tablet/screen in
+  the restaurant, plugged in and left open all day, so "npm install and
+  rebuild every time a dish gets renamed" is the wrong trade-off here —
+  editing this file directly (or the two arrays at the top of the <script>
+  below) is the whole workflow.
+
+  CONFIG — fill these in from the SAME Supabase project the main site's
+  site.config.ts `ordering` block points at (Project Settings → API):
+-->
+<script>
+  window.__STAFF_CONFIG = {
+    supabaseUrl: 'REPLACE — e.g. https://xxxxxxxx.supabase.co',
+    supabaseAnonKey: 'REPLACE — the anon/publishable key, never service_role',
+    // How often to re-check Supabase for new orders / menu changes, in ms.
+    // 4s is a good balance between "feels live" and not hammering the
+    // free-tier API — raise this if the project ever moves to a paid plan
+    // with tighter rate limits, lower it if orders need to appear faster.
+    pollMs: 4000,
+  };
+</script>
+<style>
+  :root {
+    /* Same palette as the marketing site's site.config.ts — keep these two
+       in sync by hand if the brand colors ever change; there's no shared
+       import between the two separate deploys. */
+    --bg: #F7F0DC;
+    --surface: #FFFCF3;
+    --surface-muted: #EFE4C4;
+    --brown: #6B4A34;
+    --brown-dark: #4A2F1F;
+    --green: #3F5D45;
+    --text: #3A2A1E;
+    --text-muted: #7A6A57;
+    --border: rgba(58,42,30,0.16);
+    --danger: #A33A2E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--brown);
+    color: #FFFCF3;
+  }
+  header h1 { font-size: 1.1rem; margin: 0; font-weight: 700; }
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    background: transparent;
+    color: #FFFCF3;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .tab-btn.is-active { background: #FFFCF3; color: var(--brown); border-color: #FFFCF3; }
+  main { padding: 18px; max-width: 1400px; margin: 0 auto; }
+  .view { display: none; }
+  .view.is-active { display: block; }
+
+  .status-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .status-cols { grid-template-columns: 1fr; } }
+  .status-col h2 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin: 0 0 10px 2px;
+  }
+  .order-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .order-card .top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .order-ref { font-weight: 800; font-size: 0.95rem; }
+  .order-time { font-size: 0.75rem; color: var(--text-muted); }
+  .order-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+  .order-items { margin: 10px 0; font-size: 0.9rem; }
+  .order-items div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .order-notes { font-size: 0.82rem; font-style: italic; color: var(--brown-dark); margin-bottom: 8px; }
+  .order-total { font-weight: 800; text-align: right; margin-bottom: 10px; }
+  .order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--green); color: #FFFCF3; }
+  .btn-secondary { background: var(--surface-muted); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
+  .empty-note { color: var(--text-muted); font-size: 0.85rem; padding: 20px; text-align: center; }
+
+  table.menu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
+  table.menu-table th, table.menu-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  table.menu-table th { background: var(--surface-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--text-muted); }
+  table.menu-table input[type="number"] { width: 80px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; }
+  .toggle-available { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .save-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 10px; }
+  .category-heading { font-weight: 800; color: var(--brown); margin: 18px 0 6px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Moë Tea Room — Écran</h1>
+    <div class="tabs">
+      <button class="tab-btn is-active" data-tab="orders">Commandes</button>
+      <button class="tab-btn" data-tab="menu">Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="view-orders" class="view is-active">
+      <div class="status-cols">
+        <div class="status-col">
+          <h2>Nouvelles</h2>
+          <div id="col-pending"></div>
+        </div>
+        <div class="status-col">
+          <h2>En préparation</h2>
+          <div id="col-preparing"></div>
+        </div>
+        <div class="status-col">
+          <h2>Prêtes</h2>
+          <div id="col-ready"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-menu" class="view">
+      <p class="save-hint">Décochez un plat pour le marquer épuisé sur le site, ou changez son prix — c'est appliqué immédiatement sur la page Menu des clients.</p>
+      <div id="menu-editor"></div>
+    </section>
+  </main>
+
+<script>
+  // ==========================================================================
+  // Master item list — deliberately duplicated from the main site's
+  // src/content/menu-highlights.ts rather than fetched from it (this screen
+  // has no access to that Astro project's source at runtime). Keep this
+  // list's names in sync BY HAND whenever a dish is renamed/added/removed on
+  // the main site — the join key is the exact name string, same as
+  // `item_key` in supabase/schema.sql's menu_items table.
+  // ==========================================================================
+  const MENU_ITEMS = [
+    { key: 'Le Cheeseburger Moë', category: 'Menu sur le pouce', price: 90 },
+    { key: 'Le Croque Monsieur Classique', category: 'Menu sur le pouce', price: 65 },
+    { key: 'La Quesadilla au Poulet', category: 'Menu sur le pouce', price: 70 },
+    { key: 'Le Mex', category: 'Menu sur le pouce', price: 80 },
+    { key: 'Le Panini du Chef', category: 'Menu sur le pouce', price: 60 },
+    { key: 'Éclair Vanille', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Café', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Chocolat', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Noisette', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Pistache', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Framboise', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Citron', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Mangue', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Tiramisu', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Amlou', category: 'Les Signatures', price: 40 },
+    { key: 'Éclair Signature Moë', category: 'Les Signatures', price: 40 },
+    { key: 'Flan Vanille', category: 'Les Flans', price: 33 },
+    { key: 'Flan Chocolat', category: 'Les Flans', price: 33 },
+    { key: 'Flan Signature Moë', category: 'Les Flans', price: 38 },
+    { key: 'Cookie Gourmand', category: 'Cookies Gourmands', price: 35 },
+    { key: 'Croissant Pur Beurre', category: 'Boulangerie & Viennoiseries', price: 11 },
+    { key: 'Pain au Chocolat', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Pain Suisse', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Pain aux Raisins', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Baguette Tradition', category: 'Boulangerie & Viennoiseries', price: 6.5 },
+    { key: 'Brioche Artisanale', category: 'Boulangerie & Viennoiseries', price: 35 },
+  ];
+
+  const cfg = window.__STAFF_CONFIG;
+  const headers = { apikey: cfg.supabaseAnonKey, Authorization: `Bearer ${cfg.supabaseAnonKey}`, 'Content-Type': 'application/json' };
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('is-active'));
+      document.querySelectorAll('.view').forEach((v) => v.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.getElementById(`view-${btn.dataset.tab}`).classList.add('is-active');
+    });
+  });
+
+  // ---- Orders ----
+  async function loadOrders() {
+    if (!cfg.supabaseUrl) return;
+    try {
+      const res = await fetch(
+        `${cfg.supabaseUrl}/rest/v1/orders?status=in.(pending,preparing,ready)&order=created_at.asc`,
+        { headers }
+      );
+      const orders = await res.json();
+      renderOrders(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      console.warn('[staff-screen] could not load orders', e);
+    }
+  }
+
+  function orderCard(order) {
+    const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = { dinein: 'Sur place', takeaway: 'À emporter', delivery: 'Livraison' }[order.order_type] || order.order_type;
+    const itemsHtml = (order.items || [])
+      .map((it) => `<div><span>${it.quantity} × ${escapeHtml(it.name)}</span><span>${it.price * it.quantity} MAD</span></div>`)
+      .join('');
+    const nextStatus = { pending: 'preparing', preparing: 'ready', ready: 'completed' }[order.status];
+    const nextLabel = { preparing: 'Démarrer', ready: 'Prête', completed: 'Terminer' }[nextStatus];
+
+    const el = document.createElement('div');
+    el.className = 'order-card';
+    el.innerHTML = `
+      <div class="top-row">
+        <span class="order-ref">${escapeHtml(order.order_ref || order.customer_name)}</span>
+        <span class="order-time">${time}</span>
+      </div>
+      <div class="order-meta">${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''} · ${escapeHtml(order.customer_phone)}</div>
+      <div class="order-items">${itemsHtml}</div>
+      ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
+      <div class="order-total">${order.total} MAD</div>
+      <div class="order-actions">
+        ${nextStatus ? `<button class="btn btn-primary" data-action="advance">${nextLabel}</button>` : ''}
+        <button class="btn btn-danger" data-action="cancel">Annuler</button>
+      </div>
+    `;
+    el.querySelector('[data-action="advance"]')?.addEventListener('click', () => updateOrderStatus(order.id, nextStatus));
+    el.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+      if (confirm('Annuler cette commande ?')) updateOrderStatus(order.id, 'cancelled');
+    });
+    return el;
+  }
+
+  function renderOrders(orders) {
+    const cols = { pending: document.getElementById('col-pending'), preparing: document.getElementById('col-preparing'), ready: document.getElementById('col-ready') };
+    Object.values(cols).forEach((c) => (c.innerHTML = ''));
+    const byStatus = { pending: [], preparing: [], ready: [] };
+    orders.forEach((o) => byStatus[o.status]?.push(o));
+    Object.entries(byStatus).forEach(([status, list]) => {
+      if (!list.length) {
+        cols[status].innerHTML = '<p class="empty-note">Aucune commande</p>';
+        return;
+      }
+      list.forEach((o) => cols[status].appendChild(orderCard(o)));
+    });
+  }
+
+  async function updateOrderStatus(id, status) {
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/orders?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      alert("Impossible de mettre à jour la commande — vérifiez la connexion.");
+    }
+    loadOrders();
+  }
+
+  // ---- Menu editor ----
+  async function loadMenuOverrides() {
+    if (!cfg.supabaseUrl) return {};
+    try {
+      const res = await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?select=item_key,price,available`, { headers });
+      const rows = await res.json();
+      const map = {};
+      (Array.isArray(rows) ? rows : []).forEach((r) => (map[r.item_key] = r));
+      return map;
+    } catch (e) {
+      console.warn('[staff-screen] could not load menu overrides', e);
+      return {};
+    }
+  }
+
+  async function renderMenuEditor() {
+    const overrides = await loadMenuOverrides();
+    const container = document.getElementById('menu-editor');
+    container.innerHTML = '';
+    let currentCategory = null;
+    let table, tbody;
+
+    MENU_ITEMS.forEach((item) => {
+      if (item.category !== currentCategory) {
+        currentCategory = item.category;
+        const heading = document.createElement('div');
+        heading.className = 'category-heading';
+        heading.textContent = currentCategory;
+        container.appendChild(heading);
+        table = document.createElement('table');
+        table.className = 'menu-table';
+        table.innerHTML = '<thead><tr><th>Plat</th><th>Disponible</th><th>Prix (MAD)</th><th></th></tr></thead>';
+        tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        container.appendChild(table);
+      }
+      const override = overrides[item.key];
+      const available = override ? override.available !== false : true;
+      const price = override && override.price != null ? override.price : item.price;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${escapeHtml(item.key)}</td>
+        <td><label class="toggle-available"><input type="checkbox" ${available ? 'checked' : ''} data-key="${escapeHtml(item.key)}" data-field="available" /> ${available ? 'Oui' : 'Épuisé'}</label></td>
+        <td><input type="number" step="0.5" value="${price}" data-key="${escapeHtml(item.key)}" data-field="price" /></td>
+        <td><button class="btn btn-secondary" data-action="save" data-key="${escapeHtml(item.key)}">Enregistrer</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    container.querySelectorAll('[data-action="save"]').forEach((btn) => {
+      btn.addEventListener('click', () => saveMenuItem(btn.dataset.key));
+    });
+    container.querySelectorAll('input[type="checkbox"][data-field="available"]').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const label = cb.parentElement.lastChild;
+        label.textContent = ' ' + (cb.checked ? 'Oui' : 'Épuisé');
+      });
+    });
+  }
+
+  async function saveMenuItem(key) {
+    const row = [...document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`)];
+    const available = row.find((el) => el.dataset.field === 'available')?.checked;
+    const price = Number(row.find((el) => el.dataset.field === 'price')?.value);
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?on_conflict=item_key`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ item_key: key, available, price: Number.isNaN(price) ? null : price }),
+      });
+    } catch (e) {
+      alert('Enregistrement impossible — vérifiez la connexion.');
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ---- Boot ----
+  if (!cfg.supabaseUrl || cfg.supabaseUrl.startsWith('REPLACE')) {
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<div style="background:#A33A2E;color:#fff;padding:10px;text-align:center;font-weight:700">⚠️ Config manquante — remplissez supabaseUrl/supabaseAnonKey en haut de ce fichier.</div>'
+    );
+  } else {
+    loadOrders();
+    renderMenuEditor();
+    setInterval(loadOrders, cfg.pollMs);
+    setInterval(renderMenuEditor, cfg.pollMs * 3);
+  }
+</script>
+</body>
+</html>

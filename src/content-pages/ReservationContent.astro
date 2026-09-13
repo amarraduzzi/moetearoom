@@ -1,0 +1,507 @@
+---
+// See HomeContent.astro's top comment for the shared-body-per-route
+// pattern this and every other src/content-pages/*.astro file follows.
+//
+// Table reservations, v1. Deliberately NOT a real booking engine (no live
+// table/capacity check, no calendar UI) — every request lands as
+// status='pending' and staff confirm it by phone/WhatsApp. Read live on the
+// in-restaurant staff screen (separate deploy) via the same Supabase
+// project as the cart/checkout (siteConfig.ordering).
+//
+// No framework, no client-side form library — a single vanilla <script>
+// does validation and POSTs straight to Supabase's REST API. The site
+// stays fully static (astro.config.mjs's `output: 'static'`); Supabase IS
+// the backend, not a server this project runs.
+import Layout from '../layouts/Layout.astro';
+import { siteConfig } from '../config/site.config';
+import { t, localizedPath, type Language } from '../i18n/languages';
+import { place } from '../i18n/ui';
+
+interface Props {
+  lang?: Language;
+}
+const { lang = 'fr' } = Astro.props;
+
+const { name } = siteConfig.identity;
+const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
+const city = t(place.city, lang);
+const path = localizedPath('/reservation', lang);
+
+const copy = {
+  metaTitle: {
+    fr: `${primaryKeyword} à ${city} — Réserver une table | ${name}`,
+    en: `${primaryKeyword} in ${city} — Book a table | ${name}`,
+    ar: `${primaryKeyword} في ${city} — احجز طاولة | ${name}`,
+  },
+  metaDescription: {
+    fr: `Réservez votre table chez ${name}, ${primaryKeyword} à ${city}. Réponse de confirmation par téléphone ou WhatsApp.`,
+    en: `Reserve your table at ${name}, ${primaryKeyword} in ${city}. Confirmation by phone or WhatsApp.`,
+    ar: `احجز طاولتك في ${name}, ${primaryKeyword} في ${city}. التأكيد عبر الهاتف أو واتساب.`,
+  },
+  heroTitle: { fr: 'Réserver une table', en: 'Book a table', ar: 'احجز طاولة' },
+  heroSubtitle: {
+    fr: 'Dites-nous quand vous venez, on s’occupe du reste. Chaque demande est confirmée par notre équipe par téléphone ou WhatsApp.',
+    en: 'Tell us when you’re coming, we’ll take care of the rest. Every request is confirmed by our team by phone or WhatsApp.',
+    ar: 'أخبرونا بموعد قدومكم، ونحن نهتم بالباقي. يتم تأكيد كل طلب من فريقنا عبر الهاتف أو واتساب.',
+  },
+  heroAlt: { fr: `Intérieur de ${name}`, en: `Interior of ${name}`, ar: `داخل ${name}` },
+
+  formKicker: { fr: 'Votre table vous attend', en: 'Your table awaits', ar: 'طاولتكم في انتظاركم' },
+  formLead: {
+    fr: 'Quelques informations et notre équipe s’occupe du reste.',
+    en: 'A few details and our team takes care of the rest.',
+    ar: 'بضع معلومات وفريقنا يهتم بالباقي.',
+  },
+  formName: { fr: 'Nom complet', en: 'Full name', ar: 'الاسم الكامل' },
+  formPhone: { fr: 'Téléphone (WhatsApp de préférence)', en: 'Phone (WhatsApp preferred)', ar: 'الهاتف (يفضل واتساب)' },
+  formDate: { fr: 'Date', en: 'Date', ar: 'التاريخ' },
+  formTime: { fr: 'Heure', en: 'Time', ar: 'الوقت' },
+  formTimePlaceholder: { fr: 'Choisir une heure', en: 'Choose a time', ar: 'اختر الوقت' },
+  formPartySize: { fr: 'Nombre de personnes', en: 'Party size', ar: 'عدد الأشخاص' },
+  formPartySizeLarge: { fr: '9 personnes ou plus', en: '9 people or more', ar: '9 أشخاص أو أكثر' },
+  formNotes: { fr: 'Remarque (optionnel)', en: 'Note (optional)', ar: 'ملاحظة (اختياري)' },
+  formNotesPlaceholder: { fr: 'Occasion spéciale, allergie...', en: 'Special occasion, allergy...', ar: 'مناسبة خاصة، حساسية...' },
+  formSubmit: { fr: 'Envoyer la demande', en: 'Send request', ar: 'إرسال الطلب' },
+  formSubmitting: { fr: 'Envoi en cours...', en: 'Sending...', ar: 'جارٍ الإرسال...' },
+
+  largePartyNote: {
+    fr: 'Pour un groupe de 9 personnes ou plus, contactez-nous directement pour qu’on organise ça correctement.',
+    en: 'For a group of 9 or more, please contact us directly so we can arrange it properly.',
+    ar: 'لمجموعة من 9 أشخاص أو أكثر، يرجى التواصل معنا مباشرة لننظم ذلك بشكل مناسب.',
+  },
+  largePartyWhatsapp: { fr: 'Contacter sur WhatsApp', en: 'Contact on WhatsApp', ar: 'تواصل عبر واتساب' },
+
+  successTitle: { fr: 'Demande envoyée !', en: 'Request sent!', ar: 'تم إرسال الطلب!' },
+  successBody: {
+    fr: 'Merci ! Notre équipe vous confirme votre réservation par téléphone ou WhatsApp dans les plus brefs délais.',
+    en: 'Thank you! Our team will confirm your reservation by phone or WhatsApp as soon as possible.',
+    ar: 'شكرًا لكم! سيقوم فريقنا بتأكيد حجزكم عبر الهاتف أو واتساب في أقرب وقت ممكن.',
+  },
+  errorTitle: { fr: 'Un souci est survenu', en: 'Something went wrong', ar: 'حدثت مشكلة' },
+  errorBody: {
+    fr: 'Votre demande n’a pas pu être envoyée. Contactez-nous directement, c’est aussi rapide :',
+    en: 'Your request couldn’t be sent. Contact us directly instead, it’s just as quick:',
+    ar: 'تعذر إرسال طلبكم. تواصلوا معنا مباشرة، الأمر سريع أيضًا:',
+  },
+  errorCallOrWhatsapp: { fr: 'Appeler ou WhatsApp', en: 'Call or WhatsApp', ar: 'اتصل أو واتساب' },
+  fieldRequired: { fr: 'Ce champ est requis.', en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
+
+  infoKicker: { fr: 'Bon à savoir', en: 'Good to know', ar: 'معلومة مفيدة' },
+  infoHours: { fr: 'Horaires', en: 'Opening hours', ar: 'ساعات العمل' },
+  infoConfirm: {
+    fr: 'Une demande n’est pas encore une réservation confirmée — on vous recontacte pour valider.',
+    en: 'A request isn’t a confirmed reservation yet — we’ll contact you back to confirm it.',
+    ar: 'الطلب ليس حجزًا مؤكدًا بعد — سنتواصل معكم للتأكيد.',
+  },
+  trustResponse: { fr: 'Réponse rapide, par téléphone ou WhatsApp', en: 'Fast reply, by phone or WhatsApp', ar: 'رد سريع، عبر الهاتف أو واتساب' },
+  trustRatingSuffix: { fr: 'sur Google', en: 'on Google', ar: 'على Google' },
+} satisfies Record<string, { fr: string; en: string; ar: string }>;
+
+// Time-slot options generated straight from siteConfig.contact.hours — same
+// single source of truth the "open now" badge and the footer hours line
+// use. Last slot is closing time minus 1h, not closing time itself.
+const { open, close } = siteConfig.contact.hours;
+const timeSlots: string[] = [];
+for (let h = open; h < close - 1; h++) {
+  timeSlots.push(`${String(h).padStart(2, '0')}:00`);
+  timeSlots.push(`${String(h).padStart(2, '0')}:30`);
+}
+timeSlots.push(`${String(close - 1).padStart(2, '0')}:00`);
+
+const partySizes = [1, 2, 3, 4, 5, 6, 7, 8];
+
+// Passed to the client script as data — static build, no server-side env at
+// request time, and the Supabase anon key is public-by-design (RLS scopes
+// what it can do), so plain values are the right transport here, not a
+// hidden secret needing a real backend.
+const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
+const whatsappHref = `https://wa.me/${siteConfig.contact.whatsappNumber}`;
+const { googleRating, googleReviewsUrl } = siteConfig.social;
+---
+<Layout title={t(copy.metaTitle, lang)} description={t(copy.metaDescription, lang)} path={path} lang={lang}>
+  <section id="rsv-hero" class="relative h-[42vh] min-h-[320px] sm:h-[48vh] sm:min-h-[380px] flex items-center overflow-hidden">
+    <img src="/images/interior-1.webp" alt={t(copy.heroAlt, lang)} class="absolute inset-0 w-full h-full object-cover" />
+    <div class="absolute inset-0" style="background: linear-gradient(0deg, var(--color-background) 12%, color-mix(in srgb, var(--color-background) 40%, transparent) 55%, color-mix(in srgb, var(--color-background) 60%, transparent) 100%)"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
+      <div class="max-w-md">
+        <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: var(--color-accent)">{city}</span>
+        <h1 class="font-display text-3xl sm:text-5xl font-semibold" style="color: var(--color-text-primary)">{t(copy.heroTitle, lang)}</h1>
+        <p class="mt-4 text-sm sm:text-base leading-relaxed" style="color: var(--color-text-muted)">{t(copy.heroSubtitle, lang)}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-5 sm:px-8 py-14 sm:py-20 grid sm:grid-cols-[1.4fr_1fr] gap-10 sm:gap-14 items-start">
+    <div class="rounded-2xl p-6 sm:p-9 max-w-2xl" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-reveal>
+      <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style="color: var(--color-accent)">{t(copy.formKicker, lang)}</span>
+      <p class="font-display text-xl sm:text-2xl mb-7" style="color: var(--color-text-primary)">{t(copy.formLead, lang)}</p>
+
+      <form id="reservation-form" novalidate>
+        <div class="grid sm:grid-cols-2 gap-5">
+          <div class="sm:col-span-2">
+            <label class="rsv-label" for="rsv-name">{t(copy.formName, lang)}</label>
+            <input class="rsv-input" type="text" id="rsv-name" name="name" autocomplete="name" required />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="rsv-label" for="rsv-phone">{t(copy.formPhone, lang)}</label>
+            <input class="rsv-input" type="tel" id="rsv-phone" name="phone" autocomplete="tel" required />
+          </div>
+          <div>
+            <label class="rsv-label" for="rsv-date">{t(copy.formDate, lang)}</label>
+            <input class="rsv-input" type="date" id="rsv-date" name="date" required />
+          </div>
+          <div>
+            <label class="rsv-label" for="rsv-time">{t(copy.formTime, lang)}</label>
+            <select class="rsv-input" id="rsv-time" name="time" required>
+              <option value="" disabled selected>{t(copy.formTimePlaceholder, lang)}</option>
+              {timeSlots.map((slot) => <option value={slot}>{slot}</option>)}
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="rsv-label" for="rsv-party-size">{t(copy.formPartySize, lang)}</label>
+            <select class="rsv-input" id="rsv-party-size" name="partySize" required>
+              {partySizes.map((n) => <option value={n}>{n}</option>)}
+              <option value="large">{t(copy.formPartySizeLarge, lang)}</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="rsv-label" for="rsv-notes">{t(copy.formNotes, lang)}</label>
+            <textarea class="rsv-input" id="rsv-notes" name="notes" rows="3" placeholder={t(copy.formNotesPlaceholder, lang)}></textarea>
+          </div>
+          <!-- Honeypot — invisible to real visitors, catches naive form-spam bots. -->
+          <div class="rsv-honeypot" aria-hidden="true">
+            <label for="rsv-website">Website</label>
+            <input type="text" id="rsv-website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+        </div>
+
+        <div id="rsv-large-party-note" class="hidden mt-5 rounded-xl p-4 text-sm leading-relaxed" style="background-color: var(--color-background); border: 1px solid var(--color-border); color: var(--color-text-muted)">
+          <p>{t(copy.largePartyNote, lang)}</p>
+          <a href={whatsappHref} target="_blank" rel="noreferrer" class="rsv-btn rsv-btn-filled mt-3">{t(copy.largePartyWhatsapp, lang)}</a>
+        </div>
+
+        <button id="rsv-submit" type="submit" class="rsv-btn rsv-btn-filled mt-6 w-full sm:w-auto">
+          <span id="rsv-submit-label">{t(copy.formSubmit, lang)}</span>
+        </button>
+        <div id="rsv-status" class="mt-5" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <div class="sm:sticky sm:top-28" data-reveal style="transition-delay: 100ms">
+      <h2 class="text-xs font-bold uppercase tracking-[0.2em] mb-4" style="color: var(--color-accent)">{t(copy.infoKicker, lang)}</h2>
+      <div class="space-y-4 text-sm" style="color: var(--color-text-primary)">
+        <div class="flex items-start gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.6" class="shrink-0 mt-0.5" style="color: var(--color-accent)">
+            <path d="M12 7v5l3 3 M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div>
+            <p class="font-bold text-xs uppercase tracking-wide" style="color: var(--color-text-muted)">{t(copy.infoHours, lang)}</p>
+            <p class="mt-1">{t(siteConfig.contact.openingHours, lang)}</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.6" class="shrink-0 mt-0.5" style="color: var(--color-accent)">
+            <path d="M4 4h4l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v4a2 2 0 01-2 2A15 15 0 014 6a2 2 0 012-2z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div>
+            <p class="font-bold text-xs uppercase tracking-wide" style="color: var(--color-text-muted)">{t(place.city, lang)}</p>
+            <p class="mt-1">{siteConfig.contact.address}</p>
+          </div>
+        </div>
+        <p class="text-xs leading-relaxed pt-2" style="color: var(--color-text-muted); border-top: 1px solid var(--color-border)">{t(copy.infoConfirm, lang)}</p>
+      </div>
+
+      <div class="flex flex-wrap gap-x-5 gap-y-3 mt-6 pt-6" style="border-top: 1px solid var(--color-border)">
+        {googleRating && (
+          <a href={googleReviewsUrl} target="_blank" rel="noreferrer" class="flex items-center gap-1.5 text-sm font-semibold" style="color: var(--color-text-primary)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--color-accent)" class="shrink-0">
+              <path d="M12 2.5l2.9 6.3 6.9.7-5.2 4.7 1.5 6.8-6.1-3.6-6.1 3.6 1.5-6.8-5.2-4.7 6.9-.7z" />
+            </svg>
+            {googleRating} <span class="font-normal" style="color: var(--color-text-muted)">{t(copy.trustRatingSuffix, lang)}</span>
+          </a>
+        )}
+        <span class="flex items-center gap-1.5 text-sm" style="color: var(--color-text-muted)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+            <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+          </svg>
+          {t(copy.trustResponse, lang)}
+        </span>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .rsv-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+    color: var(--color-text-muted);
+  }
+  .rsv-input {
+    width: 100%;
+    border-radius: 0.6rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .rsv-input:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  }
+  .rsv-input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.7;
+  }
+  .rsv-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+  .rsv-input::-webkit-calendar-picker-indicator {
+    filter: invert(1) opacity(0.7);
+  }
+  select.rsv-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23FFD300' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    padding-right: 2.2rem;
+  }
+  [dir='rtl'] select.rsv-input {
+    background-position: left 0.9rem center;
+    padding-right: 0.9rem;
+    padding-left: 2.2rem;
+  }
+  .rsv-input.rsv-invalid {
+    border-color: #ff5a5a;
+  }
+  .rsv-honeypot {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .rsv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    transition: filter 0.2s ease, opacity 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .rsv-btn-filled {
+    background-color: var(--color-accent);
+    color: var(--color-background);
+  }
+  .rsv-btn-filled:hover {
+    filter: brightness(1.08);
+  }
+  .rsv-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .rsv-status-success,
+  .rsv-status-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    border-radius: 0.9rem;
+    padding: 1.1rem 1.25rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .rsv-status-success {
+    background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-background));
+    border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+    color: var(--color-text-primary);
+  }
+  .rsv-status-error {
+    background-color: color-mix(in srgb, #ff5a5a 12%, var(--color-background));
+    border: 1px solid color-mix(in srgb, #ff5a5a 35%, transparent);
+    color: var(--color-text-primary);
+  }
+  .rsv-status-success p:first-child,
+  .rsv-status-error p:first-child {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    font-size: 1.05rem;
+    font-family: var(--font-display);
+  }
+  .rsv-status-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .rsv-status-success .rsv-status-icon {
+    background-color: color-mix(in srgb, var(--color-accent) 22%, transparent);
+    color: var(--color-accent);
+  }
+  .rsv-status-error .rsv-status-icon {
+    background-color: color-mix(in srgb, #ff5a5a 20%, transparent);
+    color: #ff8a8a;
+  }
+</style>
+
+<script
+  define:vars={{
+    supabaseUrl,
+    supabaseAnonKey,
+    whatsappHref,
+    labels: {
+      submitting: t(copy.formSubmitting, lang),
+      submit: t(copy.formSubmit, lang),
+      successTitle: t(copy.successTitle, lang),
+      successBody: t(copy.successBody, lang),
+      errorTitle: t(copy.errorTitle, lang),
+      errorBody: t(copy.errorBody, lang),
+      errorCallOrWhatsapp: t(copy.errorCallOrWhatsapp, lang),
+    },
+  }}
+>
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('reservation-form');
+    if (!form || form.dataset.wired === 'true') return;
+    form.dataset.wired = 'true';
+
+    const dateInput = document.getElementById('rsv-date');
+    const partySelect = document.getElementById('rsv-party-size');
+    const largePartyNote = document.getElementById('rsv-large-party-note');
+    const submitBtn = document.getElementById('rsv-submit');
+    const submitLabel = document.getElementById('rsv-submit-label');
+    const statusEl = document.getElementById('rsv-status');
+
+    if (dateInput) {
+      const today = new Date();
+      const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      dateInput.min = iso;
+    }
+
+    partySelect?.addEventListener('change', () => {
+      const isLarge = partySelect.value === 'large';
+      largePartyNote?.classList.toggle('hidden', !isLarge);
+      if (submitBtn) submitBtn.classList.toggle('hidden', isLarge);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.innerHTML = '';
+
+      const nameInput = document.getElementById('rsv-name');
+      const phoneInput = document.getElementById('rsv-phone');
+      const timeSelect = document.getElementById('rsv-time');
+      const notesInput = document.getElementById('rsv-notes');
+      const honeypot = document.getElementById('rsv-website');
+
+      const required = [nameInput, phoneInput, dateInput, timeSelect];
+      let firstInvalid = null;
+      for (const el of required) {
+        const empty = !el.value || el.value.trim() === '';
+        el.classList.toggle('rsv-invalid', empty);
+        if (empty && !firstInvalid) firstInvalid = el;
+      }
+      if (firstInvalid) {
+        firstInvalid.focus();
+        return;
+      }
+
+      if (honeypot && honeypot.value) {
+        renderSuccess();
+        form.reset();
+        return;
+      }
+
+      const partySizeRaw = partySelect ? partySelect.value : '';
+      if (partySizeRaw === 'large') return;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        renderError();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitLabel.textContent = labels.submitting;
+
+      const payload = {
+        name: nameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        party_size: Number(partySizeRaw),
+        reservation_date: dateInput.value,
+        reservation_time: timeSelect.value,
+        notes: notesInput.value.trim() || null,
+        status: 'pending',
+      };
+
+      try {
+        const res = await fetch(`${supabaseUrl}/rest/v1/reservations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${supabaseAnonKey}`,
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`Supabase insert failed: ${res.status}`);
+        renderSuccess();
+        form.reset();
+        form.querySelectorAll('.rsv-invalid').forEach((el) => el.classList.remove('rsv-invalid'));
+      } catch (err) {
+        console.error('[reservation]', err);
+        renderError();
+      } finally {
+        submitBtn.disabled = false;
+        submitLabel.textContent = labels.submit;
+      }
+    });
+
+    function renderSuccess() {
+      statusEl.innerHTML = `
+        <div class="rsv-status-success">
+          <span class="rsv-status-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+          </span>
+          <div>
+            <p>${labels.successTitle}</p>
+            <p>${labels.successBody}</p>
+          </div>
+        </div>
+      `;
+      statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderError() {
+      statusEl.innerHTML = `
+        <div class="rsv-status-error">
+          <span class="rsv-status-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5M12 16.5h.01M10.3 3.9L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+          </span>
+          <div>
+            <p>${labels.errorTitle}</p>
+            <p>${labels.errorBody}</p>
+            <a href="${whatsappHref}" target="_blank" rel="noreferrer" class="rsv-btn rsv-btn-filled mt-3">${labels.errorCallOrWhatsapp}</a>
+          </div>
+        </div>
+      `;
+      statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+</script>

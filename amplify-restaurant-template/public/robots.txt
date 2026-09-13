@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moe-tea-room.pages.dev/sitemap.xml
