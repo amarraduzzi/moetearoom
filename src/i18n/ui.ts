@@ -69,8 +69,8 @@ export const footer = {
 // (e.g. an Arabic reader expects "الرباط", not the romanized "Rabat").
 // Must refer to the same real place as siteConfig.identity.city/country.
 export const place = {
-  city: { fr: 'City', en: 'City', ar: 'المدينة' } satisfies LocalizedText,
-  country: { fr: 'Country', en: 'Country', ar: 'الدولة' } satisfies LocalizedText,
+  city: { fr: 'Rabat', en: 'Rabat', ar: 'الرباط' } satisfies LocalizedText,
+  country: { fr: 'Maroc', en: 'Morocco', ar: 'المغرب' } satisfies LocalizedText,
 };
 
 export const seoDefaults = {

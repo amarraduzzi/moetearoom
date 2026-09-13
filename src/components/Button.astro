@@ -20,7 +20,12 @@ interface Props {
   cartTrigger?: boolean;
 }
 const { href, external = false, variant = 'outline', class: className = '', cartTrigger = false } = Astro.props;
-const variantClass = variant === 'outline' ? 'amp-btn-outline' : variant === 'cta' ? 'amp-btn-cta amp-btn-outline' : 'amp-btn-filled';
+// `cta` now stacks on the FILLED look, not outline — this is the one
+// button on the page meant to visually win at a glance (the header CTA and
+// hero's primary action), so it needs solid contrast, not the same
+// low-weight outline treatment as the secondary "Voir le menu" button next
+// to it. Keeps the magnetic pointer-follow + sliding arrow from before.
+const variantClass = variant === 'outline' ? 'amp-btn-outline' : variant === 'cta' ? 'amp-btn-cta amp-btn-filled' : 'amp-btn-filled';
 ---
 <a
   href={href}

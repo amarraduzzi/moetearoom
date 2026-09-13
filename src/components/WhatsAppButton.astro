@@ -23,11 +23,12 @@ const { whatsappNumber } = siteConfig.contact;
 ---
 {whatsappNumber && (
   <a
+    id="whatsapp-fab"
     href={`https://wa.me/${whatsappNumber}`}
     target="_blank"
     rel="noreferrer"
     aria-label={t(common.whatsapp, lang)}
-    class="whatsapp-fab"
+    class="whatsapp-fab fab-defer"
     class:list={[rtl ? 'whatsapp-fab-left' : 'whatsapp-fab-right']}
   >
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -85,3 +86,26 @@ const { whatsappNumber } = siteConfig.contact;
     }
   }
 </style>
+
+<script>
+  // Shared scroll-based reveal for the two floating action buttons
+  // (WhatsApp here + the cart fab in CartWidget.astro, which carries the
+  // same .fab-defer class). Lives here rather than duplicated in both
+  // components since this one is guaranteed to render on every page.
+  let fabScrollHandler = null;
+
+  document.addEventListener('astro:page-load', () => {
+    const fabs = document.querySelectorAll('.fab-defer');
+    if (fabScrollHandler) window.removeEventListener('scroll', fabScrollHandler);
+    if (!fabs.length) return;
+    const THRESHOLD = Math.min(420, window.innerHeight * 0.55);
+
+    function onScroll() {
+      const show = window.scrollY > THRESHOLD;
+      fabs.forEach((el) => el.classList.toggle('fab-visible', show));
+    }
+    onScroll();
+    fabScrollHandler = onScroll;
+    window.addEventListener('scroll', fabScrollHandler, { passive: true });
+  });
+</script>

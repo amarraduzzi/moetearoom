@@ -43,8 +43,14 @@ const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPa
 ---
 <header id="site-header" class="sticky top-0 z-40 transition-all duration-300" data-scrolled="false">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
-    <a href={localizedPath('/', lang)} class="flex items-center gap-2 min-w-0 shrink">
-      <img src="/images/logo-mark.webp" alt="" width="36" height="36" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full" />
+    <a href={localizedPath('/', lang)} class="flex items-center gap-2.5 min-w-0 shrink">
+      <span
+        class="font-display font-bold text-base sm:text-lg shrink-0 inline-flex items-center justify-center rounded-full w-9 h-9 sm:w-10 sm:h-10"
+        style="background-color: var(--color-accent); color: var(--color-background)"
+        aria-hidden="true"
+      >
+        M
+      </span>
       <span class="font-display font-semibold text-base sm:text-lg truncate" style="color: var(--color-text-primary)">
         {siteConfig.identity.name}
       </span>

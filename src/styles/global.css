@@ -301,3 +301,29 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+/* ============================================================================
+   Deferred floating action buttons (WhatsApp fab + cart fab, both share the
+   .fab-defer class — see WhatsAppButton.astro's scroll script, which is the
+   single script driving both). Global (not component-scoped) because the
+   two buttons live in two different components. On phones the hero already
+   has 5 elements competing for attention (kicker, headline, subtitle, 2
+   CTAs); stacking 2 more floating round buttons on top of it read as
+   cluttered. Hiding them until the visitor scrolls past the hero keeps the
+   first screen calm without removing either button — they fade in right
+   when there's a reason for them. Desktop's hero has more breathing room,
+   so both fabs stay visible immediately there.
+   ============================================================================ */
+@media (max-width: 639.98px) {
+  .fab-defer {
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .fab-defer.fab-visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+}

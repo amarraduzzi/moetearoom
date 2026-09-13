@@ -46,7 +46,13 @@ const ratingStars = '★'.repeat(ratingRounded) + '☆'.repeat(5 - ratingRounded
   <div class="relative max-w-7xl mx-auto px-5 sm:px-8 py-14 grid sm:grid-cols-3 gap-10">
     <div>
       <div class="flex items-center gap-3">
-        <img src="/images/logo-mark.webp" alt="" width="44" height="44" class="w-11 h-11 rounded-full shrink-0" />
+        <span
+          class="font-display font-bold text-lg shrink-0 inline-flex items-center justify-center rounded-full w-11 h-11"
+          style="background-color: var(--color-accent); color: var(--color-background)"
+          aria-hidden="true"
+        >
+          M
+        </span>
         <div>
           <span class="text-[11px] font-bold uppercase tracking-[0.2em]" style="color: var(--color-accent)">
             {siteConfig.identity.city}
