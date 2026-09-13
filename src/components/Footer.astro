@@ -39,28 +39,17 @@ const ratingStars = '★'.repeat(ratingRounded) + '☆'.repeat(5 - ratingRounded
     src="/images/logo-mark.webp"
     alt=""
     aria-hidden="true"
-    class="mark-watermark w-[22rem] h-[22rem] -right-24 -bottom-28 hidden sm:block"
+    class="mark-watermark w-[28rem] h-auto object-contain -right-16 -bottom-16 hidden sm:block"
   />
   <div class="section-glow" style="width: 320px; height: 320px; background: var(--color-primary); opacity: 0.05; left: -110px; bottom: -110px;"></div>
 
   <div class="relative max-w-7xl mx-auto px-5 sm:px-8 py-14 grid sm:grid-cols-3 gap-10">
     <div>
       <div class="flex items-center gap-3">
-        <span
-          class="font-display font-bold text-lg shrink-0 inline-flex items-center justify-center rounded-full w-11 h-11"
-          style="background-color: var(--color-accent); color: var(--color-background)"
-          aria-hidden="true"
-        >
-          M
+        <img src="/images/logo-mark.webp" alt={siteConfig.identity.name} class="h-12 sm:h-14 w-auto shrink-0" />
+        <span class="text-[11px] font-bold uppercase tracking-[0.2em]" style="color: var(--color-accent)">
+          {siteConfig.identity.city}
         </span>
-        <div>
-          <span class="text-[11px] font-bold uppercase tracking-[0.2em]" style="color: var(--color-accent)">
-            {siteConfig.identity.city}
-          </span>
-          <h3 class="font-display text-2xl font-semibold" style="color: var(--color-text-primary)">
-            {siteConfig.identity.name}
-          </h3>
-        </div>
       </div>
       <p class="text-sm mt-3 max-w-xs" style="color: var(--color-text-muted)">
         {t(siteConfig.identity.tagline, lang)}

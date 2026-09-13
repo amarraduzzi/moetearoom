@@ -157,29 +157,36 @@ const path = localizedPath('/', lang);
       class="absolute inset-0 w-full h-full object-cover"
       style="filter: saturate(1.15) contrast(1.06); object-position: center 65%"
     />
-    <!-- Overlay is now a bottom-anchored scrim instead of a wash covering
-         most of the frame — the photo itself should read as sharp and
-         inviting, with just enough gradient at the very bottom for the
-         text block to stay legible. -->
-    <div class="absolute inset-0" style="background: linear-gradient(0deg, var(--color-background) 8%, color-mix(in srgb, var(--color-background) 45%, transparent) 40%, transparent 68%)"></div>
-    <div class="absolute inset-0 sm:hidden" style="background: linear-gradient(180deg, color-mix(in srgb, var(--color-background) 35%, transparent) 0%, transparent 22%)"></div>
+    <!-- No panel, no outline gimmick — that read as sticker text on the
+         dark-brown headline color. The professional fix is what real
+         photography-led restaurant sites actually do: put the text in a
+         light color that belongs on a photo (near-white, not the page's
+         dark-brown body color) and darken the photo itself under it with a
+         proper photographic vignette — feathered, no hard edge, no visible
+         box — plus one soft drop-shadow for depth. Vignette is strongest
+         bottom-left (where the text sits) and fades out toward the top and
+         right, so the food on the right stays bright and untouched. -->
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(115deg, rgba(20,14,8,0.72) 0%, rgba(20,14,8,0.52) 22%, rgba(20,14,8,0.18) 46%, transparent 62%), linear-gradient(0deg, rgba(20,14,8,0.55) 0%, rgba(20,14,8,0.05) 40%, transparent 60%)"
+    ></div>
 
-    <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-16 sm:pb-0 w-full">
+    <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-6 sm:pb-0 w-full">
       <div class="max-w-xl">
         <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] mb-4 px-3 py-1.5 rounded-full" style="color: var(--color-background); background-color: var(--color-accent)">
           {city} · {country}
         </span>
-        <h1 class="font-display text-[2.75rem] leading-[1.02] sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance" style="color: var(--color-text-primary); text-shadow: 0 2px 24px color-mix(in srgb, var(--color-background) 70%, transparent)">
+        <h1 class="hero-shadow font-display text-[2.5rem] leading-[1.05] sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance" style="color: #FFFCF3">
           {t(copy.heroTitle, lang)}
         </h1>
-        <p class="mt-5 text-base sm:text-lg max-w-md font-medium" style="color: var(--color-text-primary); text-shadow: 0 1px 16px color-mix(in srgb, var(--color-background) 85%, transparent)">
+        <p class="hero-shadow mt-4 sm:mt-5 text-base sm:text-lg max-w-md font-medium" style="color: rgba(255,252,243,0.92)">
           {t(copy.heroSubtitle, lang)}
         </p>
-        <div class="mt-8 flex flex-wrap gap-3">
+        <div class="mt-6 sm:mt-8 flex flex-wrap gap-3">
           <Button href={orderCtaLabel.href} cartTrigger variant="cta">{orderCtaLabel.label}</Button>
-          <Button href={localizedPath('/menu', lang)} variant="outline">{t(common.voirLeMenu, lang)}</Button>
+          <Button href={localizedPath('/menu', lang)} variant="outline" class="hero-outline-btn">{t(common.voirLeMenu, lang)}</Button>
         </div>
-        <p class="mt-5 flex items-center gap-2 text-sm font-semibold" style="color: var(--color-text-primary); text-shadow: 0 1px 16px color-mix(in srgb, var(--color-background) 85%, transparent)">
+        <p class="hero-shadow mt-5 flex items-center gap-2 text-sm font-semibold" style="color: #FFFCF3">
           <span style="color: var(--color-accent); letter-spacing: 1px">{ratingStars}</span>
           {aggregateRating.ratingValue}/5 · {aggregateRating.reviewCount} {t(common.avisTripadvisorSuffix, lang)}
         </p>
@@ -329,6 +336,32 @@ const path = localizedPath('/', lang);
   </section>
 
   <style>
+    /* No panel, no text-stroke — just a soft, tight drop-shadow so the
+       near-white text keeps a hairline of separation from the photo in the
+       few spots the vignette runs light (a bright plate edge, a highlight).
+       One shadow, not a stacked halo — this is what "professional" looks
+       like next to a text-stroke effect, which reads as sticker/meme text. */
+    .hero-shadow {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
+    }
+    /* The secondary hero button normally uses the accent-green outline,
+       tuned for sitting on the page's cream background — on top of a
+       darkened photo that green outline nearly disappears. White border
+       reads correctly against the vignette instead. */
+    /* :global() because this class lands on the <a> Button.astro renders,
+       which carries Button's own scope hash, not this component's — a
+       plain scoped selector here would silently never match it. */
+    :global(.hero-outline-btn) {
+      border-color: rgba(255, 252, 243, 0.75) !important;
+      color: #fffcf3 !important;
+    }
+    :global(.hero-outline-btn::before) {
+      background-color: #fffcf3 !important;
+    }
+    :global(.hero-outline-btn:hover),
+    :global(.hero-outline-btn:active) {
+      color: #2a1d13 !important;
+    }
     .testimonial-track { position: relative; min-height: 220px; }
     .testimonial-slide {
       position: absolute;
