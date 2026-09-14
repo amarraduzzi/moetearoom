@@ -83,7 +83,9 @@ export const menuHighlights: MenuHighlightCategory[] = [
   },
   {
     label: { fr: 'Notre Expérience Éclair', en: 'The Éclair Experience', ar: 'تجربة الإكلير' },
-    image: '/images/signature-dish.webp',
+    // Swapped Sept 2026 (Amar) for a real photo of the client's own éclair
+    // counter (was the generic signature-dish.webp placeholder).
+    image: '/images/eclair-vitrine.webp',
     imageAlt: {
       fr: 'Vitrine de pâtisserie Moë Tea Room avec éclairs et pâtisseries maison',
       en: 'Moë Tea Room pastry counter with éclairs and house-made pastries',
@@ -189,6 +191,16 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 40,
         vegetarian: true,
+        // Best-guess match from the photos Amar sent (Sept 2026) — the
+        // toasted, caramel-toned cream in the bitten shot reads as amlou's
+        // almond/honey/argan filling. Flagged to Amar; swap if this is
+        // actually a different flavor (e.g. Noisette/Café).
+        image: '/images/eclair-amlou.webp',
+        imageAlt: {
+          fr: 'Éclair Amlou coupé, montrant sa crème onctueuse',
+          en: 'Éclair Amlou, cut open to show its creamy filling',
+          ar: 'إكلير أملو مقطوع يظهر كريمته الناعمة',
+        },
       },
       {
         name: 'Éclair Signature Moë',
@@ -199,6 +211,17 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 42,
         vegetarian: true,
+        // This item's own description says "création éphémère" — a
+        // rotating seasonal creation — so the peach-and-white-chocolate
+        // éclair Amar sent (clearly a specific one-off, not on the fixed
+        // price list) fits here best. Flag to Amar if a different photo
+        // should represent the "current" signature creation instead.
+        image: '/images/eclair-signature.webp',
+        imageAlt: {
+          fr: 'Éclair signature du moment, garni de pêche et chocolat blanc',
+          en: "The current signature éclair, topped with peach and white chocolate",
+          ar: 'إكلير التوقيع الحالي، مزين بالخوخ والشوكولاتة البيضاء',
+        },
       },
     ],
   },
