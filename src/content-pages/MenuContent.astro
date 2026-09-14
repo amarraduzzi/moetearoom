@@ -47,6 +47,7 @@ const copy = {
     ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة عند الطلب.',
   },
   readyToOrder: { fr: 'Prêt à commander ?', en: 'Ready to order?', ar: 'جاهز للطلب؟' },
+  backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
   formulesSubtitle: {
     fr: "Selon le jour et l'heure — pas de commande en ligne pour ces formules, la réservation est recommandée.",
@@ -107,32 +108,18 @@ const path = localizedPath('/menu', lang);
     </div>
   </section>
 
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-4">
-    <div>
-      <Button href={orderCtaLabel.href} cartTrigger variant="cta">{orderCtaLabel.label}</Button>
-    </div>
-  </section>
-
-  <!-- Typographic moment — same oversized-number language as À propos,
-       repeated here instead of only appearing on one page of the site. -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 pt-4 pb-10 sm:pb-14 flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-10" data-reveal>
-    <p class="stat-huge">100%</p>
-    <p class="max-w-sm text-sm sm:text-base sm:pb-1" style="color: var(--color-text-muted)">
-      {t(common.preparesCommandeLine, lang)}
-    </p>
-  </section>
-
   <!-- Search + filter (final punch-list item #3, extended) — a real,
-       useful interaction, not decoration. The category chips let a visitor
-       jump straight to the section they want instead of scrolling past
-       everything; the search box lets them find one specific dish by name
-       or description without hunting. Both are client-side only (show/hide,
-       no reload, no separate results page) and combine: search narrows
-       whatever the active chip already shows. "Végétarien" stays as its
-       own chip rather than a fuller vegan/spice-level filter, since it's
-       the one dietary fact readable straight off each dish's own
-       description; see menu-highlights.ts's comment for why. -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 pb-6" data-reveal>
+       useful interaction, not decoration. The category chips act as a
+       table-of-contents: clicking one jumps straight to that section
+       further down the page instead of hiding everything else (that was
+       the original behaviour; the client asked for a direct scroll
+       instead, since the categories are always there in the normal page
+       flow anyway). The search box and the "Végétarien" chip are true
+       filters — search lets a visitor find one specific dish by name or
+       description, and Végétarien is the one dietary fact readable
+       straight off each dish's own description (see menu-highlights.ts's
+       comment for why it doesn't go further, e.g. vegan/spice-level). -->
+  <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
     <div class="relative mb-3">
       <svg class="menu-search-icon absolute pointer-events-none" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <circle cx="11" cy="11" r="7" />
@@ -150,7 +137,7 @@ const path = localizedPath('/menu', lang);
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
       {menuHighlights.map((category, i) => (
-        <button type="button" class="menu-filter-btn shrink-0" data-filter={`cat-${i}`}>{t(category.label, lang)}</button>
+        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>{t(category.label, lang)}</button>
       ))}
       <button type="button" class="menu-filter-btn shrink-0" data-filter="vegetarian">🌱 {t(common.vegetarienUniquement, lang)}</button>
     </div>
@@ -167,7 +154,7 @@ const path = localizedPath('/menu', lang);
        here rather than À propos/Avis because it's food, and warmth fits
        a menu the way it doesn't fit an editorial about-page. -->
   {menuHighlights.map((category, i) => (
-    <div class={i % 2 === 1 ? 'section-tint-warm' : ''} data-menu-category data-cat-index={i}>
+    <div id={`cat-section-${i}`} class={`scroll-mt-24 ${i % 2 === 1 ? 'section-tint-warm' : ''}`} data-menu-category data-cat-index={i}>
       <section class="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
         <div class={category.image ? 'grid sm:grid-cols-[minmax(0,15rem)_1fr] gap-6 sm:gap-8 items-start' : ''}>
           {category.image && (
@@ -225,6 +212,9 @@ const path = localizedPath('/menu', lang);
                 </div>
               ))}
             </div>
+            <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">
+              {t(copy.backToMenu, lang)}
+            </a>
           </div>
         </div>
       </section>
@@ -367,6 +357,15 @@ const path = localizedPath('/menu', lang);
     border-color: var(--color-accent);
     color: var(--color-accent);
   }
+  .back-to-menu-link {
+    color: var(--color-text-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+  .back-to-menu-link:hover {
+    color: var(--color-accent);
+  }
 </style>
 
 <script>
@@ -414,12 +413,44 @@ const path = localizedPath('/menu', lang);
       if (noResults) noResults.classList.toggle('hidden', anyVisible);
     }
 
+    const scrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+
     filterButtons.forEach((btn) => {
+      const scrollTargetId = btn.getAttribute('data-scroll-to');
+
+      // Category chips (e.g. "Menu sur le pouce") are a table-of-contents,
+      // not a filter — clicking one resets any active filter/search (so the
+      // section you land on is guaranteed to actually show its dishes) and
+      // scrolls straight to it, instead of hiding every other category the
+      // way "Tout le menu" / "Végétarien" still do below.
+      if (scrollTargetId) {
+        btn.addEventListener('click', () => {
+          if (searchInput) searchInput.value = '';
+          activeFilter = 'all';
+          filterButtons.forEach((b) => b.classList.remove('is-active'));
+          document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
+          applyFilters();
+
+          document.getElementById(scrollTargetId)?.scrollIntoView({ behavior: scrollBehavior });
+        });
+        return;
+      }
+
       btn.addEventListener('click', () => {
         filterButtons.forEach((b) => b.classList.remove('is-active'));
         btn.classList.add('is-active');
         activeFilter = btn.getAttribute('data-filter') || 'all';
         applyFilters();
+      });
+    });
+
+    // "Back to menu" link under each category — same scroll-to-top-of-list
+    // behaviour, but doesn't need the filter reset above since it never
+    // changes what's currently shown.
+    document.querySelectorAll('.back-to-menu-link').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        document.getElementById('menu-list')?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
 
