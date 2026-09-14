@@ -82,6 +82,198 @@ export const menuHighlights: MenuHighlightCategory[] = [
     ],
   },
   {
+    label: { fr: 'Boissons Chaudes', en: 'Hot Drinks', ar: 'المشروبات الساخنة' },
+    items: [
+      {
+        name: 'Espresso',
+        description: { fr: 'Café espresso italien.', en: 'Italian espresso.', ar: 'إسبريسو إيطالي.' },
+        price: 22,
+        vegetarian: true,
+      },
+      {
+        name: 'Double Espresso',
+        description: {
+          fr: 'Double dose d’espresso.',
+          en: 'Double shot of espresso.',
+          ar: 'جرعة مضاعفة من الإسبريسو.',
+        },
+        price: 25,
+        vegetarian: true,
+      },
+      {
+        name: 'Americano',
+        description: {
+          fr: 'Espresso allongé à l’eau chaude.',
+          en: 'Espresso lengthened with hot water.',
+          ar: 'إسبريسو ممدد بالماء الساخن.',
+        },
+        price: 25,
+        vegetarian: true,
+      },
+      {
+        name: 'Cappuccino',
+        description: {
+          fr: 'Espresso, lait chaud et mousse de lait.',
+          en: 'Espresso, steamed milk and milk foam.',
+          ar: 'إسبريسو مع حليب مبخر ورغوة الحليب.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Cortado',
+        description: {
+          fr: 'Espresso adouci d’un peu de lait chaud.',
+          en: 'Espresso softened with a little steamed milk.',
+          ar: 'إسبريسو ممزوج بقليل من الحليب الساخن.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Latte',
+        description: {
+          fr: 'Espresso avec beaucoup de lait chaud.',
+          en: 'Espresso with plenty of steamed milk.',
+          ar: 'إسبريسو مع كمية وافرة من الحليب الساخن.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Flat White',
+        description: {
+          fr: 'Espresso avec lait micro-moussé.',
+          en: 'Espresso with velvety micro-foamed milk.',
+          ar: 'إسبريسو مع حليب مخفوق ناعم.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Mocaccino',
+        description: {
+          fr: 'Espresso, chocolat et lait chaud.',
+          en: 'Espresso, chocolate and steamed milk.',
+          ar: 'إسبريسو مع شوكولاتة وحليب ساخن.',
+        },
+        price: 35,
+        vegetarian: true,
+      },
+      {
+        name: 'Chocolat Chaud',
+        description: { fr: 'Chocolat chaud onctueux.', en: 'Rich hot chocolate.', ar: 'شوكولاتة ساخنة غنية.' },
+        price: 35,
+        vegetarian: true,
+      },
+      {
+        name: 'Matcha Latte',
+        description: {
+          fr: 'Thé matcha avec lait chaud.',
+          en: 'Matcha tea with steamed milk.',
+          ar: 'شاي ماتشا مع حليب ساخن.',
+        },
+        price: 45,
+        vegetarian: true,
+      },
+      {
+        name: 'Caramel Macchiato',
+        description: {
+          fr: 'Espresso, lait et sirop de caramel.',
+          en: 'Espresso, milk and caramel syrup.',
+          ar: 'إسبريسو مع حليب وشراب الكراميل.',
+        },
+        price: 35,
+        vegetarian: true,
+      },
+    ],
+  },
+  {
+    label: { fr: 'Thés et Infusions', en: 'Teas & Infusions', ar: 'الشاي والأعشاب' },
+    items: [
+      {
+        name: 'Thé Vert Marocain',
+        description: {
+          fr: 'Le classique thé à la menthe marocain.',
+          en: 'The classic Moroccan mint tea.',
+          ar: 'الشاي الأخضر المغربي الكلاسيكي بالنعناع.',
+        },
+        price: 28,
+        vegetarian: true,
+      },
+      {
+        name: 'Thé Vert Jasmin',
+        description: {
+          fr: 'Thé vert parfumé à la fleur de jasmin.',
+          en: 'Green tea scented with jasmine flowers.',
+          ar: 'شاي أخضر معطر بأزهار الياسمين.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Thé Citron Gingembre',
+        description: {
+          fr: 'Infusion chaude au citron et gingembre.',
+          en: 'Hot lemon and ginger infusion.',
+          ar: 'شاي ساخن بالليمون والزنجبيل.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Thé Fruits Rouges',
+        description: {
+          fr: 'Thé aux notes fruitées de fruits rouges.',
+          en: 'Tea with fruity red-berry notes.',
+          ar: 'شاي بنكهة الفواكه الحمراء.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Infusion Verveine',
+        description: {
+          fr: 'Infusion apaisante à la verveine.',
+          en: 'Soothing verbena infusion.',
+          ar: 'شاي أعشاب مهدئ بنبتة اللويزة.',
+        },
+        price: 25,
+        vegetarian: true,
+      },
+      {
+        name: 'Thé Curcuma',
+        description: {
+          fr: 'Infusion au curcuma.',
+          en: 'Turmeric infusion.',
+          ar: 'شاي بالكركم.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Thé Noir Assam',
+        description: {
+          fr: 'Thé noir corsé originaire d’Assam.',
+          en: 'Full-bodied black tea from Assam.',
+          ar: 'شاي أسود قوي من منطقة آسام.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+      {
+        name: 'Rooibos',
+        description: {
+          fr: 'Infusion sud-africaine sans théine.',
+          en: 'Caffeine-free South African infusion.',
+          ar: 'شاي جنوب أفريقي خالٍ من الكافيين.',
+        },
+        price: 30,
+        vegetarian: true,
+      },
+    ],
+  },
+  {
     label: { fr: 'Notre Expérience Éclair', en: 'The Éclair Experience', ar: 'تجربة الإكلير' },
     // Swapped Sept 2026 (Amar) for a real photo of the client's own éclair
     // counter (was the generic signature-dish.webp placeholder).
@@ -294,198 +486,6 @@ export const menuHighlights: MenuHighlightCategory[] = [
           fr: 'Brioche moelleuse faite maison.',
           en: 'Soft, house-made brioche.',
           ar: 'بريوش طري مصنوع منزليًا.',
-        },
-        price: 35,
-        vegetarian: true,
-      },
-    ],
-  },
-  {
-    label: { fr: 'Thés et Infusions', en: 'Teas & Infusions', ar: 'الشاي والأعشاب' },
-    items: [
-      {
-        name: 'Thé Vert Marocain',
-        description: {
-          fr: 'Le classique thé à la menthe marocain.',
-          en: 'The classic Moroccan mint tea.',
-          ar: 'الشاي الأخضر المغربي الكلاسيكي بالنعناع.',
-        },
-        price: 28,
-        vegetarian: true,
-      },
-      {
-        name: 'Thé Vert Jasmin',
-        description: {
-          fr: 'Thé vert parfumé à la fleur de jasmin.',
-          en: 'Green tea scented with jasmine flowers.',
-          ar: 'شاي أخضر معطر بأزهار الياسمين.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Thé Citron Gingembre',
-        description: {
-          fr: 'Infusion chaude au citron et gingembre.',
-          en: 'Hot lemon and ginger infusion.',
-          ar: 'شاي ساخن بالليمون والزنجبيل.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Thé Fruits Rouges',
-        description: {
-          fr: 'Thé aux notes fruitées de fruits rouges.',
-          en: 'Tea with fruity red-berry notes.',
-          ar: 'شاي بنكهة الفواكه الحمراء.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Infusion Verveine',
-        description: {
-          fr: 'Infusion apaisante à la verveine.',
-          en: 'Soothing verbena infusion.',
-          ar: 'شاي أعشاب مهدئ بنبتة اللويزة.',
-        },
-        price: 25,
-        vegetarian: true,
-      },
-      {
-        name: 'Thé Curcuma',
-        description: {
-          fr: 'Infusion au curcuma.',
-          en: 'Turmeric infusion.',
-          ar: 'شاي بالكركم.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Thé Noir Assam',
-        description: {
-          fr: 'Thé noir corsé originaire d’Assam.',
-          en: 'Full-bodied black tea from Assam.',
-          ar: 'شاي أسود قوي من منطقة آسام.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Rooibos',
-        description: {
-          fr: 'Infusion sud-africaine sans théine.',
-          en: 'Caffeine-free South African infusion.',
-          ar: 'شاي جنوب أفريقي خالٍ من الكافيين.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-    ],
-  },
-  {
-    label: { fr: 'Boissons Chaudes', en: 'Hot Drinks', ar: 'المشروبات الساخنة' },
-    items: [
-      {
-        name: 'Espresso',
-        description: { fr: 'Café espresso italien.', en: 'Italian espresso.', ar: 'إسبريسو إيطالي.' },
-        price: 22,
-        vegetarian: true,
-      },
-      {
-        name: 'Double Espresso',
-        description: {
-          fr: 'Double dose d’espresso.',
-          en: 'Double shot of espresso.',
-          ar: 'جرعة مضاعفة من الإسبريسو.',
-        },
-        price: 25,
-        vegetarian: true,
-      },
-      {
-        name: 'Americano',
-        description: {
-          fr: 'Espresso allongé à l’eau chaude.',
-          en: 'Espresso lengthened with hot water.',
-          ar: 'إسبريسو ممدد بالماء الساخن.',
-        },
-        price: 25,
-        vegetarian: true,
-      },
-      {
-        name: 'Cappuccino',
-        description: {
-          fr: 'Espresso, lait chaud et mousse de lait.',
-          en: 'Espresso, steamed milk and milk foam.',
-          ar: 'إسبريسو مع حليب مبخر ورغوة الحليب.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Cortado',
-        description: {
-          fr: 'Espresso adouci d’un peu de lait chaud.',
-          en: 'Espresso softened with a little steamed milk.',
-          ar: 'إسبريسو ممزوج بقليل من الحليب الساخن.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Latte',
-        description: {
-          fr: 'Espresso avec beaucoup de lait chaud.',
-          en: 'Espresso with plenty of steamed milk.',
-          ar: 'إسبريسو مع كمية وافرة من الحليب الساخن.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Flat White',
-        description: {
-          fr: 'Espresso avec lait micro-moussé.',
-          en: 'Espresso with velvety micro-foamed milk.',
-          ar: 'إسبريسو مع حليب مخفوق ناعم.',
-        },
-        price: 30,
-        vegetarian: true,
-      },
-      {
-        name: 'Mocaccino',
-        description: {
-          fr: 'Espresso, chocolat et lait chaud.',
-          en: 'Espresso, chocolate and steamed milk.',
-          ar: 'إسبريسو مع شوكولاتة وحليب ساخن.',
-        },
-        price: 35,
-        vegetarian: true,
-      },
-      {
-        name: 'Chocolat Chaud',
-        description: { fr: 'Chocolat chaud onctueux.', en: 'Rich hot chocolate.', ar: 'شوكولاتة ساخنة غنية.' },
-        price: 35,
-        vegetarian: true,
-      },
-      {
-        name: 'Matcha Latte',
-        description: {
-          fr: 'Thé matcha avec lait chaud.',
-          en: 'Matcha tea with steamed milk.',
-          ar: 'شاي ماتشا مع حليب ساخن.',
-        },
-        price: 45,
-        vegetarian: true,
-      },
-      {
-        name: 'Caramel Macchiato',
-        description: {
-          fr: 'Espresso, lait et sirop de caramel.',
-          en: 'Espresso, milk and caramel syrup.',
-          ar: 'إسبريسو مع حليب وشراب الكراميل.',
         },
         price: 35,
         vegetarian: true,

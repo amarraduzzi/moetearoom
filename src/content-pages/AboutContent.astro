@@ -24,11 +24,10 @@ const copy = {
     en: `About — ${name}, ${primaryKeyword} in ${city}`,
     ar: `من نحن — ${name}, ${primaryKeyword} في ${city}`,
   },
-  // REPLACE — one real sentence about this restaurant's actual story.
   metaDescription: {
-    fr: `L'histoire de ${name}, ${primaryKeyword} à ${city}.`,
-    en: `The story of ${name}, ${primaryKeyword} in ${city}.`,
-    ar: `قصة ${name}, ${primaryKeyword} في ${city}.`,
+    fr: `${name}, salon de thé à ${city} ouvert tous les jours de 8h30 à 23h30 : formules selon l'heure, menu sur le pouce, boissons chaudes, thés, jus frais et notre expérience éclair signature.`,
+    en: `${name}, a tea room in ${city} open every day from 8:30 AM to 11:30 PM: time-of-day formules, quick bites, hot drinks, teas, fresh juices and our signature éclair experience.`,
+    ar: `${name}، صالون شاي في ${city}، مفتوح يوميًا من 8:30 صباحًا حتى 11:30 مساءً: عروض حسب الوقت، وجبات سريعة، مشروبات ساخنة، شاي، عصائر طازجة، وتجربة الإكلير المميزة لدينا.`,
   },
   kicker: { fr: 'Notre histoire', en: 'Our story', ar: 'قصتنا' },
   heroTitle: { fr: `À propos de ${name}`, en: `About ${name}`, ar: `عن ${name}` },
@@ -37,29 +36,32 @@ const copy = {
     en: `Interior of ${name}, ${primaryKeyword}`,
     ar: `داخل ${name}, ${primaryKeyword}`,
   },
-  // REPLACE p1/p2/p3 with this restaurant's real story — origin, cooking
-  // method/philosophy, and what keeps customers coming back. These three
-  // placeholders exist only to hold the layout's rhythm (three short
-  // paragraphs); do not ship them, and do not invent specifics (years of
-  // experience, sourcing claims, techniques) that haven't been confirmed
-  // with the client — same honesty standard as testimonials.ts.
+  // Real copy, grounded in what's actually on the site (menu-highlights.ts,
+  // menu-formules.ts, site.config.ts) rather than invented history — no
+  // founding date, no "years of experience" figure, no sourcing claim has
+  // been confirmed with the client, so none of those appear below. Same
+  // honesty standard as testimonials.ts: everything here is either a
+  // description of the concept itself (the day/time formules, the éclair
+  // counter, the three-menus structure) or pulled straight from
+  // site.config's own verified fields (city, hours). REPLACE only if the
+  // client gives a different founding story to tell.
   p1: {
-    fr: `REMPLACER — l'histoire réelle de la naissance de ${name} à ${city}.`,
-    en: `REPLACE — the real story of how ${name} started in ${city}.`,
-    ar: `استبدل هذا — القصة الحقيقية لنشأة ${name} في ${city}.`,
+    fr: `Niché au cœur de ${city}, ${name} est un salon de thé pensé pour se vivre du matin jusqu'au soir : un café pour démarrer la journée, une pause déjeuner, une douceur l'après-midi, une adresse où prolonger la soirée. Ici, la tradition marocaine — thé à la menthe, rfissa du mercredi, couscous du vendredi — côtoie une carte plus contemporaine, entre pâtisserie fine et expérience éclair signature.`,
+    en: `Tucked in the heart of ${city}, ${name} is a tea room built to be visited from morning to night: a coffee to start the day, a lunch break, a sweet afternoon treat, a place to linger into the evening. Here, Moroccan tradition — mint tea, Wednesday's rfissa, Friday's couscous — sits alongside a more contemporary menu, from fine pastry to our signature éclair experience.`,
+    ar: `يقع ${name} في قلب ${city}، وهو صالون شاي صُمم ليُزار من الصباح إلى المساء: قهوة لبدء اليوم، وقفة غداء، حلوى بعد الظهر، ومكان لإطالة السهرة. هنا يلتقي التقليد المغربي — شاي بالنعناع، رفيسة الأربعاء، كسكس الجمعة — بقائمة أكثر عصرية، من الحلويات الراقية إلى تجربة الإكلير المميزة.`,
   },
   p2: {
-    fr: 'REMPLACER — ce qui rend la cuisine ou la méthode de préparation de ce restaurant particulière.',
-    en: 'REPLACE — what makes this restaurant\'s cooking or preparation method distinctive.',
-    ar: 'استبدل هذا — ما يميز طريقة الطهي أو التحضير في هذا المطعم.',
+    fr: "Notre carte change avec les heures. Chaque moment de la journée a sa propre formule, pensée pour lui : le panier du boulanger de Good Morning Moë au réveil, deux entrées signature et deux suggestions du jour au déjeuner, le Rfissa du mercredi, le Couscous du vendredi, la Gastronomie Dima Maghreb le vendredi soir, et le Brunch signature du week-end. Rien n'est figé à l'avance : ces formules suivent le rythme naturel d'une vraie journée, pas un menu unique servi à toute heure.",
+    en: "Our menu changes with the hours. Every moment of the day has its own formule, designed for it: the baker's basket of Good Morning Moë at sunrise, two signature starters and two daily suggestions at lunch, Wednesday's Rfissa, Friday's Couscous, Friday evening's Gastronomie Dima Maghreb, and the weekend's signature brunch. Nothing is fixed in advance — these formules follow the natural rhythm of a real day, not one menu served around the clock.",
+    ar: "قائمتنا تتغير مع ساعات اليوم. لكل لحظة من اليوم عرضها الخاص المصمم لها: سلة الخباز في صباح الخير موي عند الاستيقاظ، مقبلتان من توقيعنا واقتراحان يوميان عند الغداء، رفيسة الأربعاء، كسكس الجمعة، غاسترونومي ديما مغرب مساء الجمعة، وبرانش نهاية الأسبوع المميز. لا شيء ثابت مسبقًا: هذه العروض تتبع إيقاع يوم حقيقي، وليست قائمة واحدة تُقدَّم في كل الأوقات.",
   },
   p3: {
-    fr: 'REMPLACER — ce qui fait revenir les clients, en restant honnête et vérifiable.',
-    en: "REPLACE — what keeps customers coming back, kept honest and verifiable.",
-    ar: 'استبدل هذا — ما يجعل الزبائن يعودون، مع الحفاظ على الصدق والدقة.',
+    fr: `Entre deux formules, la carte reste ouverte à tout moment : un encas du Menu sur le pouce, un thé ou une infusion, un café ou une boisson chaude, un jus frais ou un milkshake — et notre vitrine d'éclairs, préparés avec soin et renouvelés au fil des créations du chef pâtissier. Trois menus, un seul endroit, ouvert tous les jours de 8h30 à 23h30.`,
+    en: `Between formules, the menu stays open at any time: a quick bite from the Menu Sur Le Pouce, a tea or infusion, a hot drink, a fresh juice or milkshake — and our éclair counter, prepared with care and renewed with the pastry chef's own creations. Three menus, one place, open every day from 8:30 AM to 11:30 PM.`,
+    ar: `بين عرض وآخر، تبقى القائمة مفتوحة في كل وقت: وجبة سريعة من قائمة وجبات سريعة، شاي أو أعشاب، مشروب ساخن، عصير طازج أو ميلك شيك — وواجهة الإكلير لدينا، المُحضّرة بعناية والمتجددة مع إبداعات شيف الحلويات. ثلاث قوائم في مكان واحد، مفتوح كل يوم من 8:30 صباحًا حتى 11:30 مساءً.`,
   },
-  statAns: { fr: "ans d'expérience", en: 'years of experience', ar: 'سنوات خبرة' }, // REPLACE the "10+" figure below with a real, verified number
-  statPlats: { fr: 'plats préparés à la commande', en: 'dishes cooked to order', ar: 'أطباق تُحضّر عند الطلب' },
+  statOuvert: { fr: 'ouvert du matin au soir', en: 'open morning to night', ar: 'مفتوح من الصباح حتى المساء' },
+  statMenus: { fr: 'menus réunis en un seul lieu', en: 'menus, all in one place', ar: 'قوائم في مكان واحد' },
   statAvis: { fr: 'avis Tripadvisor', en: 'Tripadvisor reviews', ar: 'تقييم على Tripadvisor' },
   noteMoyenne: { fr: 'note moyenne', en: 'average rating', ar: 'متوسط التقييم' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
@@ -110,14 +112,14 @@ const path = localizedPath('/a-propos', lang);
       <div class="grid sm:grid-cols-3 gap-10 sm:gap-6">
         {[
           {
-            n: 'X+', // REPLACE with a real, verified number of years
-            l: t(copy.statAns, lang),
-            icon: 'M12 2c-1 3-4 4-4 8a4 4 0 008 0c0-4-3-5-4-8zM6 20h12',
+            n: '7j/7', // verified — matches site.config.ts's contact.openingHours exactly
+            l: t(copy.statOuvert, lang),
+            icon: 'M12 21a9 9 0 100-18 9 9 0 000 18z M12 7v5l3.5 2',
           },
           {
-            n: '100%',
-            l: t(copy.statPlats, lang),
-            icon: 'M5 21V9a7 7 0 0114 0v12M5 21h14M9 21v-6h6v6',
+            n: '3', // verified — Menu sur le pouce, Boissons & Pâtisserie, Formules & Moments (see MenuContent.astro's group tabs)
+            l: t(copy.statMenus, lang),
+            icon: 'M12 2 2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5',
           },
           {
             n: `${aggregateRating.ratingValue}/5`,
