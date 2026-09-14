@@ -49,6 +49,7 @@ const copy = {
   readyToOrder: { fr: 'Prêt à commander ?', en: 'Ready to order?', ar: 'جاهز للطلب؟' },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
+  groupDrinksPastry: { fr: 'Boissons & Pâtisserie', en: 'Drinks & Pastries', ar: 'المشروبات والحلويات' },
   formulesSubtitle: {
     fr: "Selon le jour et l'heure — pas de commande en ligne pour ces formules, la réservation est recommandée.",
     en: 'Depending on the day and time — these formules aren\'t available for online ordering; reservation is recommended.',
@@ -134,10 +135,21 @@ const path = localizedPath('/menu', lang);
         autocomplete="off"
       />
     </div>
+    <!-- Three-menu tab strip — this client runs three genuinely different
+         menus on one page (savoury "Menu sur le pouce", the drinks/pâtisserie
+         card, and the day/time formules further down), which used to read as
+         one long list. These tabs group the category chips below by which
+         menu they belong to, instead of adding a second, competing
+         navigation system. -->
+    <div class="menu-group-row flex items-center gap-2 overflow-x-auto mb-2">
+      <button type="button" class="menu-group-btn shrink-0" data-group="pouce" data-group-scroll={`cat-section-0`}>{t(menuHighlights[0].label, lang)}</button>
+      <button type="button" class="menu-group-btn shrink-0" data-group="drinks" data-group-scroll={`cat-section-1`}>{t(copy.groupDrinksPastry, lang)}</button>
+      <button type="button" class="menu-group-btn shrink-0" data-group="formules" data-group-scroll="formules-moments">{t(copy.formulesTitle, lang)}</button>
+    </div>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
       {menuHighlights.map((category, i) => (
-        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>{t(category.label, lang)}</button>
+        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`} data-group={i === 0 ? 'pouce' : 'drinks'}>{t(category.label, lang)}</button>
       ))}
       <button type="button" class="menu-filter-btn shrink-0" data-filter="vegetarian">🌱 {t(common.vegetarienUniquement, lang)}</button>
     </div>
@@ -306,11 +318,44 @@ const path = localizedPath('/menu', lang);
   .menu-search-input::-webkit-search-cancel-button {
     -webkit-appearance: none;
   }
-  .menu-filter-row {
+  .menu-filter-row,
+  .menu-group-row {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  .menu-filter-row::-webkit-scrollbar {
+  .menu-filter-row::-webkit-scrollbar,
+  .menu-group-row::-webkit-scrollbar {
+    display: none;
+  }
+  /* Deliberately a different shape from .menu-filter-btn (rounded rectangle,
+     uppercase, wider tracking vs. the pills below) so the hierarchy reads at
+     a glance: these three group the menu, the pills below navigate within
+     whichever menu is selected. */
+  .menu-group-btn {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.9rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    background-color: var(--color-surface);
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .menu-group-btn.is-active {
+    color: var(--color-background);
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+  .menu-group-btn:not(.is-active):hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .menu-filter-btn.is-group-hidden {
     display: none;
   }
   .menu-filter-btn {
@@ -379,14 +424,25 @@ const path = localizedPath('/menu', lang);
   // client-side navigation, not just a hard load.
   document.addEventListener('astro:page-load', () => {
     const filterButtons = document.querySelectorAll('.menu-filter-btn');
+    const groupButtons = document.querySelectorAll('.menu-group-btn');
     const searchInput = document.getElementById('menu-search');
     if (!filterButtons.length) return;
 
     const items = document.querySelectorAll('[data-veg]');
     const categories = document.querySelectorAll('[data-menu-category]');
     const noResults = document.getElementById('menu-no-results');
+    const categoryChips = document.querySelectorAll('.menu-filter-btn[data-group]');
 
     let activeFilter = 'all';
+
+    // Any direct interaction with the chip row below (a category chip, "Tout
+    // le menu", or "Végétarien") means the visitor wants the full picture
+    // again — clear whichever group tab was narrowing the chip row so it
+    // doesn't silently keep hiding categories.
+    function resetGroupView() {
+      groupButtons.forEach((b) => b.classList.remove('is-active'));
+      categoryChips.forEach((c) => c.classList.remove('is-group-hidden'));
+    }
 
     function applyFilters() {
       const query = (searchInput?.value ?? '').trim().toLowerCase();
@@ -425,6 +481,7 @@ const path = localizedPath('/menu', lang);
       // way "Tout le menu" / "Végétarien" still do below.
       if (scrollTargetId) {
         btn.addEventListener('click', () => {
+          resetGroupView();
           if (searchInput) searchInput.value = '';
           activeFilter = 'all';
           filterButtons.forEach((b) => b.classList.remove('is-active'));
@@ -437,10 +494,40 @@ const path = localizedPath('/menu', lang);
       }
 
       btn.addEventListener('click', () => {
+        resetGroupView();
         filterButtons.forEach((b) => b.classList.remove('is-active'));
         btn.classList.add('is-active');
         activeFilter = btn.getAttribute('data-filter') || 'all';
         applyFilters();
+      });
+    });
+
+    // Group tabs — narrow the category-chip row to the selected menu and
+    // jump to it, instead of hiding items like the "Tout le menu" /
+    // "Végétarien" filters do (a group is a set of whole categories, not a
+    // dish-level filter).
+    groupButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const group = btn.getAttribute('data-group');
+        const scrollTarget = btn.getAttribute('data-group-scroll');
+
+        groupButtons.forEach((b) => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+
+        if (group === 'formules') {
+          categoryChips.forEach((c) => c.classList.remove('is-group-hidden'));
+        } else {
+          categoryChips.forEach((c) => {
+            c.classList.toggle('is-group-hidden', c.getAttribute('data-group') !== group);
+          });
+          if (searchInput) searchInput.value = '';
+          activeFilter = 'all';
+          filterButtons.forEach((b) => b.classList.remove('is-active'));
+          document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
+          applyFilters();
+        }
+
+        if (scrollTarget) document.getElementById(scrollTarget)?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
 
