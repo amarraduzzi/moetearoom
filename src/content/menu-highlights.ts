@@ -175,6 +175,12 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 45,
         vegetarian: true,
+        image: '/images/matcha-latte.webp',
+        imageAlt: {
+          fr: 'Matcha latte avec mousse de lait en forme de cœur',
+          en: 'Matcha latte with heart-shaped milk foam art',
+          ar: 'ماتشا لاتيه مع رغوة حليب على شكل قلب',
+        },
       },
       {
         name: 'Caramel Macchiato',
@@ -200,6 +206,12 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 28,
         vegetarian: true,
+        image: '/images/the-vert-marocain.webp',
+        imageAlt: {
+          fr: 'Thé vert marocain à la menthe servi dans un verre traditionnel',
+          en: 'Moroccan mint green tea served in a traditional glass',
+          ar: 'الشاي الأخضر المغربي بالنعناع في كأس تقليدي',
+        },
       },
       {
         name: 'Thé Vert Jasmin',
@@ -627,6 +639,12 @@ export const menuHighlights: MenuHighlightCategory[] = [
         description: { fr: 'Café frappé au biscuit Lotus.', en: 'Coffee frappé with Lotus biscuit.', ar: 'قهوة فرابيه بنكهة بسكويت لوتس.' },
         price: 50,
         vegetarian: true,
+        image: '/images/frappe-cafe-lotus.webp',
+        imageAlt: {
+          fr: 'Frappé café glacé surmonté de chantilly et biscuit Lotus',
+          en: 'Iced coffee frappé topped with whipped cream and a Lotus biscuit',
+          ar: 'فرابيه قهوة مثلج مع كريمة مخفوقة وبسكويت لوتس',
+        },
       },
       {
         name: 'Iced Americano',
