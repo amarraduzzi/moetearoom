@@ -42,12 +42,19 @@ const currentPath = Astro.url.pathname;
 const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPath, l) }));
 ---
 <header id="site-header" class="sticky top-0 z-40 transition-all duration-300" data-scrolled="false">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
+  <!-- Desktop/tablet bar (md and up) — unchanged structure: logo left,
+       nav center-ish, always-visible language pills, CTA, no hamburger.
+       Only the logo itself changed (accent-green recolor + larger), per
+       Amar's request; the mobile bar below is a fully separate layout
+       rather than squeezing one row to serve both, since "centered logo"
+       and "logo on the left next to nav links" aren't reconcilable in a
+       single flex row. -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 hidden md:flex items-center justify-between gap-4">
     <a href={localizedPath('/', lang)} class="flex items-center min-w-0 shrink">
-      <img src="/images/logo-mark.webp" alt={siteConfig.identity.name} class="h-9 sm:h-11 w-auto shrink-0" />
+      <img src="/images/logo-mark-accent.webp" alt={siteConfig.identity.name} class="h-14 w-auto shrink-0" />
     </a>
 
-    <nav class="hidden md:flex items-center gap-7 shrink-0">
+    <nav class="flex items-center gap-7 shrink-0">
       {nav.map((item) => (
         <a
           href={item.href}
@@ -62,19 +69,14 @@ const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPa
     <!-- Language switcher — real links to the same page's other-language
          URL (see langLinks above), not a JS toggle: each is an actual
          separately-crawlable static page (see astro.config.mjs's i18n
-         comment for why that matters here). Always visible in the header
-         itself, including on mobile — not tucked away inside the hamburger
-         panel only, since picking a language is a first-glance decision,
-         not a secondary nav item. Stays compact enough (2-letter codes,
-         tight padding) to sit next to the logo and the mobile menu toggle
-         without crowding either. -->
-    <div class="flex items-center gap-0.5 sm:gap-1 shrink-0 rounded-full p-0.5" style="border: 1px solid var(--color-border)">
+         comment for why that matters here). -->
+    <div class="flex items-center gap-1 shrink-0 rounded-full p-0.5" style="border: 1px solid var(--color-border)">
       {langLinks.map((l) => (
         <a
           href={l.href}
           aria-label={LANGUAGE_NATIVE_NAME[l.lang]}
           aria-current={lang === l.lang ? 'true' : undefined}
-          class="px-1.5 sm:px-2 py-1 rounded-full text-[11px] sm:text-xs font-bold transition-colors"
+          class="px-2 py-1 rounded-full text-xs font-bold transition-colors"
           style={`color: ${lang === l.lang ? 'var(--color-background)' : 'var(--color-text-muted)'}; background-color: ${lang === l.lang ? 'var(--color-accent)' : 'transparent'}`}
         >
           {LANGUAGE_LABEL[l.lang]}
@@ -85,18 +87,76 @@ const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPa
     <a
       href={orderCtaLabel.href}
       data-cart-trigger="open"
-      class="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold shrink-0"
+      class="inline-flex items-center gap-1.5 text-sm font-bold shrink-0"
       style="color: var(--color-accent)"
     >
       {orderCtaLabel.label} {arrow(lang)}
     </a>
+  </div>
 
-    <!-- Mobile nav toggle -->
-    <button id="mobile-nav-toggle" class="md:hidden shrink-0" aria-label="Menu" aria-expanded="false">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--color-text-primary)">
-        <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
-      </svg>
-    </button>
+  <!-- Mobile bar (below md) — logo stays left-aligned (Amar clarified:
+       "in the middle of the header" meant vertically centered within the
+       bar's own height, via items-center below — NOT horizontally centered
+       across the screen). Just bigger and accent-green now. Language is
+       one compact dropdown button directly to the left of the hamburger,
+       not three pills spread toward the middle of the bar. -->
+  <div class="max-w-7xl mx-auto px-4 h-16 flex md:hidden items-center justify-between gap-2">
+    <a href={localizedPath('/', lang)} class="flex items-center min-w-0 shrink">
+      <img src="/images/logo-mark-accent.webp" alt={siteConfig.identity.name} class="h-11 w-auto shrink-0" />
+    </a>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <a
+        href={orderCtaLabel.href}
+        data-cart-trigger="open"
+        class="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold shrink-0"
+        style="color: var(--color-accent)"
+      >
+        {orderCtaLabel.label}
+      </a>
+
+    <!-- Language dropdown: a single button showing the current language,
+         expanding a short list downward on click — replaces the old
+         side-by-side FR/EN/AR pills on mobile specifically. -->
+    <div class="relative shrink-0">
+      <button
+        id="lang-toggle"
+        type="button"
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold"
+        style="border: 1px solid var(--color-border); color: var(--color-text-primary)"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        {LANGUAGE_LABEL[lang]}
+        <svg id="lang-toggle-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="transition-transform duration-200">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div
+        id="lang-dropdown"
+        class="hidden absolute right-0 mt-2 min-w-[8rem] rounded-xl overflow-hidden z-50"
+        style="background-color: var(--color-surface); border: 1px solid var(--color-border); box-shadow: 0 12px 28px rgba(0,0,0,0.3)"
+      >
+        {langLinks.map((l) => (
+          <a
+            href={l.href}
+            aria-current={lang === l.lang ? 'true' : undefined}
+            class="block px-3.5 py-2.5 text-sm font-semibold"
+            style={`color: ${lang === l.lang ? 'var(--color-accent)' : 'var(--color-text-primary)'}; background-color: ${lang === l.lang ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : 'transparent'}`}
+          >
+            {LANGUAGE_NATIVE_NAME[l.lang]}
+          </a>
+        ))}
+      </div>
+    </div>
+
+      <!-- Mobile nav toggle -->
+      <button id="mobile-nav-toggle" class="shrink-0" aria-label="Menu" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color: var(--color-text-primary)">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
   </div>
 
   <!-- Mobile nav panel -->
@@ -164,12 +224,21 @@ const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPa
   // swapped between navigations, so without this, every navigation would
   // stack another listener on top instead of replacing it.
   let scrollHandler = null;
+  // Same reasoning as scrollHandler above: this listener lives on
+  // `document`, which survives every client-side navigation, so it must be
+  // removed and re-added each time too or clicks anywhere on the page
+  // would close (or re-close) the language dropdown once per past
+  // navigation instead of once.
+  let langDropdownOutsideClick = null;
 
   document.addEventListener('astro:page-load', () => {
     const header = document.getElementById('site-header');
     const progress = document.getElementById('header-progress');
     const toggle = document.getElementById('mobile-nav-toggle');
     const panel = document.getElementById('mobile-nav-panel');
+    const langToggle = document.getElementById('lang-toggle');
+    const langDropdown = document.getElementById('lang-dropdown');
+    const langChevron = document.getElementById('lang-toggle-chevron');
 
     function onScroll() {
       if (!header || !progress) return;
@@ -189,5 +258,27 @@ const langLinks = LANGUAGES.map((l) => ({ lang: l, href: localizedPath(currentPa
       const isOpen = panel?.classList.toggle('open');
       toggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
     });
+
+    function closeLangDropdown() {
+      langDropdown?.classList.add('hidden');
+      langToggle?.setAttribute('aria-expanded', 'false');
+      if (langChevron) langChevron.style.transform = 'rotate(0deg)';
+    }
+
+    langToggle?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const willOpen = langDropdown?.classList.contains('hidden');
+      if (willOpen) {
+        langDropdown?.classList.remove('hidden');
+        langToggle.setAttribute('aria-expanded', 'true');
+        if (langChevron) langChevron.style.transform = 'rotate(180deg)';
+      } else {
+        closeLangDropdown();
+      }
+    });
+
+    if (langDropdownOutsideClick) document.removeEventListener('click', langDropdownOutsideClick);
+    langDropdownOutsideClick = () => closeLangDropdown();
+    document.addEventListener('click', langDropdownOutsideClick);
   });
 </script>
