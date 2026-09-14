@@ -120,16 +120,22 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
 ---
 <Layout title={t(copy.metaTitle, lang)} description={t(copy.metaDescription, lang)} path={path} lang={lang}>
   <section id="rsv-hero" class="relative h-[42vh] min-h-[320px] sm:h-[48vh] sm:min-h-[380px] flex items-center overflow-hidden">
-    <img src="/images/interior-1.webp" alt={t(copy.heroAlt, lang)} class="absolute inset-0 w-full h-full object-cover" />
-    <div class="absolute inset-0" style="background: linear-gradient(0deg, var(--color-background) 12%, color-mix(in srgb, var(--color-background) 40%, transparent) 55%, color-mix(in srgb, var(--color-background) 60%, transparent) 100%)"></div>
+    <img src="/images/interior-1.webp" alt={t(copy.heroAlt, lang)} class="absolute inset-0 w-full h-full object-cover" style="filter: saturate(1.1) contrast(1.05)" />
+    <div class="absolute inset-0" style="background: linear-gradient(0deg, rgba(20,14,8,0.68) 0%, rgba(20,14,8,0.4) 30%, rgba(20,14,8,0.08) 60%, transparent 78%)"></div>
     <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
       <div class="max-w-md">
-        <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: var(--color-accent)">{city}</span>
-        <h1 class="font-display text-3xl sm:text-5xl font-semibold" style="color: var(--color-text-primary)">{t(copy.heroTitle, lang)}</h1>
-        <p class="mt-4 text-sm sm:text-base leading-relaxed" style="color: var(--color-text-muted)">{t(copy.heroSubtitle, lang)}</p>
+        <span class="hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: var(--color-accent)">{city}</span>
+        <h1 class="hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">{t(copy.heroTitle, lang)}</h1>
+        <p class="hero-shadow mt-4 text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.92)">{t(copy.heroSubtitle, lang)}</p>
       </div>
     </div>
   </section>
+
+  <style>
+    .hero-shadow {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
+    }
+  </style>
 
   <section class="max-w-7xl mx-auto px-5 sm:px-8 py-14 sm:py-20 grid sm:grid-cols-[1.4fr_1fr] gap-10 sm:gap-14 items-start">
     <div class="rounded-2xl p-6 sm:p-9 max-w-2xl" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-reveal>
