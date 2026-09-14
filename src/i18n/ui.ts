@@ -50,6 +50,13 @@ export const common = {
 
   ajouter: { fr: 'Ajouter', en: 'Add', ar: 'إضافة' } satisfies LocalizedText,
   ajouterAuPanier: { fr: 'Ajouter au panier', en: 'Add to cart', ar: 'أضف إلى السلة' } satisfies LocalizedText,
+  // Menu search + filter chips (MenuContent.astro).
+  rechercherUnPlat: { fr: 'Rechercher un plat...', en: 'Search a dish...', ar: 'ابحث عن طبق...' } satisfies LocalizedText,
+  aucunPlatTrouve: {
+    fr: "Aucun plat ne correspond à votre recherche.",
+    en: 'No dish matches your search.',
+    ar: 'لا يوجد طبق يطابق بحثك.',
+  } satisfies LocalizedText,
   // Shown on a menu item card when the staff screen has marked it
   // unavailable (see MenuContent.astro's menu_items sync script).
   epuise: { fr: 'Épuisé', en: 'Sold out', ar: 'نفدت الكمية' } satisfies LocalizedText,

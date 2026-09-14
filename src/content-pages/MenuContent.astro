@@ -121,16 +121,38 @@ const path = localizedPath('/menu', lang);
     </p>
   </section>
 
-  <!-- Filter (final punch-list item #3) — a real, useful interaction, not
-       decoration: the FAQ already states a large part of the menu is
-       vegetarian, but until now a visitor had to scan every card to find
-       those dishes. Client-side only (show/hide, no reload) — deliberately
-       just "Végétarien", not a fuller vegan/spice-level filter, since
-       vegetarian is the one dietary fact readable straight off each dish's
-       own description; see menu-highlights.ts's comment for why. -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 flex flex-wrap items-center gap-2" data-reveal>
-    <button type="button" class="menu-filter-btn is-active" data-filter="all">{t(common.toutLeMenu, lang)}</button>
-    <button type="button" class="menu-filter-btn" data-filter="vegetarian">🌱 {t(common.vegetarienUniquement, lang)}</button>
+  <!-- Search + filter (final punch-list item #3, extended) — a real,
+       useful interaction, not decoration. The category chips let a visitor
+       jump straight to the section they want instead of scrolling past
+       everything; the search box lets them find one specific dish by name
+       or description without hunting. Both are client-side only (show/hide,
+       no reload, no separate results page) and combine: search narrows
+       whatever the active chip already shows. "Végétarien" stays as its
+       own chip rather than a fuller vegan/spice-level filter, since it's
+       the one dietary fact readable straight off each dish's own
+       description; see menu-highlights.ts's comment for why. -->
+  <section class="max-w-7xl mx-auto px-5 sm:px-8 pb-6" data-reveal>
+    <div class="relative mb-3">
+      <svg class="menu-search-icon absolute pointer-events-none" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
+      </svg>
+      <input
+        type="search"
+        id="menu-search"
+        class="menu-search-input w-full rounded-full text-sm"
+        placeholder={t(common.rechercherUnPlat, lang)}
+        aria-label={t(common.rechercherUnPlat, lang)}
+        autocomplete="off"
+      />
+    </div>
+    <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
+      <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
+      {menuHighlights.map((category, i) => (
+        <button type="button" class="menu-filter-btn shrink-0" data-filter={`cat-${i}`}>{t(category.label, lang)}</button>
+      ))}
+      <button type="button" class="menu-filter-btn shrink-0" data-filter="vegetarian">🌱 {t(common.vegetarienUniquement, lang)}</button>
+    </div>
   </section>
 
   <!-- Alternating band now goes warm (--color-primary-dark) instead of
@@ -138,7 +160,7 @@ const path = localizedPath('/menu', lang);
        here rather than À propos/Avis because it's food, and warmth fits
        a menu the way it doesn't fit an editorial about-page. -->
   {menuHighlights.map((category, i) => (
-    <div class={i % 2 === 1 ? 'section-tint-warm' : ''} data-menu-category>
+    <div class={i % 2 === 1 ? 'section-tint-warm' : ''} data-menu-category data-cat-index={i}>
       <section class="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
         <div class={category.image ? 'grid sm:grid-cols-[minmax(0,15rem)_1fr] gap-6 sm:gap-8 items-start' : ''}>
           {category.image && (
@@ -162,6 +184,8 @@ const path = localizedPath('/menu', lang);
                   data-reveal
                   data-veg={item.vegetarian ? 'true' : 'false'}
                   data-item-key={item.name}
+                  data-cat={i}
+                  data-search={`${item.name} ${t(item.description, lang)}`.toLowerCase()}
                 >
                   {item.image && (
                     <div class="photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20">
@@ -199,6 +223,10 @@ const path = localizedPath('/menu', lang);
       </section>
     </div>
   ))}
+
+  <p id="menu-no-results" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-10 text-sm text-center" style="color: var(--color-text-muted)">
+    {t(common.aucunPlatTrouve, lang)}
+  </p>
 
   <!-- Formules & moments — the client's day/time-window offers (Good
        Morning brunch, Déjeuner Moë, Rfissa/Couscous, Soirées, weekend
@@ -249,6 +277,45 @@ const path = localizedPath('/menu', lang);
 </Layout>
 
 <style>
+  .menu-search-icon {
+    /* Logical inset instead of `left` — automatically sits on the right
+       for Arabic pages, mirroring how the arrow icons elsewhere in this
+       codebase flip for RTL (see Button.astro), so the icon stays next to
+       where reading starts rather than always on the physical left. */
+    inset-inline-start: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+  }
+  .menu-search-input {
+    padding-block: 0.75rem;
+    padding-inline: 2.75rem 1rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .menu-search-input::placeholder {
+    color: var(--color-text-muted);
+  }
+  .menu-search-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+  /* Hide the native search-cancel/clear icon so it doesn't collide with our
+     own search icon on the left — the input is still a real type="search"
+     for mobile keyboard affordance (a "search" key instead of "return"). */
+  .menu-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+  .menu-filter-row {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .menu-filter-row::-webkit-scrollbar {
+    display: none;
+  }
   .menu-filter-btn {
     font-size: 0.8rem;
     font-weight: 700;
@@ -296,39 +363,62 @@ const path = localizedPath('/menu', lang);
 </style>
 
 <script>
-  // Client-side only, no reload — see the filter section's comment above
-  // for why this exists and why it's scoped to "vegetarian" specifically.
-  // Wrapped in 'astro:page-load' (same pattern as Layout.astro's sitewide
-  // scripts) so this re-initializes correctly if the Menu page is reached
-  // via a View Transitions client-side navigation, not just a hard load.
+  // Client-side only, no reload — see the search+filter section's comment
+  // above for why this exists. Combines the category/vegetarian chips with
+  // free-text search: a dish shows only if it matches BOTH the active chip
+  // and the current search text, so typing narrows whatever chip is
+  // selected instead of resetting it. Wrapped in 'astro:page-load' (same
+  // pattern as Layout.astro's sitewide scripts) so this re-initializes
+  // correctly if the Menu page is reached via a View Transitions
+  // client-side navigation, not just a hard load.
   document.addEventListener('astro:page-load', () => {
     const filterButtons = document.querySelectorAll('.menu-filter-btn');
+    const searchInput = document.getElementById('menu-search');
     if (!filterButtons.length) return;
 
     const items = document.querySelectorAll('[data-veg]');
     const categories = document.querySelectorAll('[data-menu-category]');
+    const noResults = document.getElementById('menu-no-results');
 
-    function applyFilter(filter) {
+    let activeFilter = 'all';
+
+    function applyFilters() {
+      const query = (searchInput?.value ?? '').trim().toLowerCase();
+      let anyVisible = false;
+
       items.forEach((item) => {
         const isVeg = item.getAttribute('data-veg') === 'true';
-        const show = filter === 'all' || isVeg;
+        const catIndex = item.getAttribute('data-cat');
+        const matchesFilter =
+          activeFilter === 'all' ||
+          (activeFilter === 'vegetarian' && isVeg) ||
+          activeFilter === `cat-${catIndex}`;
+        const matchesSearch = !query || (item.getAttribute('data-search') || '').includes(query);
+        const show = matchesFilter && matchesSearch;
         item.style.display = show ? '' : 'none';
+        if (show) anyVisible = true;
       });
+
       categories.forEach((cat) => {
         const hasVisibleItem = Array.from(cat.querySelectorAll('[data-veg]')).some((item) => item.style.display !== 'none');
         cat.style.display = hasVisibleItem ? '' : 'none';
       });
+
+      if (noResults) noResults.classList.toggle('hidden', anyVisible);
     }
 
     filterButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         filterButtons.forEach((b) => b.classList.remove('is-active'));
         btn.classList.add('is-active');
-        applyFilter(btn.getAttribute('data-filter'));
+        activeFilter = btn.getAttribute('data-filter') || 'all';
+        applyFilters();
       });
     });
 
-    applyFilter('all');
+    searchInput?.addEventListener('input', applyFilters);
+
+    applyFilters();
   });
 </script>
 
