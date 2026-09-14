@@ -327,3 +327,27 @@ button:focus-visible,
     pointer-events: auto;
   }
 }
+
+/* ============================================================================
+   Mint-motif watermark — the site's recurring decorative signature: the same
+   mint-sprig shape used in Ornament.astro's section dividers, tiled at very
+   low opacity behind every page (fixed, like .grain-overlay just above it in
+   markup). The idea is that it's felt rather than seen — a faint brand
+   texture tying dividers, headings and the page background together instead
+   of one isolated decorative element.
+   The leaf stroke color is hardcoded to the client's current accent green
+   (#3F5D45 — see src/config/site.config.ts colors.accent) because CSS custom
+   properties can't be read from inside a data-URI background-image. If this
+   client's accent color ever changes, update the %233F5D45 value below to
+   match (URL-encoded '#', so #3F5D45 becomes %233F5D45).
+   ============================================================================ */
+.mint-motif-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  background-repeat: repeat;
+  background-size: 140px 140px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><g fill='none' stroke='%233F5D45' stroke-width='1.1'><path d='M20 100c-6-1-11-4-14-9 7-2 13 0 16 5 1 2 1 4-2 4z'/><path d='M20 100c6-1 11-4 14-9-7-2-13 0-16 5-1 2-1 4 2 4z'/><path d='M20 100v13'/></g></svg>");
+}
