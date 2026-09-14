@@ -4,6 +4,7 @@
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import Ornament from '../components/Ornament.astro';
+import FormuleSpotlight from '../components/FormuleSpotlight.astro';
 import { siteConfig } from '../config/site.config';
 import { getOrderCtaLabel } from '../lib/nav';
 import { menuHighlights } from '../content/menu-highlights';
@@ -155,6 +156,12 @@ const path = localizedPath('/menu', lang);
     </div>
   </section>
 
+  <!-- Live "what's on right now" spotlight for the formules below — option
+       1 of 3 presented to the client, approved. Fully standalone from the
+       à-la-carte menu (its own section, its own data), matching the
+       client's own framing that these day/time offers are "los staand". -->
+  <FormuleSpotlight formules={menuFormules} anchorId="formules-moments" lang={lang} />
+
   <!-- Alternating band now goes warm (--color-primary-dark) instead of
        plain grey — the deep wine tone from the order-engine, applied
        here rather than À propos/Avis because it's food, and warmth fits
@@ -236,7 +243,7 @@ const path = localizedPath('/menu', lang);
        "add to cart" control here would invent a price that doesn't exist.
        Each card links to the reservation form instead, matching the
        source PDF's own "réservation recommandée" note. -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14" data-reveal>
+  <section id="formules-moments" class="max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14 scroll-mt-24" data-reveal>
     <div class="mb-8 max-w-2xl">
       <h2 class="font-display text-2xl sm:text-3xl font-semibold" style="color: var(--color-text-primary)">
         {t(copy.formulesTitle, lang)}

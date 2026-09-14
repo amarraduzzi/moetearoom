@@ -1,0 +1,250 @@
+---
+// "What's on right now" live spotlight for the Menu page's "Nos formules &
+// moments" (see menu-formules.ts) — approved as option 1 of 3 presented to
+// the client: a single, prominent block that automatically shows whichever
+// formule is currently running, or the next one coming up if none is,
+// instead of making a visitor scan the full grid further down the page and
+// do the day/time math themselves.
+//
+// Same "static site, so 'now' can only be known in the browser" approach as
+// OpenStatusBadge.astro: server-rendered as a hidden shell with all i18n
+// already resolved via t(), then filled in and revealed by a tiny inline
+// script keyed off the REAL Africa/Casablanca clock (not the visitor's own
+// timezone — someone browsing from abroad needs Rabat's time, not theirs).
+import Button from './Button.astro';
+import { t, localizedPath, type Language } from '../i18n/languages';
+import { nav } from '../i18n/ui';
+import type { MenuFormule } from '../content/menu-formules';
+
+interface Props {
+  formules: MenuFormule[];
+  anchorId: string; // id of the full "Nos formules & moments" section to jump to
+  lang?: Language;
+}
+const { formules, anchorId, lang = 'fr' } = Astro.props;
+const reservationPath = localizedPath('/reservation', lang);
+
+const copy = {
+  eyebrowNow: { fr: 'En ce moment', en: 'Right now', ar: 'الآن' },
+  eyebrowNext: { fr: 'Prochainement', en: 'Coming up', ar: 'قريبًا' },
+  until: { fr: "Jusqu'à", en: 'Until', ar: 'حتى' },
+  from: { fr: 'Dès', en: 'From', ar: 'ابتداءً من' },
+  today: { fr: "aujourd'hui", en: 'today', ar: 'اليوم' },
+  tomorrow: { fr: 'demain', en: 'tomorrow', ar: 'غدًا' },
+  seeAll: { fr: 'Voir toutes nos formules & moments', en: 'See all our formules & moments', ar: 'شاهد جميع عروضنا وأوقاتنا' },
+} satisfies Record<string, { fr: string; en: string; ar: string }>;
+
+const weekdayNames: Record<Language, string[]> = {
+  fr: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  ar: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+};
+
+// All i18n resolved here (server-side) instead of duplicated in the client
+// script — same approach as the Supabase menu-override script further down
+// this page.
+const formuleData = formules.map((f) => ({
+  name: t(f.name, lang),
+  description: t(f.description, lang),
+  tagline: f.tagline ? t(f.tagline, lang) : null,
+  days: f.days,
+  startHour: f.startHour,
+  endHour: f.endHour,
+}));
+
+const spotlightCopy = {
+  eyebrowNow: t(copy.eyebrowNow, lang),
+  eyebrowNext: t(copy.eyebrowNext, lang),
+  until: t(copy.until, lang),
+  from: t(copy.from, lang),
+  today: t(copy.today, lang),
+  tomorrow: t(copy.tomorrow, lang),
+};
+---
+<section class="max-w-7xl mx-auto px-5 sm:px-8 pb-6" data-reveal>
+  <div id="formule-spotlight" class="formule-spotlight hidden rounded-2xl p-6 sm:p-8">
+    <div class="flex items-start justify-between gap-5 flex-wrap">
+      <div class="min-w-0">
+        <span id="formule-spotlight-eyebrow" class="formule-spotlight-eyebrow inline-flex items-center"></span>
+        <h2 id="formule-spotlight-name" class="font-display text-xl sm:text-2xl font-semibold mt-2" style="color: var(--color-text-primary)"></h2>
+        <p id="formule-spotlight-time" class="text-sm font-semibold mt-1" style="color: var(--color-accent)"></p>
+        <p id="formule-spotlight-description" class="text-sm mt-3 max-w-xl" style="color: var(--color-text-muted)"></p>
+        <p id="formule-spotlight-tagline" class="text-sm mt-1 italic" style="color: var(--color-primary)"></p>
+      </div>
+      <Button href={reservationPath} variant="cta" class="shrink-0">{t(nav.reservation, lang)}</Button>
+    </div>
+    <a href={`#${anchorId}`} class="formule-spotlight-see-all inline-block mt-5 text-xs font-bold underline underline-offset-4">
+      {t(copy.seeAll, lang)}
+    </a>
+  </div>
+</section>
+
+<script define:vars={{ formules: formuleData, lang, copy: spotlightCopy, weekdays: weekdayNames[lang] }}>
+  // Module-scope tracked interval (same pattern as Layout.astro's
+  // scrollHandler / Header.astro's langDropdownOutsideClick) so re-running
+  // this on a View Transitions navigation clears the previous page's
+  // interval instead of stacking a second one ticking in the background.
+  let formuleSpotlightInterval = null;
+
+  document.addEventListener('astro:page-load', () => {
+    const root = document.getElementById('formule-spotlight');
+    if (!root || !formules.length) return;
+
+    const eyebrowEl = document.getElementById('formule-spotlight-eyebrow');
+    const nameEl = document.getElementById('formule-spotlight-name');
+    const timeEl = document.getElementById('formule-spotlight-time');
+    const descEl = document.getElementById('formule-spotlight-description');
+    const taglineEl = document.getElementById('formule-spotlight-tagline');
+
+    function casablancaNow() {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Africa/Casablanca',
+        weekday: 'short',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false,
+      }).formatToParts(new Date());
+      const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+      const weekdayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[map.weekday];
+      let hour = Number(map.hour);
+      if (hour === 24) hour = 0; // some locales report midnight as "24"
+      const minute = Number(map.minute);
+      return { day: weekdayIndex, decimal: hour + minute / 60 };
+    }
+
+    function formatTime(decimalHour) {
+      const hh = Math.floor(decimalHour);
+      const mm = Math.round((decimalHour - hh) * 60);
+      if (lang === 'en') {
+        let hour12 = hh % 12;
+        if (hour12 === 0) hour12 = 12;
+        const period = hh >= 12 ? 'PM' : 'AM';
+        return mm === 0 ? `${hour12}:00 ${period}` : `${hour12}:${String(mm).padStart(2, '0')} ${period}`;
+      }
+      if (lang === 'ar') {
+        return mm === 0 ? `${hh}:00` : `${hh}:${String(mm).padStart(2, '0')}`;
+      }
+      return mm === 0 ? `${hh}h` : `${hh}h${String(mm).padStart(2, '0')}`;
+    }
+
+    function fillContent(f) {
+      nameEl.textContent = f.name;
+      descEl.textContent = f.description;
+      if (f.tagline) {
+        taglineEl.textContent = f.tagline;
+        taglineEl.style.display = '';
+      } else {
+        taglineEl.textContent = '';
+        taglineEl.style.display = 'none';
+      }
+    }
+
+    function render() {
+      const now = casablancaNow();
+
+      // Formules running right now. When more than one overlaps (e.g. "Les
+      // Soirées Moë" runs every evening AND "Gastronomie Dima Maghreb" is
+      // specifically Friday evening, at the same time), the more specific
+      // one — fewer days a week — wins, since that's the one worth calling
+      // out over the standing daily offer.
+      const active = formules
+        .filter((f) => f.days.includes(now.day) && now.decimal >= f.startHour && now.decimal < f.endHour)
+        .sort((a, b) => a.days.length - b.days.length);
+
+      if (active.length) {
+        const f = active[0];
+        root.classList.remove('hidden');
+        root.setAttribute('data-state', 'now');
+        eyebrowEl.innerHTML = `<span class="formule-spotlight-dot"></span><span>${copy.eyebrowNow}</span>`;
+        timeEl.textContent = `${copy.until} ${formatTime(f.endHour)}`;
+        fillContent(f);
+        return;
+      }
+
+      // Nothing running now — find the soonest upcoming occurrence, across
+      // any of the next 7 days, among ALL formules (not just today's).
+      let best = null;
+      formules.forEach((f) => {
+        for (let offset = 0; offset <= 7; offset++) {
+          const day = (now.day + offset) % 7;
+          if (!f.days.includes(day)) continue;
+          const hoursFromNow = offset * 24 + f.startHour - now.decimal;
+          if (hoursFromNow <= 0) continue;
+          if (!best || hoursFromNow < best.hoursFromNow) {
+            best = { f, offset, hoursFromNow };
+          }
+          break; // first qualifying day for this formule is its next occurrence
+        }
+      });
+
+      if (!best) {
+        root.classList.add('hidden');
+        return;
+      }
+
+      const { f, offset } = best;
+      root.classList.remove('hidden');
+      root.setAttribute('data-state', 'next');
+      eyebrowEl.innerHTML = `<span class="formule-spotlight-dot"></span><span>${copy.eyebrowNext}</span>`;
+      const whenLabel = offset === 0 ? copy.today : offset === 1 ? copy.tomorrow : weekdays[(now.day + offset) % 7];
+      timeEl.textContent = `${copy.from} ${formatTime(f.startHour)} · ${whenLabel}`;
+      fillContent(f);
+    }
+
+    render();
+
+    if (formuleSpotlightInterval) window.clearInterval(formuleSpotlightInterval);
+    // Re-check every minute so the spotlight switches formule on its own
+    // when one ends or the next one starts, without needing a reload.
+    formuleSpotlightInterval = window.setInterval(render, 60000);
+  });
+</script>
+
+<style>
+  .formule-spotlight {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 16%, var(--color-surface)) 0%, var(--color-surface) 65%);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .formule-spotlight[data-state='next'] {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+  .formule-spotlight-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+  .formule-spotlight[data-state='next'] .formule-spotlight-eyebrow {
+    color: var(--color-text-muted);
+  }
+  .formule-spotlight :global(.formule-spotlight-dot) {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    margin-inline-end: 0.4rem;
+  }
+  .formule-spotlight[data-state='now'] :global(.formule-spotlight-dot) {
+    animation: formule-pulse 1.8s ease-in-out infinite;
+  }
+  .formule-spotlight[data-state='next'] :global(.formule-spotlight-dot) {
+    background-color: var(--color-text-muted);
+  }
+  @keyframes formule-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 45%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .formule-spotlight :global(.formule-spotlight-dot) { animation: none; }
+  }
+  .formule-spotlight-see-all {
+    color: var(--color-text-muted);
+  }
+  .formule-spotlight-see-all:hover {
+    color: var(--color-accent);
+  }
+</style>
