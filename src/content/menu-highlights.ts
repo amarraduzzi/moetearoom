@@ -205,10 +205,14 @@ export const menuHighlights: MenuHighlightCategory[] = [
   {
     label: { fr: 'Boulangerie et Viennoiseries', en: 'Bakery & Pastries', ar: 'المخبوزات والفطائر' },
     image: '/images/gallery-1.webp',
+    // Corrected Sept 2026 (Amar) — this photo is actually the pastry-counter
+    // tarts/gebakjes shot, not a basket of croissants/baguettes as
+    // originally captioned. Kept generic on purpose: describe what the
+    // photo actually shows rather than re-guessing another specific claim.
     imageAlt: {
-      fr: 'Panier de croissants, viennoiseries et baguettes fraîches',
-      en: 'Basket of fresh croissants, pastries and baguettes',
-      ar: 'سلة من الكرواسون والمعجنات الطازجة والباغيت',
+      fr: 'Sélection de pâtisseries maison présentées au comptoir',
+      en: 'Selection of house-made pastries displayed at the counter',
+      ar: 'تشكيلة من الحلويات المصنوعة يدويًا معروضة على الطاولة',
     },
     items: [
       {
