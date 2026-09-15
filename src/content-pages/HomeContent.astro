@@ -144,10 +144,14 @@ const restaurantJsonLd = {
 // photo turned out to show pastry-counter tarts, not croissants/baguettes
 // (fixed in menu-highlights.ts), so it's deliberately NOT paired with a
 // specific named item here; forcing a mismatched photo→dish pairing would
-// just trade one inaccuracy for another. Instead: one real photo card
-// (the verified match) plus three photo-less items that get the
-// illustrated icon treatment (point 3) — no guessing which photo belongs
-// to which dish.
+// just trade one inaccuracy for another.
+//
+// Update (Sept 2026): the other three highlight items (Thé Vert Marocain,
+// Matcha Latte, Frappé Café Lotus) now also have an `image` set in
+// menu-highlights.ts. Flagging for the record: these three are stock
+// photos, not verified photos of what's actually served at Moë — client
+// explicitly chose to use them anyway rather than wait for real product
+// photography. Swap them for real shots whenever those are available.
 const highlightBadges: Record<string, LocalizedText> = {
   'Éclair Signature Moë': { fr: 'Signature', en: 'Signature', ar: 'مميز' },
   'Thé Vert Marocain': { fr: 'Incontournable', en: 'Classic', ar: 'أساسي' },
