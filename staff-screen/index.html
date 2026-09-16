@@ -249,12 +249,18 @@
   }
   .rsv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 
-  table.menu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-card); }
+  /* Horizontal scroll wrapper instead of squeezing 5 columns (title,
+     description, available, price, save) into a narrow tablet screen — the
+     table itself keeps a natural width and this just lets it scroll. */
+  .menu-table-scroll { overflow-x: auto; border-radius: 14px; box-shadow: var(--shadow-card); }
+  table.menu-table { width: 100%; min-width: 720px; border-collapse: collapse; background: var(--surface); }
   table.menu-table th, table.menu-table td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
   table.menu-table tbody tr:last-child td { border-bottom: none; }
   table.menu-table tbody tr:hover { background: rgba(63,93,69,0.045); }
   table.menu-table th { background: var(--surface-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 700; }
   table.menu-table input[type="number"] { width: 84px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-body); }
+  table.menu-table input.menu-editor-title { width: 160px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-body); font-weight: 600; }
+  table.menu-table input.menu-editor-desc { width: 240px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-body); color: var(--text-muted); }
   .toggle-available { display: flex; align-items: center; gap: 7px; cursor: pointer; }
   .toggle-available input { accent-color: var(--green); width: 16px; height: 16px; }
   .save-hint { font-size: 0.83rem; color: var(--text-muted); margin: 0 0 16px; line-height: 1.6; }
@@ -426,9 +432,8 @@
     <!-- ================= MENU ================= -->
     <section id="view-menu" class="view">
       <p class="save-hint">
-        Décochez un plat existant pour le marquer épuisé sur le site, ou changez son prix — c'est appliqué immédiatement sur
-        la page Menu des clients. Pour renommer un plat existant ou changer sa description, il faut modifier le code du site
-        (demandez-le à Amplify) — cet écran ne peut que changer son prix ou le marquer épuisé.
+        Modifiez le titre, la description, le prix ou la disponibilité d'un plat existant — c'est appliqué immédiatement sur
+        la page Menu de vos clients. Cliquez sur « Enregistrer » sur la ligne du plat après chaque modification.
       </p>
       <div id="menu-editor"></div>
 
@@ -480,41 +485,92 @@
   // Master item list — deliberately duplicated from the main site's
   // src/content/menu-highlights.ts rather than fetched from it (this screen
   // has no access to that Astro project's source at runtime). Keep this
-  // list's names in sync BY HAND whenever a dish is renamed/added/removed on
-  // the main site — the join key is the exact name string, same as
-  // `item_key` in supabase/schema.sql's menu_items table.
+  // list's names/categories/prices/descriptions in sync BY HAND whenever a
+  // dish is renamed/added/removed on the main site — the join key is the
+  // exact name string, same as `item_key` in supabase/schema.sql's
+  // menu_items table.
+  //
+  // Regenerated Sept 2026 (Amar) from the real menu-highlights.ts — the
+  // previous 27-item version was missing every drink category entirely
+  // (Boissons Chaudes, Thés et Infusions, Jus Frais & Mocktails, Milkshakes/
+  // Frappés/Glacés) and had category names that didn't match the real site
+  // ('Les Créations', 'Les Flans', 'Cookies Gourmands' don't exist there).
+  // Any dish a staff member couldn't find/edit here before was that bug —
+  // this list now has all 66 real items. `description` is what pre-fills
+  // the editor's description field below; it's the site's own FR copy, not
+  // a separate source of truth.
   //
   // A dish added FROM this screen (the "custom dishes" section below) does
   // NOT go in this array — it lives entirely in Supabase (see
   // loadCustomDishes/renderCustomDishes further down).
   // ==========================================================================
   const MENU_ITEMS = [
-    { key: 'Le Cheeseburger Moë', category: 'Menu sur le pouce', price: 90 },
-    { key: 'Le Croque Monsieur Classique', category: 'Menu sur le pouce', price: 65 },
-    { key: 'La Quesadilla au Poulet', category: 'Menu sur le pouce', price: 70 },
-    { key: 'Le Mex', category: 'Menu sur le pouce', price: 80 },
-    { key: 'Le Panini du Chef', category: 'Menu sur le pouce', price: 60 },
-    { key: 'Éclair Vanille', category: "Notre Expérience Éclair", price: 28 },
-    { key: 'Éclair Café', category: "Notre Expérience Éclair", price: 28 },
-    { key: 'Éclair Chocolat', category: "Notre Expérience Éclair", price: 28 },
-    { key: 'Éclair Noisette', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Pistache', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Framboise', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Citron', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Mangue', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Tiramisu', category: 'Les Créations', price: 38 },
-    { key: 'Éclair Amlou', category: 'Les Signatures', price: 40 },
-    { key: 'Éclair Signature Moë', category: 'Les Signatures', price: 40 },
-    { key: 'Flan Vanille', category: 'Les Flans', price: 33 },
-    { key: 'Flan Chocolat', category: 'Les Flans', price: 33 },
-    { key: 'Flan Signature Moë', category: 'Les Flans', price: 38 },
-    { key: 'Cookie Gourmand', category: 'Cookies Gourmands', price: 35 },
-    { key: 'Croissant Pur Beurre', category: 'Boulangerie & Viennoiseries', price: 11 },
-    { key: 'Pain au Chocolat', category: 'Boulangerie & Viennoiseries', price: 13 },
-    { key: 'Pain Suisse', category: 'Boulangerie & Viennoiseries', price: 13 },
-    { key: 'Pain aux Raisins', category: 'Boulangerie & Viennoiseries', price: 13 },
-    { key: 'Baguette Tradition', category: 'Boulangerie & Viennoiseries', price: 6.5 },
-    { key: 'Brioche Artisanale', category: 'Boulangerie & Viennoiseries', price: 35 },
+    { key: 'Le Cheeseburger Moë', category: 'Menu sur le pouce', price: 90, description: 'Accompagné de pommes wedges croustillantes et de son mesclun de salade verte.' },
+    { key: 'Le Croque Monsieur Classique', category: 'Menu sur le pouce', price: 65, description: 'Servi avec pommes wedges et salade verte.' },
+    { key: 'La Quesadilla au Poulet', category: 'Menu sur le pouce', price: 70, description: 'Dorée et fondante, accompagnée de la salade verte aux herbes.' },
+    { key: 'Le Mex', category: 'Menu sur le pouce', price: 80, description: 'Cassolette de saucisses façon Tex-Mex, poivrons confits & pommes wedges.' },
+    { key: 'Le Panini du Chef', category: 'Menu sur le pouce', price: 60, description: 'Pain toasté, garniture du jour, accompagné de salade verte.' },
+    { key: 'Espresso', category: 'Boissons Chaudes', price: 22, description: 'Café espresso italien.' },
+    { key: 'Double Espresso', category: 'Boissons Chaudes', price: 25, description: 'Double dose d’espresso.' },
+    { key: 'Americano', category: 'Boissons Chaudes', price: 25, description: 'Espresso allongé à l’eau chaude.' },
+    { key: 'Cappuccino', category: 'Boissons Chaudes', price: 30, description: 'Espresso, lait chaud et mousse de lait.' },
+    { key: 'Cortado', category: 'Boissons Chaudes', price: 30, description: 'Espresso adouci d’un peu de lait chaud.' },
+    { key: 'Latte', category: 'Boissons Chaudes', price: 30, description: 'Espresso avec beaucoup de lait chaud.' },
+    { key: 'Flat White', category: 'Boissons Chaudes', price: 30, description: 'Espresso avec lait micro-moussé.' },
+    { key: 'Mocaccino', category: 'Boissons Chaudes', price: 35, description: 'Espresso, chocolat et lait chaud.' },
+    { key: 'Chocolat Chaud', category: 'Boissons Chaudes', price: 35, description: 'Chocolat chaud onctueux.' },
+    { key: 'Matcha Latte', category: 'Boissons Chaudes', price: 45, description: 'Thé matcha avec lait chaud.' },
+    { key: 'Caramel Macchiato', category: 'Boissons Chaudes', price: 35, description: 'Espresso, lait et sirop de caramel.' },
+    { key: 'Thé Vert Marocain', category: 'Thés et Infusions', price: 28, description: 'Le classique thé à la menthe marocain.' },
+    { key: 'Thé Vert Jasmin', category: 'Thés et Infusions', price: 30, description: 'Thé vert parfumé à la fleur de jasmin.' },
+    { key: 'Thé Citron Gingembre', category: 'Thés et Infusions', price: 30, description: 'Infusion chaude au citron et gingembre.' },
+    { key: 'Thé Fruits Rouges', category: 'Thés et Infusions', price: 30, description: 'Thé aux notes fruitées de fruits rouges.' },
+    { key: 'Infusion Verveine', category: 'Thés et Infusions', price: 25, description: 'Infusion apaisante à la verveine.' },
+    { key: 'Thé Curcuma', category: 'Thés et Infusions', price: 30, description: 'Infusion au curcuma.' },
+    { key: 'Thé Noir Assam', category: 'Thés et Infusions', price: 30, description: 'Thé noir corsé originaire d’Assam.' },
+    { key: 'Rooibos', category: 'Thés et Infusions', price: 30, description: 'Infusion sud-africaine sans théine.' },
+    { key: 'Éclair Vanille', category: 'Notre Expérience Éclair', price: 28, description: 'Crème vanille onctueuse aux notes douces et réconfortantes.' },
+    { key: 'Éclair Café', category: 'Notre Expérience Éclair', price: 28, description: 'Crème café intense et parfumée, pour les amateurs de caractère.' },
+    { key: 'Éclair Chocolat', category: 'Notre Expérience Éclair', price: 28, description: 'Crème chocolat fondante et riche en cacao.' },
+    { key: 'Éclair Noisette', category: 'Notre Expérience Éclair', price: 38, description: 'Crème pralinée noisette, subtilement toastée et gourmande.' },
+    { key: 'Éclair Pistache', category: 'Notre Expérience Éclair', price: 38, description: 'Crème pistache douce et raffinée, aux arômes délicats.' },
+    { key: 'Éclair Framboise', category: 'Notre Expérience Éclair', price: 38, description: 'Crème légère à la framboise, fraîche et légèrement acidulée.' },
+    { key: 'Éclair Citron', category: 'Notre Expérience Éclair', price: 38, description: 'Crème citron vive et rafraîchissante, parfaite en fin de repas.' },
+    { key: 'Éclair Mangue', category: 'Notre Expérience Éclair', price: 38, description: 'Crème mangue exotique, douce et ensoleillée.' },
+    { key: 'Éclair Tiramisu', category: 'Notre Expérience Éclair', price: 38, description: 'Crème mascarpone au café, inspirée du célèbre dessert italien.' },
+    { key: 'Éclair Amlou', category: 'Notre Expérience Éclair', price: 40, description: 'Crème amlou artisanale à base d\'amandes, miel et huile d\'argan, saveur authentique du Maroc.' },
+    { key: 'Éclair Signature Moë', category: 'Notre Expérience Éclair', price: 42, description: 'Création éphémère, inspirée du moment et sublimée par le Chef Pâtissier.' },
+    { key: 'Croissant Pur Beurre', category: 'Boulangerie et Viennoiseries', price: 11, description: 'Croissant traditionnel au beurre, feuilleté et doré.' },
+    { key: 'Pain au Chocolat', category: 'Boulangerie et Viennoiseries', price: 13, description: 'Viennoiserie feuilletée fourrée de chocolat.' },
+    { key: 'Pain Suisse', category: 'Boulangerie et Viennoiseries', price: 13, description: 'Viennoiserie garnie de crème pâtissière et pépites de chocolat.' },
+    { key: 'Pain aux Raisins', category: 'Boulangerie et Viennoiseries', price: 13, description: 'Viennoiserie feuilletée enroulée, garnie de crème et raisins secs.' },
+    { key: 'Baguette Tradition', category: 'Boulangerie et Viennoiseries', price: 6.5, description: 'Baguette de tradition française, croûte croustillante.' },
+    { key: 'Brioche Artisanale', category: 'Boulangerie et Viennoiseries', price: 35, description: 'Brioche moelleuse faite maison.' },
+    { key: 'Orange Pressée', category: 'Jus Frais & Mocktails', price: 30, description: 'Jus d’orange fraîchement pressé.' },
+    { key: 'Citron Pressé', category: 'Jus Frais & Mocktails', price: 30, description: 'Jus de citron fraîchement pressé.' },
+    { key: 'Avocat', category: 'Jus Frais & Mocktails', price: 40, description: 'Jus d’avocat crémeux.' },
+    { key: 'Avocat & Fruits Secs', category: 'Jus Frais & Mocktails', price: 45, description: 'Jus d’avocat aux fruits secs.' },
+    { key: 'Citron & Gingembre', category: 'Jus Frais & Mocktails', price: 35, description: 'Jus frais citron-gingembre.' },
+    { key: 'Mojito Classique', category: 'Jus Frais & Mocktails', price: 40, description: 'Mocktail menthe et citron vert.' },
+    { key: 'Sunrise', category: 'Jus Frais & Mocktails', price: 45, description: 'Mocktail fruité aux couleurs du levant.' },
+    { key: 'Red Mood', category: 'Jus Frais & Mocktails', price: 45, description: 'Mocktail aux fruits rouges.' },
+    { key: 'Blue Mood', category: 'Jus Frais & Mocktails', price: 45, description: 'Mocktail fruité bleu curaçao.' },
+    { key: 'Milk Shake Vanille', category: 'Milkshakes, Frappés & Glacés', price: 45, description: 'Milkshake onctueux à la vanille.' },
+    { key: 'Milk Shake Chocolat', category: 'Milkshakes, Frappés & Glacés', price: 45, description: 'Milkshake onctueux au chocolat.' },
+    { key: 'Milk Shake Caramel', category: 'Milkshakes, Frappés & Glacés', price: 45, description: 'Milkshake onctueux au caramel.' },
+    { key: 'Milk Shake Fraise', category: 'Milkshakes, Frappés & Glacés', price: 45, description: 'Milkshake onctueux à la fraise.' },
+    { key: 'Milk Shake Banane', category: 'Milkshakes, Frappés & Glacés', price: 45, description: 'Milkshake onctueux à la banane.' },
+    { key: 'Frappé Café', category: 'Milkshakes, Frappés & Glacés', price: 50, description: 'Café frappé glacé et mousseux.' },
+    { key: 'Frappé Café Lotus', category: 'Milkshakes, Frappés & Glacés', price: 50, description: 'Café frappé au biscuit Lotus.' },
+    { key: 'Iced Americano', category: 'Milkshakes, Frappés & Glacés', price: 30, description: 'Americano glacé.' },
+    { key: 'Iced Latte', category: 'Milkshakes, Frappés & Glacés', price: 35, description: 'Latte glacé.' },
+    { key: 'Iced Caramel Macchiato', category: 'Milkshakes, Frappés & Glacés', price: 40, description: 'Caramel macchiato glacé.' },
+    { key: 'Iced Mocha Latte', category: 'Milkshakes, Frappés & Glacés', price: 40, description: 'Mocha latte glacé.' },
+    { key: 'Iced Chocolat', category: 'Milkshakes, Frappés & Glacés', price: 40, description: 'Chocolat glacé.' },
+    { key: 'Iced Matcha Latte', category: 'Milkshakes, Frappés & Glacés', price: 50, description: 'Matcha latte glacé maison.' },
+    { key: 'Strawberry Matcha Latte', category: 'Milkshakes, Frappés & Glacés', price: 55, description: 'Matcha latte glacé à la fraise.' },
+    { key: 'Mango Matcha Latte', category: 'Milkshakes, Frappés & Glacés', price: 55, description: 'Matcha latte glacé à la mangue.' },
+    { key: 'Coconut Matcha Latte', category: 'Milkshakes, Frappés & Glacés', price: 55, description: 'Matcha latte glacé à la noix de coco.' },
   ];
 
   const cfg = window.__STAFF_CONFIG;
@@ -849,7 +905,7 @@
   async function loadMenuOverrides() {
     if (!cfg.supabaseUrl) return {};
     try {
-      const res = await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?select=item_key,price,available,name`, { headers });
+      const res = await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?select=item_key,price,available,name,description`, { headers });
       const rows = await res.json();
       const map = {};
       (Array.isArray(rows) ? rows : []).forEach((r) => (map[r.item_key] = r));
@@ -874,23 +930,31 @@
         heading.className = 'category-heading';
         heading.textContent = currentCategory;
         container.appendChild(heading);
+        const scrollWrap = document.createElement('div');
+        scrollWrap.className = 'menu-table-scroll';
         table = document.createElement('table');
         table.className = 'menu-table';
-        table.innerHTML = '<thead><tr><th>Plat</th><th>Disponible</th><th>Prix (MAD)</th><th></th></tr></thead>';
+        table.innerHTML = '<thead><tr><th>Titre</th><th>Description</th><th>Disponible</th><th>Prix (MAD)</th><th></th></tr></thead>';
         tbody = document.createElement('tbody');
         table.appendChild(tbody);
-        container.appendChild(table);
+        scrollWrap.appendChild(table);
+        container.appendChild(scrollWrap);
       }
-      // name-overrides only ever apply to CUSTOM dishes (see below) — an
-      // override row for a static item never carries a name, so this is
-      // always item.key for the existing-dish table.
+      // Override row for an existing static dish — item.key is always the
+      // join key (data never changes it), but the title/description shown
+      // here — and on the site once saved — can now be overridden just
+      // like price/available. Pre-fill from the override if one exists,
+      // otherwise from this screen's own copy of the site's current text.
       const override = overrides[item.key];
       const available = override ? override.available !== false : true;
       const price = override && override.price != null ? override.price : item.price;
+      const title = override && override.name ? override.name : item.key;
+      const description = override && override.description != null ? override.description : item.description;
 
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${escapeHtml(item.key)}</td>
+        <td><input type="text" value="${escapeHtml(title)}" data-key="${escapeHtml(item.key)}" data-field="title" class="menu-editor-title" /></td>
+        <td><input type="text" value="${escapeHtml(description || '')}" data-key="${escapeHtml(item.key)}" data-field="description" class="menu-editor-desc" /></td>
         <td><label class="toggle-available"><input type="checkbox" ${available ? 'checked' : ''} data-key="${escapeHtml(item.key)}" data-field="available" /> ${available ? 'Oui' : 'Épuisé'}</label></td>
         <td><input type="number" step="0.5" value="${price}" data-key="${escapeHtml(item.key)}" data-field="price" /></td>
         <td><button class="btn btn-secondary" data-action="save" data-key="${escapeHtml(item.key)}">Enregistrer</button></td>
@@ -913,11 +977,27 @@
     const row = [...document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`)];
     const available = row.find((el) => el.dataset.field === 'available')?.checked;
     const price = Number(row.find((el) => el.dataset.field === 'price')?.value);
+    const title = row.find((el) => el.dataset.field === 'title')?.value.trim();
+    const description = row.find((el) => el.dataset.field === 'description')?.value.trim();
+    if (!title) {
+      alert('Le titre ne peut pas être vide.');
+      return;
+    }
     try {
+      // Always sends title/description now, even unchanged — that's what
+      // lets the site tell "this is an override of an existing dish" (its
+      // item_key matches a real static item) apart from a brand-new custom
+      // dish, instead of relying on name being null the way it used to.
       await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?on_conflict=item_key`, {
         method: 'POST',
         headers: { ...headers, Prefer: 'resolution=merge-duplicates' },
-        body: JSON.stringify({ item_key: key, available, price: Number.isNaN(price) ? null : price }),
+        body: JSON.stringify({
+          item_key: key,
+          available,
+          price: Number.isNaN(price) ? null : price,
+          name: title,
+          description: description || null,
+        }),
       });
     } catch (e) {
       alert('Enregistrement impossible — vérifiez la connexion.');

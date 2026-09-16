@@ -110,27 +110,31 @@ create policy "reservations_update_anon" on public.reservations
 --
 -- Two different things share this one table on purpose, both driven by the
 -- same "change without a code deploy" need:
---   1. OVERRIDE of an existing static dish — only price/available are ever
---      written for these; name/description/category stay null (the site's
---      own copy is what's shown). Renaming or re-describing a dish that
---      already ships in menu-highlights.ts still needs a real code change —
---      see the standing honesty-of-content note elsewhere in this project;
---      the staff screen deliberately doesn't pretend to support that.
+--   1. OVERRIDE of an existing static dish — price/available, AND (since
+--      Sept 2026) name/description too, so staff can rename or
+--      re-describe a dish that already ships in menu-highlights.ts without
+--      a code deploy. item_key never changes — it's still the join key —
+--      only what's displayed for it does. The site tells this case apart
+--      from case 2 below by whether item_key matches a real static dish
+--      (read from the page's own DOM at runtime — see MenuContent.astro's
+--      menu-items-sync script), NOT by whether name is set, since an
+--      override row can carry a name now too.
 --   2. A wholly NEW dish, added from the staff screen — name/description/
 --      category/price are all set, and the site's Menu page renders an
 --      extra card for it (see MenuContent.astro's menu-items-sync script).
 --
--- Every dish with no row here still shows at its normal price/available on
--- the site. This keeps the staff screen's editor simple (edit only what
--- changed, or add only what's new) instead of requiring a full duplicate
--- menu to be seeded and kept in sync by hand.
+-- Every dish with no row here still shows at its normal name/description/
+-- price/available on the site. This keeps the staff screen's editor simple
+-- (edit only what changed, or add only what's new) instead of requiring a
+-- full duplicate menu to be seeded and kept in sync by hand.
 create table if not exists public.menu_items (
   id uuid primary key default gen_random_uuid(),
   updated_at timestamptz not null default now(),
   item_key text not null unique,
-  -- Set only for a NEW dish added from the staff screen (case 2 above) —
-  -- null for an override row on an existing static dish (case 1), where
-  -- the site's own name/description are always what's shown.
+  -- Set for BOTH cases now (Sept 2026) — for an override row (case 1) this
+  -- is the dish's current displayed name, which starts out equal to
+  -- item_key and only differs once staff renames it; for a new dish
+  -- (case 2) it's that dish's only name.
   name text,
   description text,
   -- Informational for existing-dish overrides (not used by the site's
@@ -149,10 +153,10 @@ create table if not exists public.menu_items (
   -- dish already has its station from MenuContent.astro's own
   -- STATION_BY_CATEGORY map and doesn't need an override row for it.
   station text,
-  -- Optional photo. For an override row (case 1) this REPLACES the site's
-  -- own static photo for that dish; for a new dish (case 2) it's the only
-  -- photo source. Null means "no photo" (new dish) or "keep the site's
-  -- static photo" (override) — never treated as "remove the photo".
+  -- Unused since Sept 2026 — dish photos were removed from the Menu page
+  -- entirely (Amar: "ik wil helemaal geen foto in het menu hebben"), so
+  -- nothing writes or reads this column anymore. Left in place rather than
+  -- dropped so no migration is needed either way; safe to ignore.
   image_url text
 );
 

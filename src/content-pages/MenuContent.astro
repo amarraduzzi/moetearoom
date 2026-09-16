@@ -205,12 +205,7 @@ const path = localizedPath('/menu', lang);
   {menuHighlights.map((category, i) => (
     <div id={`cat-section-${i}`} class={`scroll-mt-24 ${i % 2 === 1 ? 'section-tint-warm' : ''}`} data-menu-category data-cat-index={i}>
       <section class="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
-        <div class={category.image ? 'grid sm:grid-cols-[minmax(0,15rem)_1fr] gap-6 sm:gap-8 items-start' : ''}>
-          {category.image && (
-            <div class="photo-frame rounded-2xl overflow-hidden aspect-[4/3] sm:aspect-square" data-reveal="scale">
-              <img src={category.image} alt={category.imageAlt ? t(category.imageAlt, lang) : t(category.label, lang)} class="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )}
+        <div>
           <div>
             <h2
               class="font-display text-2xl font-semibold mb-5 pb-3 flex items-baseline gap-3"
@@ -230,18 +225,15 @@ const path = localizedPath('/menu', lang);
                   data-cat={i}
                   data-search={`${item.name} ${t(item.description, lang)}`.toLowerCase()}
                 >
-                  <div class="js-item-photo-frame photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20" class:list={{ hidden: !item.image }}>
-                    <img class="js-item-photo w-full h-full object-cover" src={item.image ?? ''} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} loading="lazy" />
-                  </div>
                   <div class="min-w-0 flex-1">
                     <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
-                      {item.name}
+                      <span class="js-item-name">{item.name}</span>
                       {item.vegetarian && <span class="text-xs align-middle" title={t(common.vegetarienUniquement, lang)}>🌱</span>}
                       <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
                         {t(common.epuise, lang)}
                       </span>
                     </h3>
-                    <p class="text-sm mt-1" style="color: var(--color-text-muted)">{t(item.description, lang)}</p>
+                    <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{t(item.description, lang)}</p>
                   </div>
                   <div class="flex flex-col items-end gap-2 shrink-0">
                     <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
@@ -642,13 +634,24 @@ const path = localizedPath('/menu', lang);
   document.addEventListener('astro:page-load', () => {
     if (!supabaseUrl || !supabaseAnonKey) return;
 
-    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available,station,image_url`, {
+    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available,station`, {
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
     })
       .then((res) => (res.ok ? res.json() : []))
       .then((rows) => {
-        applyStaticOverrides(rows.filter((r) => !r.name));
-        renderExtraDishes(rows.filter((r) => r.name));
+        // Which rows are an OVERRIDE of a dish this page already rendered
+        // vs a BRAND NEW dish added from the staff screen used to be "does
+        // it carry a name" — an override never used to set one. Now the
+        // staff screen also lets staff rename/re-describe an existing
+        // dish, so an override row carries a name too; the real
+        // distinguisher is whether its item_key matches a card already on
+        // this page (a real static item_key), read straight from the DOM
+        // this page just rendered rather than duplicating that list here.
+        const staticKeys = new Set(
+          [...document.querySelectorAll('.js-menu-item[data-item-key]')].map((el) => el.getAttribute('data-item-key'))
+        );
+        applyStaticOverrides(rows.filter((r) => staticKeys.has(r.item_key)));
+        renderExtraDishes(rows.filter((r) => !staticKeys.has(r.item_key)));
       })
       .catch(() => {
         // Network hiccup or Supabase not reachable — site keeps working
@@ -679,11 +682,28 @@ const path = localizedPath('/menu', lang);
           if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
           if (addBtn) addBtn.setAttribute('data-price', String(override.price));
         }
-        if (override.image_url) {
-          const frame = card.querySelector('.js-item-photo-frame');
-          const img = card.querySelector('.js-item-photo');
-          if (img) img.setAttribute('src', override.image_url);
-          frame?.classList.remove('hidden');
+        // Renamed/re-described from the staff screen — the join key
+        // (data-item-key / data-id) never changes, only what's displayed.
+        let nameText = null;
+        let descText = null;
+        if (override.name) {
+          const nameEl = card.querySelector('.js-item-name');
+          if (nameEl) nameEl.textContent = override.name;
+          if (addBtn) addBtn.setAttribute('data-name', override.name);
+          nameText = override.name;
+        }
+        if (override.description != null) {
+          const descEl = card.querySelector('.js-item-desc');
+          if (descEl) descEl.textContent = override.description;
+          descText = override.description;
+        }
+        if (nameText || descText) {
+          // Keep the search box matching the text actually on screen —
+          // it was built from the static copy at render time and won't
+          // otherwise know a title/description changed.
+          const currentName = card.querySelector('.js-item-name')?.textContent || '';
+          const currentDesc = card.querySelector('.js-item-desc')?.textContent || '';
+          card.setAttribute('data-search', `${currentName} ${currentDesc}`.toLowerCase());
         }
       });
     }
@@ -705,14 +725,9 @@ const path = localizedPath('/menu', lang);
           const station = row.station === 'bar' ? 'bar' : 'cuisine';
           return `
             <div class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-item-key="${escapeHtml(row.item_key)}" data-search="${escapeHtml(search)}">
-              ${row.image_url ? `
-                <div class="photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20">
-                  <img class="w-full h-full object-cover" src="${escapeHtml(row.image_url)}" alt="${escapeHtml(row.name)}" loading="lazy" />
-                </div>
-              ` : ''}
               <div class="min-w-0 flex-1">
-                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">${escapeHtml(row.name)}</h3>
-                ${row.description ? `<p class="text-sm mt-1" style="color: var(--color-text-muted)">${escapeHtml(row.description)}</p>` : ''}
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)"><span class="js-item-name">${escapeHtml(row.name)}</span></h3>
+                ${row.description ? `<p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">${escapeHtml(row.description)}</p>` : ''}
                 ${row.category ? `<p class="text-xs mt-1 uppercase tracking-wide" style="color: var(--color-accent)">${escapeHtml(row.category)}</p>` : ''}
               </div>
               <div class="flex flex-col items-end gap-2 shrink-0">
