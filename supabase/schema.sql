@@ -96,29 +96,48 @@ create policy "reservations_update_anon" on public.reservations
 
 -- ----------------------------------------------------------------------------
 -- menu_items — lets the in-restaurant staff screen turn dishes on/off and
--- edit prices WITHOUT a code deploy. `item_key` is the dish name exactly as
--- it appears in src/content/menu-highlights.ts (e.g. 'Le Cheeseburger Moë')
--- — that's the join key the site's Menu page uses to look up an override,
--- not a separate id the staff screen has to know about.
+-- edit prices WITHOUT a code deploy, AND lets it add brand new dishes that
+-- don't exist in the site's code at all. `item_key` is the join key the
+-- site's Menu page uses to look up a row: for a dish that already exists in
+-- src/content/menu-highlights.ts, item_key is that dish's exact name (e.g.
+-- 'Le Cheeseburger Moë'); for a dish added FROM the staff screen, item_key
+-- is a slug the staff screen generates itself (see staff-screen/index.html)
+-- since there's no static entry to match against.
 --
--- Deliberately an OVERRIDE table, not the source of truth for the whole
--- menu: a row only needs to exist for a dish once staff actually changes
--- it (marks it sold out, or edits its price). Every dish with no row here
--- still shows at its normal price/available on the site — see the
--- `menu-items-sync` script on the Menu page (MenuContent.astro) for how
--- the merge happens client-side. This keeps the staff screen's editor
--- simple (edit only what changed) instead of requiring a full duplicate
+-- Two different things share this one table on purpose, both driven by the
+-- same "change without a code deploy" need:
+--   1. OVERRIDE of an existing static dish — only price/available are ever
+--      written for these; name/description/category stay null (the site's
+--      own copy is what's shown). Renaming or re-describing a dish that
+--      already ships in menu-highlights.ts still needs a real code change —
+--      see the standing honesty-of-content note elsewhere in this project;
+--      the staff screen deliberately doesn't pretend to support that.
+--   2. A wholly NEW dish, added from the staff screen — name/description/
+--      category/price are all set, and the site's Menu page renders an
+--      extra card for it (see MenuContent.astro's menu-items-sync script).
+--
+-- Every dish with no row here still shows at its normal price/available on
+-- the site. This keeps the staff screen's editor simple (edit only what
+-- changed, or add only what's new) instead of requiring a full duplicate
 -- menu to be seeded and kept in sync by hand.
 create table if not exists public.menu_items (
   id uuid primary key default gen_random_uuid(),
   updated_at timestamptz not null default now(),
   item_key text not null unique,
-  -- Optional, informational only (helps the staff screen group its editor
-  -- list) — not used by the site's lookup, which matches on item_key alone.
+  -- Set only for a NEW dish added from the staff screen (case 2 above) —
+  -- null for an override row on an existing static dish (case 1), where
+  -- the site's own name/description are always what's shown.
+  name text,
+  description text,
+  -- Informational for existing-dish overrides (not used by the site's
+  -- lookup there); the actual section heading a new dish is grouped under
+  -- for case 2 — matched by exact text against menu-highlights.ts's
+  -- category labels where possible, otherwise shown in its own section.
   category text,
-  -- Overrides. Null price means "use the site's own price for this item",
-  -- not "free" — the staff screen should always send a real number when it
-  -- writes a row, but null is handled safely either way.
+  -- Overrides. Null price means "use the site's own price for this item"
+  -- for an existing dish, not "free" — the staff screen should always send
+  -- a real number when it writes a row, but null is handled safely either
+  -- way.
   price numeric(10, 2),
   available boolean not null default true
 );

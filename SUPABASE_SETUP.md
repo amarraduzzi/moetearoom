@@ -48,10 +48,14 @@ build). Open `staff-screen/index.html`, fill in the same Project URL and
 anon key from step 3 at the top of the file, and deploy that folder on its
 own — see `staff-screen/README.md`.
 
-The staff screen also lets you mark a dish sold out or change its price
-without a code deploy (writes to the `menu_items` table `schema.sql`
-created) — the Menu page picks up those changes automatically on next
-page load.
+The staff screen has three tabs: live orders, live reservations (the site's
+reservation form writes straight to the `reservations` table this schema
+created — no extra wiring needed beyond this shared project), and a menu
+editor. That editor lets staff mark a dish sold out or change its price
+without a code deploy, AND add a brand new dish straight from the screen
+(writes to the `menu_items` table `schema.sql` created) — the Menu page
+picks up all of this automatically on next page load, no rebuild/redeploy
+of the main site needed.
 
 ## Notes
 

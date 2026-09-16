@@ -56,6 +56,11 @@ const copy = {
     en: 'Depending on the day and time — these formules aren\'t available for online ordering; reservation is recommended.',
     ar: 'حسب اليوم والوقت — لا يتوفر الطلب أونلاين لهذه العروض، ويُنصح بالحجز.',
   },
+  // Heading for dishes added from the staff screen (see the
+  // menu-extra-dishes section below) — deliberately generic rather than
+  // naming a specific category, since this section can hold dishes from
+  // several different categories at once.
+  nouveautesTitle: { fr: 'Nouveautés', en: 'New', ar: 'جديد' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
 const reservationPath = localizedPath('/reservation', lang);
 
@@ -237,6 +242,28 @@ const path = localizedPath('/menu', lang);
   <p id="menu-no-results" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-10 text-sm text-center" style="color: var(--color-text-muted)">
     {t(common.aucunPlatTrouve, lang)}
   </p>
+
+  <!-- Dishes added from the in-restaurant staff screen (menu_items rows
+       with no matching static item_key — see supabase/schema.sql's
+       comment on that table) — populated client-side by the
+       menu-items-sync script below. Deliberately its own section outside
+       the search/category-filter system above rather than injected into
+       one of the menuHighlights.map(...) categories: those categories and
+       the filter chips that drive them are static, built at build time,
+       while this content can appear seconds after a staff member adds it.
+       Bolting a live section onto a static filter index would mean either
+       re-querying every DOM list the filter script already captured (see
+       that script's own comment) or silently letting these dishes fall
+       outside search/category filtering while still claiming to be
+       filterable — same "don't half-support something" standard as the
+       rest of this project. Hidden until the sync script finds at least
+       one row. -->
+  <section id="menu-extra-dishes" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 scroll-mt-24">
+    <h2 class="font-display text-2xl font-semibold mb-5 pb-3" style="color: var(--color-text-primary); border-bottom: 1px solid var(--color-border)">
+      {t(copy.nouveautesTitle, lang)}
+    </h2>
+    <div id="menu-extra-dishes-grid" class="grid sm:grid-cols-2 gap-4"></div>
+  </section>
 
   <!-- Formules & moments — the client's day/time-window offers (Good
        Morning brunch, Déjeuner Moë, Rfissa/Couscous, Soirées, weekend
@@ -549,53 +576,140 @@ const path = localizedPath('/menu', lang);
   });
 </script>
 
-<script define:vars={{ supabaseUrl: siteConfig.ordering.supabaseUrl, supabaseAnonKey: siteConfig.ordering.supabaseAnonKey, currency: siteConfig.identity.currency }}>
-  // Applies staff-screen overrides (sold-out / price edits) from the
-  // `menu_items` table on top of the statically-rendered menu — see the
-  // long comment on that table in supabase/schema.sql for why this is a
-  // client-side merge (only changed dishes have a row) instead of the site
-  // reading its whole menu from Supabase. Safe no-op until
-  // siteConfig.ordering.supabaseUrl/supabaseAnonKey are set (same "still
-  // works without it" pattern as the cart's checkout — see
-  // CartWidget.astro), and safe to fail silently on a flaky connection:
-  // worst case the customer just sees the site's normal static prices.
+<script
+  define:vars={{
+    supabaseUrl: siteConfig.ordering.supabaseUrl,
+    supabaseAnonKey: siteConfig.ordering.supabaseAnonKey,
+    currency: siteConfig.identity.currency,
+    labels: { epuise: t(common.epuise, lang), ajouterAuPanier: t(common.ajouterAuPanier, lang), ajouter: t(common.ajouter, lang) },
+  }}
+>
+  // Applies staff-screen changes from the `menu_items` table on top of the
+  // statically-rendered menu — see the long comment on that table in
+  // supabase/schema.sql. Two different kinds of row, both fetched in one
+  // request:
+  //   1. Overrides of an EXISTING static dish (item_key matches a card
+  //      already on the page, row.name is null) — sold-out / price edits,
+  //      applied onto that card in place, same as before.
+  //   2. Brand new dishes ADDED from the staff screen (row.name is set,
+  //      item_key is a slug the staff screen generated, doesn't match any
+  //      static card) — rendered as extra cards in the #menu-extra-dishes
+  //      section below the normal categories (see that section's own
+  //      comment for why it's separate from the search/filter system).
+  //
+  // Safe no-op until siteConfig.ordering.supabaseUrl/supabaseAnonKey are
+  // set (same "still works without it" pattern as the cart's checkout —
+  // see CartWidget.astro), and safe to fail silently on a flaky
+  // connection: worst case the customer just sees the site's normal
+  // static menu with no staff-screen changes applied.
   document.addEventListener('astro:page-load', () => {
     if (!supabaseUrl || !supabaseAnonKey) return;
-    const cards = document.querySelectorAll('.js-menu-item');
-    if (!cards.length) return;
 
-    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,price,available`, {
+    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available`, {
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
     })
       .then((res) => (res.ok ? res.json() : []))
       .then((rows) => {
-        const overrides = new Map(rows.map((row) => [row.item_key, row]));
-        cards.forEach((card) => {
-          const key = card.getAttribute('data-item-key');
-          const override = key ? overrides.get(key) : null;
-          if (!override) return;
-
-          const addBtn = card.querySelector('.js-add-to-cart');
-          if (override.available === false) {
-            card.querySelector('.js-sold-out-badge')?.classList.remove('hidden');
-            card.style.opacity = '0.55';
-            if (addBtn) {
-              addBtn.setAttribute('disabled', 'true');
-              addBtn.style.pointerEvents = 'none';
-              addBtn.style.opacity = '0.5';
-            }
-          }
-          if (override.price != null) {
-            const priceEl = card.querySelector('.js-item-price');
-            if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
-            if (addBtn) addBtn.setAttribute('data-price', String(override.price));
-          }
-        });
+        applyStaticOverrides(rows.filter((r) => !r.name));
+        renderExtraDishes(rows.filter((r) => r.name));
       })
       .catch(() => {
         // Network hiccup or Supabase not reachable — site keeps working
         // with its normal static prices, deliberately no error shown.
       });
+
+    function applyStaticOverrides(overrideRows) {
+      const cards = document.querySelectorAll('.js-menu-item');
+      if (!cards.length) return;
+      const overrides = new Map(overrideRows.map((row) => [row.item_key, row]));
+      cards.forEach((card) => {
+        const key = card.getAttribute('data-item-key');
+        const override = key ? overrides.get(key) : null;
+        if (!override) return;
+
+        const addBtn = card.querySelector('.js-add-to-cart');
+        if (override.available === false) {
+          card.querySelector('.js-sold-out-badge')?.classList.remove('hidden');
+          card.style.opacity = '0.55';
+          if (addBtn) {
+            addBtn.setAttribute('disabled', 'true');
+            addBtn.style.pointerEvents = 'none';
+            addBtn.style.opacity = '0.5';
+          }
+        }
+        if (override.price != null) {
+          const priceEl = card.querySelector('.js-item-price');
+          if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
+          if (addBtn) addBtn.setAttribute('data-price', String(override.price));
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderExtraDishes(customRows) {
+      const available = customRows.filter((r) => r.available !== false);
+      if (!available.length) return;
+      const section = document.getElementById('menu-extra-dishes');
+      const grid = document.getElementById('menu-extra-dishes-grid');
+      if (!section || !grid) return;
+
+      grid.innerHTML = available
+        .map((row) => {
+          const search = `${row.name} ${row.description || ''}`.toLowerCase();
+          return `
+            <div class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-item-key="${escapeHtml(row.item_key)}" data-search="${escapeHtml(search)}">
+              <div class="min-w-0 flex-1">
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">${escapeHtml(row.name)}</h3>
+                ${row.description ? `<p class="text-sm mt-1" style="color: var(--color-text-muted)">${escapeHtml(row.description)}</p>` : ''}
+                ${row.category ? `<p class="text-xs mt-1 uppercase tracking-wide" style="color: var(--color-accent)">${escapeHtml(row.category)}</p>` : ''}
+              </div>
+              <div class="flex flex-col items-end gap-2 shrink-0">
+                <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">${row.price != null ? row.price : '—'} ${currency}</span>
+                <button type="button" class="js-add-to-cart menu-add-btn" data-id="${escapeHtml(row.item_key)}" data-name="${escapeHtml(row.name)}" data-price="${row.price != null ? row.price : 0}" aria-label="${escapeHtml(labels.ajouterAuPanier)} — ${escapeHtml(row.name)}">
+                  + ${escapeHtml(labels.ajouter)}
+                </button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
+      section.classList.remove('hidden');
+
+      // Wiring the new "Add" buttons happens in the OTHER script below
+      // (plain, no define:vars) rather than here — deliberately, not
+      // duplicated by accident. A `define:vars` script is never run
+      // through Vite (it has to stay literal inline HTML so Astro can
+      // inject the server value), so a dynamic `import('/src/lib/cart.ts')`
+      // written in THIS script would ship as a literal, unbundled path
+      // that 404s in production — that exact bug shipped here once already
+      // and was caught by testing this feature end-to-end against a built
+      // (not dev-server) copy of the site before delivering it, not just
+      // eyeballing the code. The plain script below IS run through Vite,
+      // where the same-looking import correctly resolves to a real bundled
+      // chunk — so this dispatches an event and lets that script do the
+      // wiring with its own already-working import.
+      document.dispatchEvent(new CustomEvent('menu-extra-dishes-rendered', { detail: { grid } }));
+
+      // Extra-section-only search: the main applyFilters() above captured
+      // its DOM lists before this section existed, so it never sees these
+      // cards (see the section's own comment) — this keeps just the search
+      // box working here too, independent of the category/veg chips.
+      const searchInput = document.getElementById('menu-search');
+      searchInput?.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        let anyVisible = false;
+        grid.querySelectorAll('.js-menu-item').forEach((card) => {
+          const match = !query || (card.getAttribute('data-search') || '').includes(query);
+          card.style.display = match ? '' : 'none';
+          if (match) anyVisible = true;
+        });
+        section.classList.toggle('hidden', !anyVisible);
+      });
+    }
   });
 </script>
 
@@ -604,8 +718,24 @@ const path = localizedPath('/menu', lang);
   // data-price attributes rendered above). Delegated + dynamically imports
   // src/lib/cart.ts, same pattern as CartWidget.astro, so this file doesn't
   // need to know anything about the cart's internals beyond addToCart().
+  //
+  // Also wires the extra "Add" buttons the menu-items-sync script above
+  // injects for staff-screen-added dishes, via the 'menu-extra-dishes-
+  // rendered' event that script dispatches instead of importing cart.ts
+  // itself — that script runs as `define:vars`, which Astro never sends
+  // through Vite (it has to stay literal inline HTML), so a dynamic
+  // import written there would ship as an unbundled path and 404 in
+  // production. This script is a normal module Vite DOES bundle, so the
+  // same import here resolves correctly — see that script's own comment.
   document.addEventListener('astro:page-load', () => {
-    const buttons = document.querySelectorAll('.js-add-to-cart');
+    wireAddToCartButtons(document.querySelectorAll('.js-add-to-cart'));
+
+    document.addEventListener('menu-extra-dishes-rendered', (e) => {
+      wireAddToCartButtons(e.detail.grid.querySelectorAll('.js-add-to-cart'));
+    });
+  });
+
+  function wireAddToCartButtons(buttons) {
     if (!buttons.length) return;
 
     import('/src/lib/cart.ts').then(({ addToCart }) => {
@@ -622,5 +752,5 @@ const path = localizedPath('/menu', lang);
         });
       });
     });
-  });
+  }
 </script>
