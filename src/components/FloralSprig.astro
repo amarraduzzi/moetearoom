@@ -1,0 +1,58 @@
+---
+// Subtle corner botanical accent — Amar's own asset (Sept 2026 request:
+// "we hebben op de kaart deze graphics. Kunnen we die ook subtiel op de
+// website toevoegen"), cut out from the same green line-art sprig
+// illustration already printed on the physical menu cards (the scan he
+// sent had a plain white background; that's been keyed out to alpha so it
+// sits naturally on the site's cream background instead of showing a white
+// box). Same treatment pattern as LogoWatermark.astro — absolute-positioned,
+// low opacity, needs a `relative overflow-hidden` parent — but a different
+// asset and a much lower default opacity: LogoWatermark is a bold brand
+// signature (8% but huge), this is meant to read as a quiet flourish in a
+// corner, closer to a printed card's own accent than a background texture.
+//
+// `flip` mirrors the artwork horizontally (see floral-sprig-flip.webp) —
+// the source sprig sweeps from bottom-left to top-right, so a flipped copy
+// is what you want in a top-left or bottom-right corner instead of
+// reusing the same orientation everywhere.
+interface Props {
+  corner?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  size?: string; // Tailwind width/height pair, e.g. 'w-40 sm:w-56'
+  opacity?: number;
+}
+const { corner = 'top-right', size = 'w-36 sm:w-52', opacity = 0.16 } = Astro.props;
+
+const flip = corner === 'top-left' || corner === 'bottom-right';
+const src = flip ? '/images/floral-sprig-flip.webp' : '/images/floral-sprig.webp';
+
+const positionClass =
+  corner === 'top-right'
+    ? '-top-4 -right-4 sm:-top-6 sm:-right-6'
+    : corner === 'top-left'
+      ? '-top-4 -left-4 sm:-top-6 sm:-left-6'
+      : corner === 'bottom-right'
+        ? '-bottom-4 -right-4 sm:-bottom-6 sm:-right-6'
+        : '-bottom-4 -left-4 sm:-bottom-6 sm:-left-6';
+
+// Bottom corners use the bottom-anchored half of the artwork (it's one
+// continuous sprig, top-heavy with the flower cluster) — flipping it
+// vertically too would point leaves the wrong way, so bottom placements
+// instead just flow off the edge naturally via the position offsets above;
+// no extra transform needed beyond the horizontal flip already handled.
+---
+<img
+  src={src}
+  alt=""
+  aria-hidden="true"
+  class={`floral-sprig pointer-events-none select-none absolute ${size} ${positionClass}`}
+  style={`opacity: ${opacity}`}
+  loading="lazy"
+  decoding="async"
+/>
+
+<style>
+  .floral-sprig {
+    height: auto;
+    z-index: 0;
+  }
+</style>

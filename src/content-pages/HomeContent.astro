@@ -10,6 +10,7 @@ import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import Ornament from '../components/Ornament.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
+import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
 import { getOrderCtaLabel } from '../lib/nav';
 import { menuHighlights } from '../content/menu-highlights';
@@ -239,15 +240,23 @@ const path = localizedPath('/', lang);
        the testimonial band) lifts it one step and ties it to the brand's
        warm-brown instead of leaving it flat. -->
   <div class="section-tint-warm">
-    <section class="max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
-      <div class="flex items-baseline justify-between mb-8 pb-3" style="border-bottom: 1px solid var(--color-border)">
-        <div>
-          <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-1" style="color: var(--color-accent)">{t(copy.selectionKicker, lang)}</span>
-          <h2 class="font-display text-2xl sm:text-3xl font-semibold" style="color: var(--color-text-primary)">{t(copy.incontournablesTitle, lang)}</h2>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 overflow-hidden">
+      {/* Same printed-menu sprig used on the Menu page (see FloralSprig.astro)
+          — Amar asked (Sept 2026) for the physical card's own botanical
+          graphic to also appear, subtly, on the site. Placed here rather
+          than stacked with the gold-wordmark LogoWatermark further down
+          this page, so the two decorative signatures don't compete in the
+          same viewport. */}
+      <FloralSprig corner="top-right" />
+      <div class="relative">
+        <div class="flex items-baseline justify-between mb-8 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <div>
+            <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-1" style="color: var(--color-accent)">{t(copy.selectionKicker, lang)}</span>
+            <h2 class="font-display text-2xl sm:text-3xl font-semibold" style="color: var(--color-text-primary)">{t(copy.incontournablesTitle, lang)}</h2>
+          </div>
+          <a href={localizedPath('/menu', lang)} class="text-sm font-bold" style="color: var(--color-accent)">{t(common.menuComplet, lang)} {arrow(lang)}</a>
         </div>
-        <a href={localizedPath('/menu', lang)} class="text-sm font-bold" style="color: var(--color-accent)">{t(common.menuComplet, lang)} {arrow(lang)}</a>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {highlightItems.map((item, i) => (
           <div
             class="card-lift rounded-2xl overflow-hidden relative"
@@ -335,6 +344,7 @@ const path = localizedPath('/', lang);
             </div>
           </div>
         ))}
+        </div>
       </div>
     </section>
   </div>

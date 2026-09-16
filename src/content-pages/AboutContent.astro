@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import Ornament from '../components/Ornament.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
+import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
 import { aggregateRating } from '../content/testimonials';
 import { t, localizedPath, type Language } from '../i18n/languages';
@@ -105,6 +106,12 @@ const path = localizedPath('/a-propos', lang);
        behind the whole band so it isn't just another flat tinted box. -->
   <div class="section-tint relative overflow-hidden">
     <div class="section-glow" style="width: 340px; height: 340px; background: var(--color-primary); opacity: 0.07; left: 50%; top: -120px; transform: translateX(-50%);"></div>
+    {/* Same printed-menu sprig used on the Menu/Home pages (see
+        FloralSprig.astro) — the client's own botanical graphic from the
+        physical menu cards, added sitewide on request (Sept 2026). Bottom
+        corner here since the top of this band is already busy with the
+        section-glow blur above. */}
+    <FloralSprig corner="bottom-left" />
     <section class="relative max-w-3xl mx-auto px-5 sm:px-8 py-16 sm:py-20">
       <div class="grid sm:grid-cols-3 gap-10 sm:gap-6">
         {[
