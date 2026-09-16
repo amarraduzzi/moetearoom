@@ -311,6 +311,45 @@
   .form-error { color: var(--danger); font-size: 0.82rem; margin: -4px 0 10px; }
 
   .config-warning { background: var(--danger); color: #fff; padding: 12px; text-align: center; font-weight: 700; }
+
+  /* ---- order-item station grouping + print tickets ------------------- */
+  .order-station-group { margin: 10px 0; }
+  .order-station-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+  }
+  .order-station-label.bar { color: var(--green); }
+  .order-station-label.cuisine { color: var(--brown); }
+  .order-print-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .btn-print { background: var(--surface-muted); color: var(--text); font-size: 0.76rem; padding: 7px 11px; }
+
+  /* Print tickets — a station's items rendered into #print-ticket right
+     before window.print() is called (see printTicket() in the script
+     below), then hidden again. The @media print rule hides EVERYTHING else
+     on the page so only the ticket comes out of whatever printer is
+     selected in the OS/browser print dialog — works the same whether
+     that's eventually a USB, network or Wi-Fi receipt printer, since that
+     choice happens in the print dialog, not in this code. */
+  #print-ticket { display: none; }
+  @media print {
+    body > *:not(#print-ticket) { display: none !important; }
+    #print-ticket {
+      display: block !important;
+      font-family: 'Courier New', monospace;
+      color: #000;
+      padding: 0;
+      width: 100%;
+    }
+    #print-ticket h2 { font-size: 1.3rem; margin: 0 0 4px; text-align: center; }
+    #print-ticket .ticket-meta { font-size: 0.85rem; text-align: center; margin-bottom: 10px; }
+    #print-ticket hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
+    #print-ticket .ticket-line { display: flex; justify-content: space-between; font-size: 0.95rem; padding: 2px 0; }
+    #print-ticket .ticket-notes { margin-top: 10px; font-size: 0.85rem; font-style: italic; }
+  }
 </style>
 </head>
 <body>
@@ -411,6 +450,15 @@
         <div class="form-grid full">
           <div class="form-field"><label for="dish-f-desc">Description</label><textarea id="dish-f-desc" rows="2" placeholder="Courte description affichée sous le nom du plat"></textarea></div>
         </div>
+        <div class="form-grid full">
+          <div class="form-field">
+            <label for="dish-f-station">Poste de préparation</label>
+            <select id="dish-f-station" required>
+              <option value="cuisine">🍽 Cuisine</option>
+              <option value="bar">☕ Bar</option>
+            </select>
+          </div>
+        </div>
         <p class="form-error" id="dish-f-error" style="display:none"></p>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Ajouter le plat</button>
@@ -421,6 +469,11 @@
       <div id="custom-dishes"></div>
     </section>
   </main>
+
+  <!-- Populated by printTicket() right before window.print(), then left as
+       whatever it last held (invisible on screen either way) — see the
+       @media print rule above. -->
+  <div id="print-ticket"></div>
 
 <script>
   // ==========================================================================
@@ -498,12 +551,56 @@
     }
   }
 
-  function orderCard(order) {
-    const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    const typeLabel = { dinein: 'Sur place', takeaway: 'À emporter', delivery: 'Livraison' }[order.order_type] || order.order_type;
-    const itemsHtml = (order.items || [])
+  const ORDER_TYPE_LABEL = { dinein: 'Sur place', takeaway: 'À emporter', delivery: 'Livraison' };
+  const STATION_LABEL = { bar: '☕ Bar', cuisine: '🍽 Cuisine' };
+
+  function stationGroupHtml(items, station) {
+    const group = items.filter((it) => (it.station === 'bar' ? 'bar' : 'cuisine') === station);
+    if (!group.length) return '';
+    const rows = group
       .map((it) => `<div><span>${it.quantity} × ${escapeHtml(it.name)}</span><span>${it.price * it.quantity} MAD</span></div>`)
       .join('');
+    return `
+      <div class="order-station-group">
+        <div class="order-station-label ${station}">${STATION_LABEL[station]}</div>
+        <div class="order-items">${rows}</div>
+      </div>
+    `;
+  }
+
+  // Builds a plain, monospace print-ready ticket for ONE station's items in
+  // ONE order into #print-ticket, then opens the browser's print dialog —
+  // see the @media print CSS above. Whichever printer ends up selected
+  // there (today: none, this is the "screen" half — see the standing note
+  // at the top of this file) is entirely the OS's business, not this
+  // page's; nothing here changes when a real receipt printer is wired up.
+  function printTicket(order, station) {
+    const items = (order.items || []).filter((it) => (it.station === 'bar' ? 'bar' : 'cuisine') === station);
+    if (!items.length) return;
+    const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = ORDER_TYPE_LABEL[order.order_type] || order.order_type;
+    const rows = items.map((it) => `<div class="ticket-line"><span>${it.quantity} × ${escapeHtml(it.name)}</span></div>`).join('');
+    const ticket = document.getElementById('print-ticket');
+    ticket.innerHTML = `
+      <h2>${STATION_LABEL[station]}</h2>
+      <div class="ticket-meta">
+        ${escapeHtml(order.order_ref || order.customer_name)} — ${time}<br />
+        ${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''}
+      </div>
+      <hr />
+      ${rows}
+      <hr />
+      ${order.notes ? `<div class="ticket-notes">"${escapeHtml(order.notes)}"</div>` : ''}
+    `;
+    window.print();
+  }
+
+  function orderCard(order) {
+    const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = ORDER_TYPE_LABEL[order.order_type] || order.order_type;
+    const items = order.items || [];
+    const hasBar = items.some((it) => it.station === 'bar');
+    const hasCuisine = items.some((it) => (it.station === 'bar' ? 'bar' : 'cuisine') === 'cuisine');
     const nextStatus = { pending: 'preparing', preparing: 'ready', ready: 'completed' }[order.status];
     const nextLabel = { preparing: 'Démarrer', ready: 'Prête', completed: 'Terminer' }[nextStatus];
 
@@ -515,9 +612,14 @@
         <span class="order-time">${time}</span>
       </div>
       <div class="order-meta">${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''}${order.customer_phone ? ' · ' + escapeHtml(order.customer_phone) : ''}</div>
-      <div class="order-items">${itemsHtml}</div>
+      ${stationGroupHtml(items, 'bar')}
+      ${stationGroupHtml(items, 'cuisine')}
       ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
       <div class="order-total">${order.total} MAD</div>
+      <div class="order-print-actions">
+        ${hasBar ? '<button class="btn btn-print" data-action="print-bar">🖨 Ticket bar</button>' : ''}
+        ${hasCuisine ? '<button class="btn btn-print" data-action="print-cuisine">🖨 Ticket cuisine</button>' : ''}
+      </div>
       <div class="order-actions">
         ${nextStatus ? `<button class="btn btn-primary" data-action="advance">${nextLabel}</button>` : ''}
         <button class="btn btn-danger" data-action="cancel">Annuler</button>
@@ -527,6 +629,8 @@
     el.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
       if (confirm('Annuler cette commande ?')) updateOrderStatus(order.id, 'cancelled');
     });
+    el.querySelector('[data-action="print-bar"]')?.addEventListener('click', () => printTicket(order, 'bar'));
+    el.querySelector('[data-action="print-cuisine"]')?.addEventListener('click', () => printTicket(order, 'cuisine'));
     return el;
   }
 
@@ -862,7 +966,7 @@
       <div class="grow">
         <div class="dish-name">${escapeHtml(row.name)} ${available ? '' : '<span class="status-badge cancelled">Épuisé</span>'}</div>
         ${row.description ? `<div class="dish-desc">${escapeHtml(row.description)}</div>` : ''}
-        <div class="dish-cat">${escapeHtml(row.category || 'Sans catégorie')} · ${row.price != null ? row.price + ' MAD' : '—'}</div>
+        <div class="dish-cat">${escapeHtml(row.category || 'Sans catégorie')} · ${row.price != null ? row.price + ' MAD' : '—'} · ${row.station === 'bar' ? '☕ Bar' : '🍽 Cuisine'}</div>
       </div>
       <div class="order-actions">
         <button class="btn btn-secondary" data-action="toggle">${available ? 'Marquer épuisé' : 'Marquer disponible'}</button>
@@ -925,6 +1029,7 @@
     const category = document.getElementById('dish-f-category').value.trim();
     const price = Number(document.getElementById('dish-f-price').value);
     const description = document.getElementById('dish-f-desc').value.trim();
+    const station = document.getElementById('dish-f-station').value === 'bar' ? 'bar' : 'cuisine';
     if (!name || !category || !price) {
       errorEl.textContent = 'Merci de remplir le nom, la catégorie et le prix.';
       errorEl.style.display = 'block';
@@ -941,6 +1046,7 @@
           category,
           price,
           available: true,
+          station,
         }),
       });
       dishAddForm.reset();

@@ -143,7 +143,17 @@ create table if not exists public.menu_items (
   -- a real number when it writes a row, but null is handled safely either
   -- way.
   price numeric(10, 2),
-  available boolean not null default true
+  available boolean not null default true,
+  -- Which prep station this dish routes to on the staff screen — 'bar' or
+  -- 'cuisine'. Only meaningful for a NEW dish (case 2); an existing static
+  -- dish already has its station from MenuContent.astro's own
+  -- STATION_BY_CATEGORY map and doesn't need an override row for it.
+  station text,
+  -- Optional photo. For an override row (case 1) this REPLACES the site's
+  -- own static photo for that dish; for a new dish (case 2) it's the only
+  -- photo source. Null means "no photo" (new dish) or "keep the site's
+  -- static photo" (override) — never treated as "remove the photo".
+  image_url text
 );
 
 alter table public.menu_items enable row level security;
@@ -187,3 +197,32 @@ alter publication supabase_realtime add table public.menu_items;
 -- dine-in orders (customer is physically at the table) — this column was
 -- originally "not null". Run this once on an existing project:
 alter table public.orders alter column customer_phone drop not null;
+
+-- Sept 2026: bar/cuisine routing + dish photos. Run this once on an
+-- existing project (both statements are safe to re-run):
+alter table public.menu_items add column if not exists station text;
+alter table public.menu_items add column if not exists image_url text;
+
+-- ----------------------------------------------------------------------------
+-- Storage — 'menu-photos' bucket for dish photos uploaded from the staff
+-- screen (new dishes and existing-dish overrides). Public read (photos are
+-- shown on the public site), anon insert/update (same v1 trade-off as the
+-- tables above — no staff login gate on the Storage API itself, only on the
+-- /screen route serving the upload UI). Run this once, new project or
+-- existing — it's idempotent.
+-- ----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('menu-photos', 'menu-photos', true)
+on conflict (id) do nothing;
+
+create policy "menu_photos_read_public" on storage.objects
+  for select to public
+  using (bucket_id = 'menu-photos');
+
+create policy "menu_photos_insert_anon" on storage.objects
+  for insert to anon
+  with check (bucket_id = 'menu-photos');
+
+create policy "menu_photos_update_anon" on storage.objects
+  for update to anon
+  using (bucket_id = 'menu-photos');

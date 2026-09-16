@@ -22,6 +22,15 @@ export interface CartLine {
   price: number;
   quantity: number;
   note?: string;
+  /** Which prep station makes this item — set once at add-to-cart time from
+   *  the menu card's data-station attribute (see MenuContent.astro), never
+   *  guessed later by name-matching. Defaults to 'cuisine' for any line
+   *  added before this field existed (old localStorage carts) or where a
+   *  card is somehow missing the attribute — food is the safer default
+   *  since a drink silently routed to the kitchen is a smaller problem than
+   *  the reverse. Read by CartWidget.astro to group the WhatsApp message
+   *  and the Supabase order payload by station for the staff screen. */
+  station?: 'bar' | 'cuisine';
 }
 
 const STORAGE_KEY = 'moe-tea-room-cart-v1';
@@ -55,13 +64,19 @@ export function getCart(): CartLine[] {
   return readCart();
 }
 
-export function addToCart(id: string, name: string, price: number, quantity = 1): CartLine[] {
+export function addToCart(
+  id: string,
+  name: string,
+  price: number,
+  quantity = 1,
+  station: 'bar' | 'cuisine' = 'cuisine'
+): CartLine[] {
   const lines = readCart();
   const existing = lines.find((l) => l.id === id);
   if (existing) {
     existing.quantity += quantity;
   } else {
-    lines.push({ id, name, price, quantity });
+    lines.push({ id, name, price, quantity, station });
   }
   writeCart(lines);
   return lines;

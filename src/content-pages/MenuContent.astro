@@ -23,6 +23,28 @@ const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
 const city = t(place.city, lang);
 const orderCtaLabel = getOrderCtaLabel(lang);
 
+// Which prep station makes each category, keyed by the category's French
+// label (always present, unlike a translated one) — stamped onto each
+// "Add to cart" button below as data-station, read by cart.ts's addToCart
+// so an order line carries its station from the moment it's added, rather
+// than the staff screen trying to re-derive it later by matching names
+// against a second, easily-stale list (see the standing note on the old
+// staff-screen MENU_ITEMS array being incomplete/out of sync with this
+// file — a brand-new dish added from the staff screen sets its own station
+// explicitly in that form instead, see staff-screen/index.html).
+const STATION_BY_CATEGORY: Record<string, 'bar' | 'cuisine'> = {
+  'Menu sur le pouce': 'cuisine',
+  'Boissons Chaudes': 'bar',
+  'Thés et Infusions': 'bar',
+  'Notre Expérience Éclair': 'cuisine',
+  'Boulangerie et Viennoiseries': 'cuisine',
+  'Jus Frais & Mocktails': 'bar',
+  'Milkshakes, Frappés & Glacés': 'bar',
+};
+function stationFor(categoryLabelFr: string): 'bar' | 'cuisine' {
+  return STATION_BY_CATEGORY[categoryLabelFr] ?? 'cuisine';
+}
+
 const copy = {
   metaTitle: {
     fr: `Menu — ${primaryKeyword} à ${city} | ${name}`,
@@ -199,11 +221,9 @@ const path = localizedPath('/menu', lang);
                   data-cat={i}
                   data-search={`${item.name} ${t(item.description, lang)}`.toLowerCase()}
                 >
-                  {item.image && (
-                    <div class="photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20">
-                      <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                  )}
+                  <div class="js-item-photo-frame photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20" class:list={{ hidden: !item.image }}>
+                    <img class="js-item-photo w-full h-full object-cover" src={item.image ?? ''} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} loading="lazy" />
+                  </div>
                   <div class="min-w-0 flex-1">
                     <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
                       {item.name}
@@ -222,6 +242,7 @@ const path = localizedPath('/menu', lang);
                       data-id={`${i}-${j}`}
                       data-name={item.name}
                       data-price={item.price}
+                      data-station={stationFor(category.label.fr)}
                       aria-label={`${t(common.ajouterAuPanier, lang)} — ${item.name}`}
                     >
                       + {t(common.ajouter, lang)}
@@ -605,7 +626,7 @@ const path = localizedPath('/menu', lang);
   document.addEventListener('astro:page-load', () => {
     if (!supabaseUrl || !supabaseAnonKey) return;
 
-    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available`, {
+    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available,station,image_url`, {
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
     })
       .then((res) => (res.ok ? res.json() : []))
@@ -642,6 +663,12 @@ const path = localizedPath('/menu', lang);
           if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
           if (addBtn) addBtn.setAttribute('data-price', String(override.price));
         }
+        if (override.image_url) {
+          const frame = card.querySelector('.js-item-photo-frame');
+          const img = card.querySelector('.js-item-photo');
+          if (img) img.setAttribute('src', override.image_url);
+          frame?.classList.remove('hidden');
+        }
       });
     }
 
@@ -659,8 +686,14 @@ const path = localizedPath('/menu', lang);
       grid.innerHTML = available
         .map((row) => {
           const search = `${row.name} ${row.description || ''}`.toLowerCase();
+          const station = row.station === 'bar' ? 'bar' : 'cuisine';
           return `
             <div class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-item-key="${escapeHtml(row.item_key)}" data-search="${escapeHtml(search)}">
+              ${row.image_url ? `
+                <div class="photo-frame shrink-0 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20">
+                  <img class="w-full h-full object-cover" src="${escapeHtml(row.image_url)}" alt="${escapeHtml(row.name)}" loading="lazy" />
+                </div>
+              ` : ''}
               <div class="min-w-0 flex-1">
                 <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">${escapeHtml(row.name)}</h3>
                 ${row.description ? `<p class="text-sm mt-1" style="color: var(--color-text-muted)">${escapeHtml(row.description)}</p>` : ''}
@@ -668,7 +701,7 @@ const path = localizedPath('/menu', lang);
               </div>
               <div class="flex flex-col items-end gap-2 shrink-0">
                 <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">${row.price != null ? row.price : '—'} ${currency}</span>
-                <button type="button" class="js-add-to-cart menu-add-btn" data-id="${escapeHtml(row.item_key)}" data-name="${escapeHtml(row.name)}" data-price="${row.price != null ? row.price : 0}" aria-label="${escapeHtml(labels.ajouterAuPanier)} — ${escapeHtml(row.name)}">
+                <button type="button" class="js-add-to-cart menu-add-btn" data-id="${escapeHtml(row.item_key)}" data-name="${escapeHtml(row.name)}" data-price="${row.price != null ? row.price : 0}" data-station="${station}" aria-label="${escapeHtml(labels.ajouterAuPanier)} — ${escapeHtml(row.name)}">
                   + ${escapeHtml(labels.ajouter)}
                 </button>
               </div>
@@ -744,8 +777,9 @@ const path = localizedPath('/menu', lang);
           const id = btn.getAttribute('data-id');
           const name = btn.getAttribute('data-name');
           const price = Number(btn.getAttribute('data-price'));
+          const station = btn.getAttribute('data-station') === 'bar' ? 'bar' : 'cuisine';
           if (!id || !name || Number.isNaN(price)) return;
-          addToCart(id, name, price, 1);
+          addToCart(id, name, price, 1, station);
 
           btn.classList.add('is-added');
           window.setTimeout(() => btn.classList.remove('is-added'), 500);

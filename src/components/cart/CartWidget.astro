@@ -974,10 +974,24 @@ const { currency, name: restaurantName } = siteConfig.identity;
         if (phoneInput.value.trim()) msgLines.push(`*Tél:* ${phoneInput.value.trim()}`);
         msgLines.push('---------------------------------------');
         msgLines.push('*DÉTAIL DE LA COMMANDE:*');
-        msgLines.push('');
-        lines.forEach((line, idx) => {
-          msgLines.push(`${idx + 1}. *${line.quantity}x ${line.name}* — ${line.price * line.quantity} ${currency}`);
-        });
+        // Grouped by prep station (☕ Bar / 🍽 Cuisine) so whoever reads this
+        // WhatsApp message — same as the staff screen's order cards — can
+        // route each part without re-reading the whole list. `line.station`
+        // is set at add-to-cart time (see cart.ts / MenuContent.astro's
+        // data-station), defaulting to cuisine for any older cart line that
+        // predates this field.
+        const barLines = lines.filter((l) => l.station === 'bar');
+        const cuisineLines = lines.filter((l) => l.station !== 'bar');
+        const pushGroup = (label, group) => {
+          if (!group.length) return;
+          msgLines.push('');
+          msgLines.push(`_${label}_`);
+          group.forEach((line) => {
+            msgLines.push(`${line.quantity}x ${line.name} — ${line.price * line.quantity} ${currency}`);
+          });
+        };
+        pushGroup('☕ BAR', barLines);
+        pushGroup('🍽 CUISINE', cuisineLines);
         msgLines.push('---------------------------------------');
         if (notesInput.value.trim()) msgLines.push(`*Note:* ${notesInput.value.trim()}`);
         msgLines.push(`*TOTAL À PAYER:* *${total} ${currency}*`);
@@ -1007,7 +1021,7 @@ const { currency, name: restaurantName } = siteConfig.identity;
               customer_phone: phoneInput.value.trim() || null,
               order_type: mode,
               address_or_table: addressOrTable || null,
-              items: lines.map((l) => ({ name: l.name, quantity: l.quantity, price: l.price })),
+              items: lines.map((l) => ({ name: l.name, quantity: l.quantity, price: l.price, station: l.station === 'bar' ? 'bar' : 'cuisine' })),
               total,
               notes: notesInput.value.trim() || null,
               status: 'pending',
