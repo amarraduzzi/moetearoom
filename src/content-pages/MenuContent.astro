@@ -125,13 +125,22 @@ const path = localizedPath('/menu', lang);
         class="absolute inset-0 w-full h-full object-cover"
       />
     </div>
-    <div class="absolute inset-0" style="background: linear-gradient(0deg, var(--color-background) 12%, color-mix(in srgb, var(--color-background) 40%, transparent) 55%, color-mix(in srgb, var(--color-background) 60%, transparent) 100%)"></div>
+    <!-- Same fix already proven on Home's own hero (see HomeContent.astro's
+         comment above its vignette): this photo is naturally pale (white
+         box, light background), so a light cream tint on top of it just
+         washed the whole thing out instead of darkening it — the text
+         color was the wrong half of the fix too, since dark-brown heading
+         text only reads against that same light wash. Switching to a dark
+         photographic vignette + near-white text keeps the photo crisp and
+         still guarantees contrast for the title, the same approach used on
+         Home instead of a one-off. -->
+    <div class="absolute inset-0" style="background: linear-gradient(0deg, rgba(58,42,30,0.78) 0%, rgba(58,42,30,0.4) 45%, rgba(58,42,30,0.08) 75%, transparent 100%)"></div>
     <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-12 sm:pb-16 w-full">
-      <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: var(--color-accent)">{city}</span>
-      <h1 class="font-display text-3xl sm:text-5xl lg:text-6xl font-semibold" style="color: var(--color-text-primary)">
+      <span class="hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
+      <h1 class="hero-shadow font-display text-3xl sm:text-5xl lg:text-6xl font-semibold" style="color: #FFFCF3">
         {t(copy.heroTitle, lang)}
       </h1>
-      <p class="mt-4 max-w-xl text-sm sm:text-base" style="color: var(--color-text-muted)">
+      <p class="hero-shadow mt-4 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.9)">
         {t(copy.heroSubtitle, lang)}
       </p>
     </div>
@@ -336,6 +345,13 @@ const path = localizedPath('/menu', lang);
 </Layout>
 
 <style>
+  /* Same text-shadow used on Home's hero (see HomeContent.astro) — Astro
+     scopes <style> per file, so this can't be shared, just kept identical.
+     Gives the near-white hero heading a hairline of separation from the
+     photo without reading as a sticker/stroke effect. */
+  .hero-shadow {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
+  }
   .menu-search-icon {
     /* Logical inset instead of `left` — automatically sits on the right
        for Arabic pages, mirroring how the arrow icons elsewhere in this

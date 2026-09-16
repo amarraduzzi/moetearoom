@@ -122,12 +122,18 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
 <Layout title={t(copy.metaTitle, lang)} description={t(copy.metaDescription, lang)} path={path} lang={lang}>
   <section id="rsv-hero" class="relative h-[42vh] min-h-[320px] sm:h-[48vh] sm:min-h-[380px] flex items-center overflow-hidden">
     <img src="/images/interior-1.webp" alt={t(copy.heroAlt, lang)} class="absolute inset-0 w-full h-full object-cover" />
-    <div class="absolute inset-0" style="background: linear-gradient(0deg, var(--color-background) 12%, color-mix(in srgb, var(--color-background) 40%, transparent) 55%, color-mix(in srgb, var(--color-background) 60%, transparent) 100%)"></div>
+    <!-- Same fix as Menu's hero (see MenuContent.astro's comment): this
+         photo is naturally pale, so the old light cream tint washed it out
+         instead of darkening it. Text sits vertically centered here rather
+         than bottom-anchored, so the vignette is a near-flat dark wash
+         instead of Menu's bottom-heavy gradient — same near-white text on
+         top of it, following Home's hero pattern. -->
+    <div class="absolute inset-0" style="background: linear-gradient(0deg, rgba(58,42,30,0.58) 0%, rgba(58,42,30,0.5) 100%)"></div>
     <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
       <div class="max-w-md">
-        <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: var(--color-accent)">{city}</span>
-        <h1 class="font-display text-3xl sm:text-5xl font-semibold" style="color: var(--color-text-primary)">{t(copy.heroTitle, lang)}</h1>
-        <p class="mt-4 text-sm sm:text-base leading-relaxed" style="color: var(--color-text-muted)">{t(copy.heroSubtitle, lang)}</p>
+        <span class="rsv-hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
+        <h1 class="rsv-hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">{t(copy.heroTitle, lang)}</h1>
+        <p class="rsv-hero-shadow mt-4 text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.9)">{t(copy.heroSubtitle, lang)}</p>
       </div>
     </div>
   </section>
@@ -234,6 +240,12 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
 </Layout>
 
 <style>
+  /* Same hero text-shadow as Home/Menu (kept local — Astro scopes <style>
+     per file) so the near-white heading stays crisp against the darkened
+     photo without a stroke/sticker look. */
+  .rsv-hero-shadow {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
+  }
   .rsv-label {
     display: block;
     font-size: 0.7rem;
