@@ -492,6 +492,17 @@ const path = localizedPath('/', lang);
     </section>
   </div>
 
+  <!-- section-tint (gallery, above) uses --color-surface and the plain
+       page background below it is --color-background — on this light
+       cream theme those two are only a few percent apart in lightness, so
+       the section boundary was nearly invisible (flagged Sept 2026: no
+       "scheiding" between the photo grid and the features band below it).
+       Reordering wouldn't fix that — the same two near-identical tones
+       would still touch, just in the other order. A deliberate divider
+       (already the site's own pattern for marking a transition, see
+       Ornament.astro) is what actually reads as a break. -->
+  <Ornament />
+
   <!-- Why us / E-E-A-T signals -->
   <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 grid sm:grid-cols-3 gap-8 overflow-hidden">
     <LogoWatermark size="w-[22rem] h-[22rem]" />
