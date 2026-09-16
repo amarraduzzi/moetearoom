@@ -204,14 +204,10 @@ export const siteConfig: SiteConfig = {
     facebookUrl: 'https://www.facebook.com/61580975256089/',
   },
   ordering: {
-    // TODO — create a free Supabase project (supabase.new), run
-    // supabase/schema.sql in its SQL editor, then paste the Project URL and
-    // the "anon / publishable" key here (Project Settings → API). Until
-    // these are filled in, checkout still sends the order via WhatsApp
-    // fine — only the live staff-screen sync won't work. See
-    // SUPABASE_SETUP.md.
-    supabaseUrl: '',
-    supabaseAnonKey: '',
+    // Live Supabase project (created Sept 2026) — schema.sql run, staff
+    // screen points at the same project. See SUPABASE_SETUP.md.
+    supabaseUrl: 'https://jkqrtpxhxxtviizgihox.supabase.co',
+    supabaseAnonKey: 'sb_publishable_nFOrexvp2LZuQ0KxiuwwWQ_acLTUrrf',
   },
   social: {
     // Real numbers from the client's Google Business Profile (see the
