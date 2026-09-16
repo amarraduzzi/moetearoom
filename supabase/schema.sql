@@ -27,7 +27,11 @@ create table if not exists public.orders (
   created_at timestamptz not null default now(),
   order_ref text,
   customer_name text not null,
-  customer_phone text not null,
+  -- Nullable: the checkout form only asks for a phone number for takeaway/
+  -- delivery orders — dine-in customers are physically at the table, so
+  -- staff don't need a callback number for those (see CartWidget.astro's
+  -- applyMode()).
+  customer_phone text,
   -- 'dinein' | 'takeaway' | 'delivery'
   order_type text not null default 'dinein',
   -- table number (dine-in) or delivery address (delivery) — one free-text
@@ -171,3 +175,15 @@ create policy "menu_items_update_anon" on public.menu_items
 alter publication supabase_realtime add table public.orders;
 alter publication supabase_realtime add table public.reservations;
 alter publication supabase_realtime add table public.menu_items;
+
+-- ----------------------------------------------------------------------------
+-- MIGRATIONS — one-off statements for a project that already ran an older
+-- version of this file. Safe to run again if already applied (each guards
+-- itself). New projects don't need these — the create table above already
+-- has the final shape.
+-- ----------------------------------------------------------------------------
+
+-- Sept 2026: the checkout form stopped requiring a phone number for
+-- dine-in orders (customer is physically at the table) — this column was
+-- originally "not null". Run this once on an existing project:
+alter table public.orders alter column customer_phone drop not null;

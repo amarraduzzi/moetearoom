@@ -514,7 +514,7 @@
         <span class="order-ref">${escapeHtml(order.order_ref || order.customer_name)}</span>
         <span class="order-time">${time}</span>
       </div>
-      <div class="order-meta">${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''} · ${escapeHtml(order.customer_phone)}</div>
+      <div class="order-meta">${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''}${order.customer_phone ? ' · ' + escapeHtml(order.customer_phone) : ''}</div>
       <div class="order-items">${itemsHtml}</div>
       ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
       <div class="order-total">${order.total} MAD</div>

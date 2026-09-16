@@ -33,15 +33,34 @@ const copy = {
   subtotal: { fr: 'Sous-total', en: 'Subtotal', ar: 'المجموع الفرعي' },
   continue: { fr: 'Passer la commande', en: 'Checkout', ar: 'إتمام الطلب' },
   back: { fr: 'Retour au panier', en: 'Back to cart', ar: 'العودة إلى السلة' },
+  coordinatesSection: { fr: 'Vos coordonnées', en: 'Your details', ar: 'بياناتك' },
   name: { fr: 'Nom complet', en: 'Full name', ar: 'الاسم الكامل' },
-  phone: { fr: 'Téléphone (WhatsApp de préférence)', en: 'Phone (WhatsApp preferred)', ar: 'الهاتف (يفضل واتساب)' },
-  mode: { fr: 'Mode', en: 'Mode', ar: 'طريقة الطلب' },
+  namePlaceholder: { fr: 'Ex : Fatima Zahra', en: 'E.g. Fatima Zahra', ar: 'مثال: فاطمة الزهراء' },
+  phone: { fr: 'Téléphone / WhatsApp', en: 'Phone / WhatsApp', ar: 'الهاتف / واتساب' },
+  phonePlaceholder: { fr: 'Ex : +212 6 00 00 00 00', en: 'E.g. +212 6 00 00 00 00', ar: 'مثال: 00 00 00 00 6 212+' },
+  mode: { fr: 'Mode de commande', en: 'Order type', ar: 'طريقة الطلب' },
   modeDineIn: { fr: 'Sur place', en: 'Dine-in', ar: 'في المكان' },
   modeTakeaway: { fr: 'À emporter', en: 'Takeaway', ar: 'سفري' },
   modeDelivery: { fr: 'Livraison', en: 'Delivery', ar: 'توصيل' },
   table: { fr: 'Numéro de table', en: 'Table number', ar: 'رقم الطاولة' },
+  tablePlaceholder: { fr: 'Ex : 12', en: 'E.g. 12', ar: 'مثال: 12' },
   address: { fr: 'Adresse de livraison', en: 'Delivery address', ar: 'عنوان التوصيل' },
-  notes: { fr: 'Remarque (optionnel)', en: 'Note (optional)', ar: 'ملاحظة (اختياري)' },
+  addressPlaceholder: {
+    fr: `Ex : Appt 5, Immeuble B, ${siteConfig.identity.city}`,
+    en: `E.g. Apt 5, Building B, ${siteConfig.identity.city}`,
+    ar: `مثال: شقة 5، عمارة ب، ${siteConfig.identity.city}`,
+  },
+  addressHint: {
+    fr: 'Pour une localisation plus précise, vous pouvez aussi partager votre position en direct via l’icône 📎 dans WhatsApp après l’envoi de la commande.',
+    en: 'For a more precise location, you can also share your live position via the 📎 icon in WhatsApp after sending the order.',
+    ar: 'لمزيد من الدقة، يمكنك أيضًا مشاركة موقعك المباشر عبر أيقونة 📎 في واتساب بعد إرسال الطلب.',
+  },
+  notes: { fr: 'Remarques & allergies (optionnel)', en: 'Notes & allergies (optional)', ar: 'ملاحظات وحساسية (اختياري)' },
+  notesPlaceholder: {
+    fr: 'Ex : Moins épicé, sans oignons, sauce à part...',
+    en: 'E.g. Less spicy, no onions, sauce on the side...',
+    ar: 'مثال: أقل حرارة، بدون بصل، الصلصة جانبًا...',
+  },
   submit: { fr: 'Envoyer via WhatsApp', en: 'Send via WhatsApp', ar: 'إرسال عبر واتساب' },
   submitting: { fr: 'Envoi...', en: 'Sending...', ar: 'جارٍ الإرسال...' },
   fieldRequired: { fr: 'Ce champ est requis.', en: 'This field is required.', ar: 'هذا الحقل مطلوب.' },
@@ -83,10 +102,29 @@ const { currency, name: restaurantName } = siteConfig.identity;
   <div id="cart-overlay" class="cart-overlay" aria-hidden="true">
     <div id="cart-panel" class="cart-panel" role="dialog" aria-modal="true" aria-label={t(copy.cartTitle, lang)}>
       <div class="cart-panel-header">
-        <h2 class="font-display text-lg font-semibold" style="color: var(--color-text-primary)">{t(copy.cartTitle, lang)}</h2>
+        <div class="cart-panel-heading">
+          <span class="cart-avatar" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6" />
+              <path d="M4.5 19.5c1.7-4.1 4.3-6 7.5-6s5.8 1.9 7.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </span>
+          <div>
+            <h2 class="font-display text-lg font-semibold" style="color: var(--color-text-primary)">{t(copy.cartTitle, lang)}</h2>
+            <p id="cart-items-count" class="cart-items-count"></p>
+          </div>
+        </div>
         <button id="cart-close" type="button" class="cart-icon-btn" aria-label={t(copy.close, lang)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
+      </div>
+
+      <div class="cart-steps" aria-hidden="true">
+        <span class="cart-step-dot is-active" data-step="lines"></span>
+        <span class="cart-step-line"></span>
+        <span class="cart-step-dot" data-step="checkout"></span>
+        <span class="cart-step-line"></span>
+        <span class="cart-step-dot" data-step="success"></span>
       </div>
 
       <!-- Step 1: line items -->
@@ -108,36 +146,75 @@ const { currency, name: restaurantName } = siteConfig.identity;
       <!-- Step 2: checkout form -->
       <div id="cart-step-checkout" class="cart-step hidden">
         <button id="cart-back-to-lines" type="button" class="cart-back-link">← {t(copy.back, lang)}</button>
-        <form id="cart-checkout-form" novalidate class="mt-3">
+        <p class="cart-section-label mt-3">{t(copy.coordinatesSection, lang)}</p>
+        <form id="cart-checkout-form" novalidate>
+          <div class="cart-field">
+            <label class="cart-label">{t(copy.mode, lang)}</label>
+            <div class="cart-segmented cart-segmented-modes" id="co-mode-segmented" role="tablist">
+              <button type="button" class="cart-segment" data-mode="delivery" role="tab" aria-selected="false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 7h11v8H3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /><path d="M14 10h3.5L20 13v2h-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /><circle cx="7" cy="17.5" r="1.6" stroke="currentColor" stroke-width="1.5" /><circle cx="16.5" cy="17.5" r="1.6" stroke="currentColor" stroke-width="1.5" /></svg>
+                <span>{t(copy.modeDelivery, lang)}</span>
+              </button>
+              <button type="button" class="cart-segment" data-mode="takeaway" role="tab" aria-selected="false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 9h14l-1.2 10.2a2 2 0 01-2 1.8H8.2a2 2 0 01-2-1.8L5 9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" /><path d="M8.5 9V7a3.5 3.5 0 017 0v2" stroke="currentColor" stroke-width="1.5" /></svg>
+                <span>{t(copy.modeTakeaway, lang)}</span>
+              </button>
+              <button type="button" class="cart-segment is-active" data-mode="dinein" role="tab" aria-selected="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3v8M4 3v5a2 2 0 002 2 2 2 0 002-2V3M8 11v10M18 3c-1.7 0-3 2-3 5.5S16.3 13 18 13m0-10v18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                <span>{t(copy.modeDineIn, lang)}</span>
+              </button>
+            </div>
+            <input type="hidden" id="co-mode" name="mode" value="dinein" />
+          </div>
           <div class="cart-field">
             <label class="cart-label" for="co-name">{t(copy.name, lang)}</label>
-            <input class="cart-input" type="text" id="co-name" name="name" autocomplete="name" required />
+            <div class="cart-input-wrap">
+              <svg class="cart-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.6" />
+                <path d="M4.5 19.5c1.7-4.1 4.3-6 7.5-6s5.8 1.9 7.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+              <input class="cart-input" type="text" id="co-name" name="name" autocomplete="name" placeholder={t(copy.namePlaceholder, lang)} required />
+            </div>
           </div>
-          <div class="cart-field">
+          <div class="cart-field cart-collapse" id="co-phone-field">
             <label class="cart-label" for="co-phone">{t(copy.phone, lang)}</label>
-            <input class="cart-input" type="tel" id="co-phone" name="phone" autocomplete="tel" required />
+            <div class="cart-input-wrap">
+              <svg class="cart-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7.5 4h2.3l1.1 3.4-1.7 1.4a9.5 9.5 0 004.6 4.6l1.4-1.7 3.4 1.1v2.3a1.5 1.5 0 01-1.6 1.5A12.5 12.5 0 016 6.1 1.5 1.5 0 017.5 4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <input class="cart-input" type="tel" id="co-phone" name="phone" autocomplete="tel" placeholder={t(copy.phonePlaceholder, lang)} />
+            </div>
           </div>
-          <div class="cart-field">
-            <label class="cart-label" for="co-mode">{t(copy.mode, lang)}</label>
-            <select class="cart-input" id="co-mode" name="mode">
-              <option value="dinein">{t(copy.modeDineIn, lang)}</option>
-              <option value="takeaway">{t(copy.modeTakeaway, lang)}</option>
-              <option value="delivery">{t(copy.modeDelivery, lang)}</option>
-            </select>
-          </div>
-          <div class="cart-field" id="co-table-field">
+          <div class="cart-field cart-collapse is-open" id="co-table-field">
             <label class="cart-label" for="co-table">{t(copy.table, lang)}</label>
-            <input class="cart-input" type="text" id="co-table" name="table" />
+            <input class="cart-input" type="text" id="co-table" name="table" placeholder={t(copy.tablePlaceholder, lang)} />
           </div>
-          <div class="cart-field hidden" id="co-address-field">
+          <div class="cart-field cart-collapse" id="co-address-field">
             <label class="cart-label" for="co-address">{t(copy.address, lang)}</label>
-            <input class="cart-input" type="text" id="co-address" name="address" />
+            <div class="cart-input-wrap">
+              <svg class="cart-field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 21s7-6.1 7-11a7 7 0 10-14 0c0 4.9 7 11 7 11z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                <circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <input class="cart-input" type="text" id="co-address" name="address" placeholder={t(copy.addressPlaceholder, lang)} />
+            </div>
+            <p class="cart-field-hint">📎 {t(copy.addressHint, lang)}</p>
           </div>
           <div class="cart-field">
             <label class="cart-label" for="co-notes">{t(copy.notes, lang)}</label>
-            <textarea class="cart-input" id="co-notes" name="notes" rows="2"></textarea>
+            <div class="cart-input-wrap">
+              <svg class="cart-field-icon cart-field-icon-top" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 4h11l3 3v13H5V4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+              <textarea class="cart-input" id="co-notes" name="notes" rows="2" placeholder={t(copy.notesPlaceholder, lang)}></textarea>
+            </div>
           </div>
           <button id="cart-submit" type="submit" class="cart-btn cart-btn-filled w-full mt-4">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 21l1.4-4.2A8 8 0 1110 19.6L3 21z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M8 10c0 3 3 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
             <span id="cart-submit-label">{t(copy.submit, lang)}</span>
           </button>
           <div id="cart-status" class="mt-3" aria-live="polite"></div>
@@ -156,7 +233,13 @@ const { currency, name: restaurantName } = siteConfig.identity;
         <div class="cart-success-callout mt-4">
           <p class="text-sm" style="color: var(--color-text-primary)">{t(copy.successBody, lang)}</p>
           <p class="text-xs mt-3" style="color: var(--color-text-muted)">{t(copy.successResend, lang)}</p>
-          <button id="cart-resend-wa" type="button" class="cart-btn cart-btn-filled w-full mt-2">{t(copy.successResendBtn, lang)}</button>
+          <button id="cart-resend-wa" type="button" class="cart-btn cart-btn-filled w-full mt-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M3 21l1.4-4.2A8 8 0 1110 19.6L3 21z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M8 10c0 3 3 6 6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            {t(copy.successResendBtn, lang)}
+          </button>
         </div>
         <button id="cart-reset" type="button" class="cart-btn cart-btn-outline mt-4">{t(copy.successAnother, lang)}</button>
       </div>
@@ -280,6 +363,46 @@ const { currency, name: restaurantName } = siteConfig.identity;
   .cart-icon-btn:hover {
     color: var(--color-accent);
   }
+  .cart-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .cart-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+    color: var(--color-accent);
+  }
+  .cart-items-count {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    margin-top: 0.1rem;
+  }
+  .cart-section-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.9rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .cart-field-hint {
+    display: flex;
+    gap: 0.4rem;
+    align-items: flex-start;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    margin: 0.5rem 0 0;
+  }
   .cart-step.hidden {
     display: none;
   }
@@ -360,6 +483,21 @@ const { currency, name: restaurantName } = siteConfig.identity;
   .cart-field.hidden {
     display: none;
   }
+  /* Table/address fields swap via a smooth height animation instead of an
+     abrupt display:none toggle when the delivery mode changes — see
+     applyMode() in the script below. */
+  .cart-collapse {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin-bottom 0.25s ease;
+  }
+  .cart-collapse.is-open {
+    max-height: 220px;
+    opacity: 1;
+    margin-bottom: 0.9rem;
+  }
   .cart-label {
     display: block;
     font-size: 0.7rem;
@@ -369,14 +507,41 @@ const { currency, name: restaurantName } = siteConfig.identity;
     margin-bottom: 0.35rem;
     color: var(--color-text-muted);
   }
+  /* Inputs sit on the panel's already-lifted surface, so a plain cream fill
+     (the old background-color: var(--color-background)) barely registered
+     against it — this gives fields a real, crisp surface of their own. */
+  .cart-input-wrap {
+    position: relative;
+  }
+  .cart-field-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+  [dir='rtl'] .cart-field-icon {
+    left: auto;
+    right: 0.85rem;
+  }
+  .cart-input-wrap .cart-input {
+    padding-left: 2.5rem;
+  }
+  [dir='rtl'] .cart-input-wrap .cart-input {
+    padding-left: 0.9rem;
+    padding-right: 2.5rem;
+  }
   .cart-input {
     width: 100%;
-    border-radius: 0.6rem;
-    padding: 0.7rem 0.9rem;
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.9rem;
     font-size: 0.875rem;
-    background-color: var(--color-background);
+    background-color: #fff;
     border: 1px solid var(--color-border);
+    box-shadow: 0 1px 2px rgba(58, 42, 30, 0.05);
     color: var(--color-text-primary);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .cart-input:focus {
     outline: none;
@@ -385,6 +550,99 @@ const { currency, name: restaurantName } = siteConfig.identity;
   }
   .cart-input.cart-invalid {
     border-color: #ff5a5a;
+  }
+  /* Segmented "Sur place / À emporter / Livraison" control, replacing the
+     old plain <select> — same visual language as the staff screen's filter
+     chips, so the two feel like one product. */
+  .cart-segmented {
+    display: flex;
+    gap: 4px;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: 0.8rem;
+    padding: 4px;
+  }
+  .cart-segment {
+    flex: 1;
+    text-align: center;
+    padding: 0.55rem 0.3rem;
+    border-radius: 0.6rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .cart-segment.is-active {
+    background-color: var(--color-accent);
+    color: var(--color-background);
+    box-shadow: 0 3px 10px -4px color-mix(in srgb, var(--color-accent) 70%, transparent);
+  }
+  /* The Mode selector specifically gets the taller icon-over-label card
+     treatment (bordered, not filled, like the reference layout); other
+     segmented controls in this file stay the compact pill style above. */
+  .cart-segmented-modes {
+    background: transparent;
+    border: none;
+    padding: 0;
+    gap: 8px;
+  }
+  .cart-segmented-modes .cart-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.7rem 0.4rem;
+    background-color: #fff;
+    border: 1.5px solid var(--color-border);
+    border-radius: 0.85rem;
+    font-size: 0.72rem;
+    box-shadow: 0 1px 2px rgba(58, 42, 30, 0.05);
+  }
+  .cart-segmented-modes .cart-segment.is-active {
+    background-color: color-mix(in srgb, var(--color-accent) 10%, #fff);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    box-shadow: 0 3px 10px -4px color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .cart-field-icon-top {
+    top: 0.85rem;
+    transform: none;
+  }
+  .cart-input-wrap textarea.cart-input {
+    padding-top: 0.7rem;
+    min-height: 4.5rem;
+  }
+  /* Step dots (Panier → Détails → Confirmation), updated by showStep() in
+     the script below. */
+  .cart-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding-bottom: 1rem;
+  }
+  .cart-step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--color-border);
+    transition: all 0.2s ease;
+  }
+  .cart-step-dot.is-active {
+    width: 9px;
+    height: 9px;
+    background-color: var(--color-accent);
+  }
+  .cart-step-dot.is-done {
+    background-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  }
+  .cart-step-line {
+    width: 22px;
+    height: 1px;
+    background-color: var(--color-border);
   }
   .cart-btn {
     display: inline-flex;
@@ -481,7 +739,9 @@ const { currency, name: restaurantName } = siteConfig.identity;
       const toCheckoutBtn = document.getElementById('cart-to-checkout');
       const backBtn = document.getElementById('cart-back-to-lines');
       const form = document.getElementById('cart-checkout-form');
-      const modeSelect = document.getElementById('co-mode');
+      const modeSegmented = document.getElementById('co-mode-segmented');
+      const modeInput = document.getElementById('co-mode');
+      const phoneField = document.getElementById('co-phone-field');
       const tableField = document.getElementById('co-table-field');
       const addressField = document.getElementById('co-address-field');
       const submitBtn = document.getElementById('cart-submit');
@@ -489,6 +749,7 @@ const { currency, name: restaurantName } = siteConfig.identity;
       const statusEl = document.getElementById('cart-status');
       const resetBtn = document.getElementById('cart-reset');
       const resendWaBtn = document.getElementById('cart-resend-wa');
+      const itemsCountEl = document.getElementById('cart-items-count');
 
       // Set right before window.open() in the submit handler below, reused
       // by the "Reopen WhatsApp" button on the success step — see the note
@@ -507,6 +768,12 @@ const { currency, name: restaurantName } = siteConfig.identity;
         },
       };
       const L = (key) => LABELS[key][lang] ?? LABELS[key].fr;
+      const ITEMS_COUNT_LABEL = (n) =>
+        ({
+          fr: `${n} article${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''}`,
+          en: `${n} item${n > 1 ? 's' : ''} selected`,
+          ar: `${n} صنف مختار`,
+        }[lang] ?? `${n}`);
 
       function renderLines() {
         const lines = cart.getCart();
@@ -538,6 +805,7 @@ const { currency, name: restaurantName } = siteConfig.identity;
         const count = cart.getCartCount(lines);
         badge.textContent = String(count);
         badge.classList.toggle('hidden', count === 0);
+        itemsCountEl.textContent = ITEMS_COUNT_LABEL(count);
       }
 
       function escapeHtml(str) {
@@ -570,9 +838,22 @@ const { currency, name: restaurantName } = siteConfig.identity;
         overlay.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
       }
+      const STEP_KEY = {
+        'cart-step-lines': 'lines',
+        'cart-step-checkout': 'checkout',
+        'cart-step-success': 'success',
+      };
+      const STEP_ORDER = ['lines', 'checkout', 'success'];
       function showStep(step) {
         [stepLines, stepCheckout, stepSuccess].forEach((el) => el.classList.add('hidden'));
         step.classList.remove('hidden');
+        const key = STEP_KEY[step.id];
+        const idx = STEP_ORDER.indexOf(key);
+        document.querySelectorAll('.cart-step-dot').forEach((dot) => {
+          const dotIdx = STEP_ORDER.indexOf(dot.dataset.step);
+          dot.classList.toggle('is-active', dot.dataset.step === key);
+          dot.classList.toggle('is-done', dotIdx < idx);
+        });
       }
 
       fab.addEventListener('click', () => {
@@ -614,10 +895,30 @@ const { currency, name: restaurantName } = siteConfig.identity;
         if (lastWaUrl) window.open(lastWaUrl, '_blank', 'noopener');
       });
 
-      modeSelect.addEventListener('change', () => {
-        const isDelivery = modeSelect.value === 'delivery';
-        tableField.classList.toggle('hidden', isDelivery);
-        addressField.classList.toggle('hidden', !isDelivery);
+      // Which contact fields a mode actually needs: dine-in staff can just
+      // walk to the table, so phone isn't required there (it still shows
+      // for takeaway/delivery, where a callback number matters — e.g. if
+      // the customer's own WhatsApp message never gets sent, see the
+      // success-step "Reopen WhatsApp" note above, staff still has a
+      // number to reach them on for takeaway/delivery specifically).
+      function applyMode(mode) {
+        modeInput.value = mode;
+        modeSegmented.querySelectorAll('.cart-segment').forEach((b) => {
+          const active = b.dataset.mode === mode;
+          b.classList.toggle('is-active', active);
+          b.setAttribute('aria-selected', String(active));
+        });
+        phoneField.classList.toggle('is-open', mode !== 'dinein');
+        tableField.classList.toggle('is-open', mode === 'dinein');
+        addressField.classList.toggle('is-open', mode === 'delivery');
+        if (mode === 'dinein') {
+          document.getElementById('co-phone').classList.remove('cart-invalid');
+        }
+      }
+      modeSegmented.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-mode]');
+        if (!btn) return;
+        applyMode(btn.dataset.mode);
       });
 
       form.addEventListener('submit', (e) => {
@@ -630,7 +931,11 @@ const { currency, name: restaurantName } = siteConfig.identity;
         const addressInput = document.getElementById('co-address');
         const notesInput = document.getElementById('co-notes');
 
-        const required = [nameInput, phoneInput];
+        const mode = modeInput.value;
+        // Phone is only required for takeaway/delivery — for dine-in the
+        // customer is physically at the table, so staff never need to call
+        // them back (see applyMode() above for the full reasoning).
+        const required = mode === 'dinein' ? [nameInput] : [nameInput, phoneInput];
         let firstInvalid = null;
         for (const el of required) {
           const empty = !el.value || el.value.trim() === '';
@@ -644,8 +949,6 @@ const { currency, name: restaurantName } = siteConfig.identity;
 
         const lines = cart.getCart();
         if (lines.length === 0) return;
-
-        const mode = modeSelect.value;
         const addressOrTable = mode === 'delivery' ? addressInput.value.trim() : tableInput.value.trim();
         const total = cart.getCartTotal(lines);
         const orderRef = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -668,7 +971,7 @@ const { currency, name: restaurantName } = siteConfig.identity;
         msgLines.push('---------------------------------------');
         msgLines.push(`*Client:* ${nameInput.value.trim()}`);
         msgLines.push(`*Mode:* ${modeLabel}${addressOrTable ? ` (${addressOrTable})` : ''}`);
-        msgLines.push(`*Tél:* ${phoneInput.value.trim()}`);
+        if (phoneInput.value.trim()) msgLines.push(`*Tél:* ${phoneInput.value.trim()}`);
         msgLines.push('---------------------------------------');
         msgLines.push('*DÉTAIL DE LA COMMANDE:*');
         msgLines.push('');
@@ -701,7 +1004,7 @@ const { currency, name: restaurantName } = siteConfig.identity;
             body: JSON.stringify({
               order_ref: orderRef,
               customer_name: nameInput.value.trim(),
-              customer_phone: phoneInput.value.trim(),
+              customer_phone: phoneInput.value.trim() || null,
               order_type: mode,
               address_or_table: addressOrTable || null,
               items: lines.map((l) => ({ name: l.name, quantity: l.quantity, price: l.price })),
