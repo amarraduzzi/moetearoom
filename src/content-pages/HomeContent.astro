@@ -460,10 +460,10 @@ const path = localizedPath('/', lang);
         loading="lazy"
       />
     </div>
-    <div class="absolute inset-0" style="background: linear-gradient(100deg, color-mix(in srgb, var(--color-primary-dark) 30%, var(--color-background)) 0%, color-mix(in srgb, var(--color-primary-dark) 16%, color-mix(in srgb, var(--color-background) 55%, transparent)) 42%, color-mix(in srgb, var(--color-background) 15%, transparent) 68%, transparent 100%)"></div>
+    <div class="absolute inset-0 signature-overlay"></div>
 
     <div class="relative z-10 h-full flex items-center max-w-7xl mx-auto px-5 sm:px-8">
-      <div class="max-w-md">
+      <div class="max-w-md signature-text">
         <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-4" style="color: var(--color-accent)">{t(copy.platSignatureKicker, lang)}</span>
         <p class="pull-quote">
           {t(copy.platSignatureQuote, lang)}

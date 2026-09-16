@@ -185,6 +185,43 @@ body {
   color: var(--color-text-primary);
 }
 
+/* Signature-spotlight overlay + text — the diagonal gradient behind the
+   "plat signature" pull-quote was too subtle against a busy, often-light
+   food photo (the cheesecake shot in particular), so the italic display
+   font lost most of its edges. Two fixes, both needed: a darker overlay
+   dedicated to this section (kept separate from other uses of the same
+   photo-hero pattern so nothing else gets darkened), and a text-shadow on
+   the quote itself so letterforms hold their edge even where the overlay
+   still lets photo detail through. Mobile gets its own, near-uniform
+   overlay rather than the desktop diagonal: on narrow screens the quote
+   wraps close to full width, so a left-to-right gradient leaves its right
+   half sitting almost directly on the raw photo. */
+.signature-overlay {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--color-primary-dark) 55%, var(--color-background)) 0%,
+    color-mix(in srgb, var(--color-primary-dark) 38%, color-mix(in srgb, var(--color-background) 60%, transparent)) 42%,
+    color-mix(in srgb, var(--color-background) 22%, transparent) 68%,
+    transparent 100%
+  );
+}
+.signature-text .pull-quote {
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.signature-text span {
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+@media (max-width: 640px) {
+  .signature-overlay {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary-dark) 45%, var(--color-background)) 0%,
+      color-mix(in srgb, var(--color-primary-dark) 62%, var(--color-background)) 45%,
+      color-mix(in srgb, var(--color-primary-dark) 70%, var(--color-background)) 100%
+    );
+  }
+}
+
 /* Large faded background wordmark — a big, low-opacity copy of the gold
    emblem sitting behind a section's text. Real weight without competing
    with the foreground content for attention. */
@@ -326,28 +363,4 @@ button:focus-visible,
     transform: scale(1);
     pointer-events: auto;
   }
-}
-
-/* ============================================================================
-   Mint-motif watermark — the site's recurring decorative signature: the same
-   mint-sprig shape used in Ornament.astro's section dividers, tiled at very
-   low opacity behind every page (fixed, like .grain-overlay just above it in
-   markup). The idea is that it's felt rather than seen — a faint brand
-   texture tying dividers, headings and the page background together instead
-   of one isolated decorative element.
-   The leaf stroke color is hardcoded to the client's current accent green
-   (#3F5D45 — see src/config/site.config.ts colors.accent) because CSS custom
-   properties can't be read from inside a data-URI background-image. If this
-   client's accent color ever changes, update the %233F5D45 value below to
-   match (URL-encoded '#', so #3F5D45 becomes %233F5D45).
-   ============================================================================ */
-.mint-motif-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.05;
-  background-repeat: repeat;
-  background-size: 140px 140px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><g fill='none' stroke='%233F5D45' stroke-width='1.1'><path d='M20 100c-6-1-11-4-14-9 7-2 13 0 16 5 1 2 1 4-2 4z'/><path d='M20 100c6-1 11-4 14-9-7-2-13 0-16 5-1 2-1 4 2 4z'/><path d='M20 100v13'/></g></svg>");
 }
