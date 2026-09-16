@@ -868,13 +868,28 @@ const { currency, name: restaurantName } = siteConfig.identity;
       // "Commander" buttons sitewide (Button.astro with cartTrigger) —
       // delegated on document since they exist on every page, not just
       // wherever this widget's own markup lives.
-      document.addEventListener('click', (e) => {
-        const trigger = e.target.closest('[data-cart-trigger]');
-        if (!trigger) return;
-        e.preventDefault();
-        showStep(stepLines);
-        openDrawer();
-      });
+      //
+      // Registered on the CAPTURE phase, not bubble: Astro's <ViewTransitions />
+      // (Layout.astro) also delegates a click listener on document to intercept
+      // `<a>` clicks for SPA-style page swaps, registered on the bubble phase.
+      // With both on bubble, Astro's own handler ran first and had already
+      // kicked off its navigate-to-/menu before this handler's preventDefault
+      // landed — that's the bug the client saw (cart flashes open, then the
+      // page still navigates to /menu). Capture fires before any bubble
+      // listener, so stopPropagation() here stops the click from ever
+      // reaching Astro's router at all.
+      document.addEventListener(
+        'click',
+        (e) => {
+          const trigger = e.target.closest('[data-cart-trigger]');
+          if (!trigger) return;
+          e.preventDefault();
+          e.stopPropagation();
+          showStep(stepLines);
+          openDrawer();
+        },
+        true
+      );
 
       toCheckoutBtn.addEventListener('click', () => {
         if (cart.getCart().length === 0) return;

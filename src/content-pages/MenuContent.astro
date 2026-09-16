@@ -146,42 +146,40 @@ const path = localizedPath('/menu', lang);
     </div>
   </section>
 
-  <!-- Search + filter (final punch-list item #3, extended) — a real,
-       useful interaction, not decoration. The category chips act as a
+  <!-- Filter (final punch-list item #3, extended) — a real, useful
+       interaction, not decoration. The category chips act as a
        table-of-contents: clicking one jumps straight to that section
        further down the page instead of hiding everything else (that was
        the original behaviour; the client asked for a direct scroll
        instead, since the categories are always there in the normal page
-       flow anyway). The search box and the "Végétarien" chip are true
-       filters — search lets a visitor find one specific dish by name or
-       description, and Végétarien is the one dietary fact readable
-       straight off each dish's own description (see menu-highlights.ts's
-       comment for why it doesn't go further, e.g. vegan/spice-level). -->
+       flow anyway). The "Végétarien" chip is the one true filter left —
+       it's the one dietary fact readable straight off each dish's own
+       description (see menu-highlights.ts's comment for why it doesn't go
+       further, e.g. vegan/spice-level). The free-text search box that used
+       to sit here was removed on the client's own request (Sept 2026:
+       "Haal de functie rechercher un plat eruit. Dat heeft geen functie in
+       de site.") — the category chips below already cover finding a dish,
+       so the search box was pure decoration to them, not a used feature. -->
   <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
-    <div class="relative mb-3">
-      <svg class="menu-search-icon absolute pointer-events-none" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" />
-        <path d="M21 21l-4.3-4.3" stroke-linecap="round" />
-      </svg>
-      <input
-        type="search"
-        id="menu-search"
-        class="menu-search-input w-full rounded-full text-sm"
-        placeholder={t(common.rechercherUnPlat, lang)}
-        aria-label={t(common.rechercherUnPlat, lang)}
-        autocomplete="off"
-      />
-    </div>
     <!-- Three-menu tab strip — this client runs three genuinely different
          menus on one page (savoury "Menu sur le pouce", the drinks/pâtisserie
          card, and the day/time formules further down), which used to read as
          one long list. These tabs group the category chips below by which
          menu they belong to, instead of adding a second, competing
-         navigation system. -->
-    <div class="menu-group-row flex items-center gap-2 overflow-x-auto mb-2">
-      <button type="button" class="menu-group-btn shrink-0" data-group="pouce" data-group-scroll={`cat-section-0`}>{t(menuHighlights[0].label, lang)}</button>
-      <button type="button" class="menu-group-btn shrink-0" data-group="drinks" data-group-scroll={`cat-section-1`}>{t(copy.groupDrinksPastry, lang)}</button>
-      <button type="button" class="menu-group-btn shrink-0" data-group="formules" data-group-scroll="formules-moments">{t(copy.formulesTitle, lang)}</button>
+         navigation system.
+
+         Grid, not the horizontal-scroll strip used below for the (much
+         longer) category-chip row: only 3 tabs live here, and the client
+         asked for exactly these three to be visible at a glance on mobile
+         instead of requiring a left/right swipe to see all of them (Sept
+         2026 feedback, with a screenshot of the cut-off "Boisson…" tab).
+         Equal thirds fit on any phone width; a tab's own label is allowed
+         to wrap to two lines rather than truncate or force horizontal
+         scroll back in. -->
+    <div class="menu-group-row grid grid-cols-3 gap-2 mb-2">
+      <button type="button" class="menu-group-btn" data-group="pouce" data-group-scroll={`cat-section-0`}>{t(menuHighlights[0].label, lang)}</button>
+      <button type="button" class="menu-group-btn" data-group="drinks" data-group-scroll={`cat-section-1`}>{t(copy.groupDrinksPastry, lang)}</button>
+      <button type="button" class="menu-group-btn" data-group="formules" data-group-scroll="formules-moments">{t(copy.formulesTitle, lang)}</button>
     </div>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
@@ -344,65 +342,43 @@ const path = localizedPath('/menu', lang);
   .hero-shadow {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
   }
-  .menu-search-icon {
-    /* Logical inset instead of `left` — automatically sits on the right
-       for Arabic pages, mirroring how the arrow icons elsewhere in this
-       codebase flip for RTL (see Button.astro), so the icon stays next to
-       where reading starts rather than always on the physical left. */
-    inset-inline-start: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-text-muted);
-  }
-  .menu-search-input {
-    padding-block: 0.75rem;
-    padding-inline: 2.75rem 1rem;
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .menu-search-input::placeholder {
-    color: var(--color-text-muted);
-  }
-  .menu-search-input:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
-  }
-  /* Hide the native search-cancel/clear icon so it doesn't collide with our
-     own search icon on the left — the input is still a real type="search"
-     for mobile keyboard affordance (a "search" key instead of "return"). */
-  .menu-search-input::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-  }
-  .menu-filter-row,
-  .menu-group-row {
+  .menu-filter-row {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  .menu-filter-row::-webkit-scrollbar,
-  .menu-group-row::-webkit-scrollbar {
+  .menu-filter-row::-webkit-scrollbar {
     display: none;
   }
   /* Deliberately a different shape from .menu-filter-btn (rounded rectangle,
      uppercase, wider tracking vs. the pills below) so the hierarchy reads at
      a glance: these three group the menu, the pills below navigate within
-     whichever menu is selected. */
+     whichever menu is selected. Grid-of-3 (see the markup above) means each
+     button's width is fixed by its column, not its own text — center the
+     label and let it wrap onto a second line instead of overflowing or
+     forcing the row into horizontal scroll. */
   .menu-group-btn {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    padding: 0.45rem 0.9rem;
+    padding: 0.5rem 0.4rem;
     border-radius: 0.5rem;
     border: 1px solid var(--color-border);
     color: var(--color-text-muted);
     background-color: var(--color-surface);
+    text-align: center;
+    line-height: 1.25;
+    white-space: normal;
     transition:
       color 0.15s ease,
       background-color 0.15s ease,
       border-color 0.15s ease;
+  }
+  @media (min-width: 640px) {
+    .menu-group-btn {
+      font-size: 0.7rem;
+      padding: 0.45rem 0.9rem;
+    }
   }
   .menu-group-btn.is-active {
     color: var(--color-background);
@@ -472,18 +448,14 @@ const path = localizedPath('/menu', lang);
 </style>
 
 <script>
-  // Client-side only, no reload — see the search+filter section's comment
-  // above for why this exists. Combines the category/vegetarian chips with
-  // free-text search: a dish shows only if it matches BOTH the active chip
-  // and the current search text, so typing narrows whatever chip is
-  // selected instead of resetting it. Wrapped in 'astro:page-load' (same
-  // pattern as Layout.astro's sitewide scripts) so this re-initializes
-  // correctly if the Menu page is reached via a View Transitions
-  // client-side navigation, not just a hard load.
+  // Client-side only, no reload — see the filter section's comment above
+  // for why this exists. Wrapped in 'astro:page-load' (same pattern as
+  // Layout.astro's sitewide scripts) so this re-initializes correctly if
+  // the Menu page is reached via a View Transitions client-side
+  // navigation, not just a hard load.
   document.addEventListener('astro:page-load', () => {
     const filterButtons = document.querySelectorAll('.menu-filter-btn');
     const groupButtons = document.querySelectorAll('.menu-group-btn');
-    const searchInput = document.getElementById('menu-search');
     if (!filterButtons.length) return;
 
     const items = document.querySelectorAll('[data-veg]');
@@ -503,18 +475,15 @@ const path = localizedPath('/menu', lang);
     }
 
     function applyFilters() {
-      const query = (searchInput?.value ?? '').trim().toLowerCase();
       let anyVisible = false;
 
       items.forEach((item) => {
         const isVeg = item.getAttribute('data-veg') === 'true';
         const catIndex = item.getAttribute('data-cat');
-        const matchesFilter =
+        const show =
           activeFilter === 'all' ||
           (activeFilter === 'vegetarian' && isVeg) ||
           activeFilter === `cat-${catIndex}`;
-        const matchesSearch = !query || (item.getAttribute('data-search') || '').includes(query);
-        const show = matchesFilter && matchesSearch;
         item.style.display = show ? '' : 'none';
         if (show) anyVisible = true;
       });
@@ -540,7 +509,6 @@ const path = localizedPath('/menu', lang);
       if (scrollTargetId) {
         btn.addEventListener('click', () => {
           resetGroupView();
-          if (searchInput) searchInput.value = '';
           activeFilter = 'all';
           filterButtons.forEach((b) => b.classList.remove('is-active'));
           document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
@@ -578,7 +546,6 @@ const path = localizedPath('/menu', lang);
           categoryChips.forEach((c) => {
             c.classList.toggle('is-group-hidden', c.getAttribute('data-group') !== group);
           });
-          if (searchInput) searchInput.value = '';
           activeFilter = 'all';
           filterButtons.forEach((b) => b.classList.remove('is-active'));
           document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
@@ -598,8 +565,6 @@ const path = localizedPath('/menu', lang);
         document.getElementById('menu-list')?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
-
-    searchInput?.addEventListener('input', applyFilters);
 
     applyFilters();
   });
@@ -757,22 +722,6 @@ const path = localizedPath('/menu', lang);
       // chunk — so this dispatches an event and lets that script do the
       // wiring with its own already-working import.
       document.dispatchEvent(new CustomEvent('menu-extra-dishes-rendered', { detail: { grid } }));
-
-      // Extra-section-only search: the main applyFilters() above captured
-      // its DOM lists before this section existed, so it never sees these
-      // cards (see the section's own comment) — this keeps just the search
-      // box working here too, independent of the category/veg chips.
-      const searchInput = document.getElementById('menu-search');
-      searchInput?.addEventListener('input', () => {
-        const query = searchInput.value.trim().toLowerCase();
-        let anyVisible = false;
-        grid.querySelectorAll('.js-menu-item').forEach((card) => {
-          const match = !query || (card.getAttribute('data-search') || '').includes(query);
-          card.style.display = match ? '' : 'none';
-          if (match) anyVisible = true;
-        });
-        section.classList.toggle('hidden', !anyVisible);
-      });
     }
   });
 </script>
