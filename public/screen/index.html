@@ -141,6 +141,46 @@
   .logout-link:hover { color: var(--surface); border-color: rgba(255,252,243,0.5); }
 
   main { padding: 26px 22px 60px; max-width: 1400px; margin: 0 auto; }
+
+  /* ------------------------------------------------------- background decor
+     Same two decorative signatures as the marketing site (LogoWatermark.astro
+     / FloralSprig.astro) — Amar asked (Sept 2026) for this screen to carry
+     the same quiet branding instead of being a bare utility page. `position:
+     fixed` + `z-index: -1` (not just a low z-index on a normal element) is
+     what actually keeps these behind the order columns/tables/cards: those
+     are plain non-positioned content, which paints BEFORE any positioned
+     element with z-index:auto/0 regardless of DOM order — only a negative
+     z-index guarantees "behind everything" here. `pointer-events: none` so
+     they never intercept a tap on a card underneath. Fixed (not absolute)
+     so they stay put while a column scrolls, like a watermark on paper
+     rather than an image sitting in the page flow. */
+  .bg-logo-watermark {
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    user-select: none;
+    bottom: -6%;
+    right: -4%;
+    width: min(52vw, 560px);
+    height: auto;
+    opacity: 0.05;
+    filter: grayscale(0.2);
+  }
+  .bg-floral-sprig {
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    user-select: none;
+    top: 96px;
+    left: -14px;
+    width: min(15vw, 150px);
+    height: auto;
+    opacity: 0.12;
+  }
+  @media (max-width: 800px) {
+    .bg-logo-watermark { width: 80vw; bottom: -8%; right: -10%; }
+    .bg-floral-sprig { width: 26vw; top: 88px; left: -12px; }
+  }
   .view { display: none; }
   .view.is-active { display: block; animation: fade-in 0.22s ease; }
   @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -284,6 +324,53 @@
   .custom-dish-card .dish-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 3px; }
   .custom-dish-card .dish-cat { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-top: 6px; }
 
+  /* -------------------------------------------------------------- Rapport */
+  .report-date-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .btn-report-nav { padding: 9px 13px; font-size: 0.95rem; line-height: 1; }
+  .report-date-input {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+  .report-date-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(63,93,69,0.14); }
+  .report-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .report-stats { grid-template-columns: 1fr; } }
+  .report-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .report-stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .report-stat-value { font-family: var(--font-display); font-size: 1.9rem; font-weight: 600; color: var(--brown-dark); }
+  .report-empty { font-size: 0.85rem; color: var(--text-muted); padding: 10px 2px; }
+  .report-dish-row, .report-order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 0.88rem;
+  }
+  .report-dish-row .report-dish-name { font-weight: 700; }
+  .report-dish-row .report-dish-qty { color: var(--text-muted); }
+  .report-order-row .report-order-main { display: flex; flex-direction: column; gap: 2px; }
+  .report-order-row .report-order-name { font-weight: 700; }
+  .report-order-row .report-order-meta { font-size: 0.76rem; color: var(--text-muted); }
+  .report-order-row .report-order-total { font-weight: 800; color: var(--green-dark); white-space: nowrap; }
+
   .inline-form {
     background: var(--surface);
     border: 1.5px dashed var(--border);
@@ -359,6 +446,8 @@
 </style>
 </head>
 <body>
+  <img src="/images/logo-mark.webp" alt="" aria-hidden="true" class="bg-logo-watermark" />
+  <img src="/images/floral-sprig-flip.webp" alt="" aria-hidden="true" class="bg-floral-sprig" />
   <header>
     <div class="brand">
       <img src="/images/logo-mark.png" alt="Moë Tea Room" />
@@ -372,6 +461,7 @@
         <button class="tab-btn is-active" data-tab="orders">Commandes</button>
         <button class="tab-btn" data-tab="reservations">Réservations <span id="rsv-badge" class="badge" style="display:none">0</span></button>
         <button class="tab-btn" data-tab="menu">Menu</button>
+        <button class="tab-btn" data-tab="report">Rapport</button>
       </div>
       <a class="logout-link" href="/screen/logout">Déconnexion</a>
     </div>
@@ -402,9 +492,26 @@
         <div class="filter-row" id="rsv-filters">
           <button type="button" class="filter-chip is-active" data-rsv-filter="upcoming">À venir</button>
           <button type="button" class="filter-chip" data-rsv-filter="pending">En attente</button>
+          <button type="button" class="filter-chip" data-rsv-filter="day">Par jour</button>
           <button type="button" class="filter-chip" data-rsv-filter="all">Toutes</button>
         </div>
         <button type="button" class="btn btn-primary" id="rsv-add-toggle">+ Nouvelle réservation</button>
+      </div>
+
+      <!-- Only shown for the "Par jour" filter — a real day-by-day agenda
+           (Amar's request, Sept 2026: "ik wil ook dat de reserveringen in
+           een agenda worden gepland. Ze kunnen per dag reserveringen
+           zien"). The other filters ("À venir" etc.) already grouped
+           reservations under a day heading each, but that's a long
+           scroll through every upcoming day at once — this instead pins
+           the view to exactly one day, with the same prev/next/today
+           date-nav pattern as the Rapport tab, so staff can flip through
+           specific days the same way they'd flip a paper agenda. -->
+      <div class="report-date-nav" id="rsv-day-nav" style="display: none; margin-bottom: 18px">
+        <button type="button" class="btn btn-ghost btn-report-nav" id="rsv-prev-day" aria-label="Jour précédent">←</button>
+        <input type="date" id="rsv-day-input" class="report-date-input" />
+        <button type="button" class="btn btn-ghost btn-report-nav" id="rsv-next-day" aria-label="Jour suivant">→</button>
+        <button type="button" class="btn btn-ghost" id="rsv-day-today">Aujourd'hui</button>
       </div>
 
       <form id="rsv-add-form" class="inline-form">
@@ -472,6 +579,47 @@
       </form>
 
       <div id="custom-dishes"></div>
+    </section>
+
+    <!-- ================= RAPPORT ================= -->
+    <section id="view-report" class="view">
+      <div class="view-toolbar">
+        <div class="report-date-nav">
+          <button type="button" class="btn btn-ghost btn-report-nav" id="report-prev-day" aria-label="Jour précédent">←</button>
+          <input type="date" id="report-date" class="report-date-input" />
+          <button type="button" class="btn btn-ghost btn-report-nav" id="report-next-day" aria-label="Jour suivant">→</button>
+          <button type="button" class="btn btn-ghost" id="report-today">Aujourd'hui</button>
+        </div>
+      </div>
+
+      <!-- Cancelled orders never made it to the till, so they're excluded
+           from every total below — a report that counted them would
+           overstate the day's actual sales. loadReport() fetches every
+           status for the selected day (not just active ones, unlike
+           loadOrders() above, which only ever shows pending/preparing/ready)
+           and filters cancelled out client-side rather than in the query,
+           so a future "show cancelled count too" ask can reuse the same
+           fetch instead of a second round-trip. -->
+      <div class="report-stats">
+        <div class="report-stat-card">
+          <span class="report-stat-label">Chiffre d'affaires</span>
+          <span class="report-stat-value" id="report-revenue">—</span>
+        </div>
+        <div class="report-stat-card">
+          <span class="report-stat-label">Commandes</span>
+          <span class="report-stat-value" id="report-count">—</span>
+        </div>
+        <div class="report-stat-card">
+          <span class="report-stat-label">Panier moyen</span>
+          <span class="report-stat-value" id="report-avg">—</span>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top: 28px">Plats les plus vendus</div>
+      <div id="report-top-dishes"></div>
+
+      <div class="section-title">Commandes du jour</div>
+      <div id="report-orders-list"></div>
     </section>
   </main>
 
@@ -721,12 +869,31 @@
   // Réservations
   // ==========================================================================
   let rsvFilter = 'upcoming';
+  const rsvDayNav = document.getElementById('rsv-day-nav');
+  const rsvDayInput = document.getElementById('rsv-day-input');
 
   document.getElementById('rsv-filters').addEventListener('click', (e) => {
     const btn = e.target.closest('[data-rsv-filter]');
     if (!btn) return;
     rsvFilter = btn.dataset.rsvFilter;
     document.querySelectorAll('#rsv-filters .filter-chip').forEach((c) => c.classList.toggle('is-active', c === btn));
+    rsvDayNav.style.display = rsvFilter === 'day' ? 'flex' : 'none';
+    if (rsvFilter === 'day' && !rsvDayInput.value) rsvDayInput.value = todayIso();
+    renderReservations(lastReservations);
+  });
+
+  function shiftRsvDay(days) {
+    const current = rsvDayInput.value || todayIso();
+    const d = new Date(`${current}T00:00:00`);
+    d.setDate(d.getDate() + days);
+    rsvDayInput.value = d.toISOString().slice(0, 10);
+    renderReservations(lastReservations);
+  }
+  rsvDayInput.addEventListener('change', () => renderReservations(lastReservations));
+  document.getElementById('rsv-prev-day').addEventListener('click', () => shiftRsvDay(-1));
+  document.getElementById('rsv-next-day').addEventListener('click', () => shiftRsvDay(1));
+  document.getElementById('rsv-day-today').addEventListener('click', () => {
+    rsvDayInput.value = todayIso();
     renderReservations(lastReservations);
   });
 
@@ -798,6 +965,11 @@
       filtered = rows.filter((r) => r.status !== 'cancelled' && r.reservation_date >= today);
     } else if (rsvFilter === 'pending') {
       filtered = rows.filter((r) => r.status === 'pending');
+    } else if (rsvFilter === 'day') {
+      const day = rsvDayInput.value || today;
+      filtered = rows
+        .filter((r) => r.reservation_date === day)
+        .sort((a, b) => (a.reservation_time || '').localeCompare(b.reservation_time || ''));
     }
 
     const pendingCount = rows.filter((r) => r.status === 'pending' && r.reservation_date >= today).length;
@@ -1136,6 +1308,133 @@
       errorEl.textContent = "Impossible d'ajouter ce plat — vérifiez la connexion.";
       errorEl.style.display = 'block';
     }
+  });
+
+  // ==========================================================================
+  // Rapport — daily revenue/order-count/top-dishes + a browsable order
+  // history, added per Amar's request (Sept 2026: "Er moet in het scherm
+  // ook een geschiedenis van bestellingen worden toegevoegd. Een dagomzet
+  // etc."). Deliberately its OWN fetch rather than reusing loadOrders()'s
+  // data: loadOrders() only ever pulls status=in.(pending,preparing,ready)
+  // — the live kitchen board, which drops an order the moment it's marked
+  // completed (or cancelled) — so a report built from that would miss
+  // every finished sale of the day, i.e. almost everything a revenue
+  // report needs. This queries orders by created_at date range instead,
+  // with no status filter server-side, and only excludes cancelled orders
+  // client-side when totalling (a cancelled order still shows in the list
+  // below, marked as such, for a manager who wants the full picture).
+  // ==========================================================================
+  const ORDER_STATUS_LABEL = { pending: 'Nouvelle', preparing: 'En préparation', ready: 'Prête', completed: 'Terminée', cancelled: 'Annulée' };
+  const ORDER_STATUS_BADGE_CLASS = { completed: 'confirmed', cancelled: 'cancelled' }; // everything else (pending/preparing/ready) falls back to 'pending' styling below
+
+  function todayLocalDateStr() {
+    const now = new Date();
+    const tzOffsetMs = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffsetMs).toISOString().slice(0, 10);
+  }
+
+  const reportDateInput = document.getElementById('report-date');
+
+  async function loadReport(dateStr) {
+    if (!cfg.supabaseUrl || !dateStr) return;
+    // Local-day boundaries (not UTC) — the restaurant's "today" should match
+    // the clock on the wall in Rabat, not whatever UTC midnight happens to
+    // be. created_at is timestamptz, so Postgres compares these correctly
+    // as absolute instants regardless of which timezone this browser is in.
+    const start = new Date(`${dateStr}T00:00:00`);
+    const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+    try {
+      const res = await fetch(
+        `${cfg.supabaseUrl}/rest/v1/orders?created_at=gte.${start.toISOString()}&created_at=lt.${end.toISOString()}&order=created_at.desc`,
+        { headers }
+      );
+      const orders = await res.json();
+      renderReport(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      console.warn('[staff-screen] could not load report', e);
+    }
+  }
+
+  function renderReport(orders) {
+    const counted = orders.filter((o) => o.status !== 'cancelled');
+    const revenue = counted.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const count = counted.length;
+    const avg = count ? revenue / count : 0;
+
+    document.getElementById('report-revenue').textContent = `${revenue.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} MAD`;
+    document.getElementById('report-count').textContent = String(count);
+    document.getElementById('report-avg').textContent = count ? `${avg.toLocaleString('fr-FR', { maximumFractionDigits: 2 })} MAD` : '—';
+
+    // Top-selling dishes — aggregate quantity per dish name across every
+    // counted order's items array (see orders.items's shape at the top of
+    // this file's comment block / schema.sql).
+    const qtyByDish = new Map();
+    counted.forEach((o) => {
+      (o.items || []).forEach((it) => {
+        qtyByDish.set(it.name, (qtyByDish.get(it.name) || 0) + Number(it.quantity || 0));
+      });
+    });
+    const topDishes = [...qtyByDish.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    const topEl = document.getElementById('report-top-dishes');
+    topEl.innerHTML = topDishes.length
+      ? topDishes
+          .map(
+            ([name, qty]) => `
+        <div class="report-dish-row">
+          <span class="report-dish-name">${escapeHtml(name)}</span>
+          <span class="report-dish-qty">${qty} vendus</span>
+        </div>`
+          )
+          .join('')
+      : '<p class="report-empty">Aucune vente ce jour-là.</p>';
+
+    const listEl = document.getElementById('report-orders-list');
+    listEl.innerHTML = orders.length
+      ? orders
+          .map((o) => {
+            const time = new Date(o.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            const badgeClass = ORDER_STATUS_BADGE_CLASS[o.status] || 'pending';
+            const typeLabel = ORDER_TYPE_LABEL[o.order_type] || o.order_type;
+            return `
+        <div class="report-order-row">
+          <div class="report-order-main">
+            <span class="report-order-name">${escapeHtml(o.order_ref || o.customer_name)}</span>
+            <span class="report-order-meta">${time} · ${escapeHtml(typeLabel)}${o.address_or_table ? ' · ' + escapeHtml(o.address_or_table) : ''}</span>
+          </div>
+          <span class="status-badge ${badgeClass}">${ORDER_STATUS_LABEL[o.status] || o.status}</span>
+          <span class="report-order-total">${Number(o.total || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} MAD</span>
+        </div>`;
+          })
+          .join('')
+      : '<p class="report-empty">Aucune commande ce jour-là.</p>';
+  }
+
+  function shiftReportDate(days) {
+    const current = reportDateInput.value || todayLocalDateStr();
+    const d = new Date(`${current}T00:00:00`);
+    d.setDate(d.getDate() + days);
+    reportDateInput.value = d.toISOString().slice(0, 10);
+    loadReport(reportDateInput.value);
+  }
+
+  reportDateInput.addEventListener('change', () => loadReport(reportDateInput.value));
+  document.getElementById('report-prev-day').addEventListener('click', () => shiftReportDate(-1));
+  document.getElementById('report-next-day').addEventListener('click', () => shiftReportDate(1));
+  document.getElementById('report-today').addEventListener('click', () => {
+    reportDateInput.value = todayLocalDateStr();
+    loadReport(reportDateInput.value);
+  });
+
+  // Only fetch when the tab is actually opened — this is the one view NOT
+  // auto-polled (see Boot below): a report is looked at occasionally, not
+  // watched live like the orders board, so there's no reason to hit
+  // Supabase every few seconds for it. Re-fetches every time the tab is
+  // clicked, which also picks up any order that landed since the last
+  // visit to this tab.
+  document.querySelector('.tab-btn[data-tab="report"]').addEventListener('click', () => {
+    if (!reportDateInput.value) reportDateInput.value = todayLocalDateStr();
+    loadReport(reportDateInput.value);
   });
 
   // ==========================================================================
