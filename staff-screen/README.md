@@ -1,4 +1,10 @@
-# Moë Tea Room — écran caisse/cuisine
+# Moë Tea Room — écran caisse/cuisine (archive)
+
+> **Ce dossier n'est plus déployé séparément.** Depuis Sept 2026, l'écran
+> tourne en direct sur **moetearoom.pages.dev/screen**, protégé par un
+> vrai login — voir `SUPABASE_SETUP.md` (étape 6) pour la configuration. Ce
+> dossier reste comme copie source/archive ; si tu modifies l'écran,
+> modifie aussi (ou surtout) `public/screen/index.html`.
 
 Écran pour l'imprimante/tablette en salle : les commandes ET les
 réservations passées sur le site (Supabase) apparaissent ici en direct, et
@@ -65,8 +71,7 @@ ouvert toute la journée sur un écran/tablette dédié dans le restaurant.
   code source. Une limite acceptable pour un ajout rapide/temporaire ; pour
   un plat durable, mieux vaut l'ajouter proprement dans le code (demandez
   à Amplify) pour qu'il ait ses trois langues comme le reste du menu.
-- Pas de connexion/mot de passe dans cette v1 : quiconque a l'URL de cet
-  écran peut changer le menu, les commandes ou les réservations. Convient
-  pour un écran physique dans un espace non accessible aux clients ; si
-  l'écran doit être accessible depuis n'importe où, il faudra ajouter une
-  authentification avant de le déployer publiquement.
+- Sur `moetearoom.pages.dev/screen` (la version réellement en ligne),
+  l'écran est protégé par un login (voir `SUPABASE_SETUP.md`, étape 6). Ce
+  fichier archivé ici, s'il est un jour redéployé séparément de son côté,
+  n'a PAS cette protection intégrée — il faudrait la remettre en place.

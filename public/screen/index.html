@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Moë Tea Room — Écran caisse/cuisine</title>
+<!--
+  Separate deploy from the marketing site (moetearoom repo) — see that
+  project's SUPABASE_SETUP.md, step 5. Deliberately a single static HTML
+  file with no build step or framework: this runs on one tablet/screen in
+  the restaurant, plugged in and left open all day, so "npm install and
+  rebuild every time a dish gets renamed" is the wrong trade-off here —
+  editing this file directly (or the two arrays/config at the top of the
+  <script> below) is the whole workflow.
+
+  Three tabs: Commandes (orders board), Réservations (agenda + manual add),
+  Menu (edit existing dishes' price/épuisé, add brand new dishes).
+
+  CONFIG — fill these in from the SAME Supabase project the main site's
+  site.config.ts `ordering` block points at (Project Settings → API):
+-->
+<script>
+  window.__STAFF_CONFIG = {
+    supabaseUrl: 'https://jkqrtpxhxxtviizgihox.supabase.co',
+    supabaseAnonKey: 'sb_publishable_nFOrexvp2LZuQ0KxiuwwWQ_acLTUrrf',
+    // How often to re-check Supabase for new orders / reservations /
+    // menu changes, in ms. 4s is a good balance between "feels live" and
+    // not hammering the free-tier API — raise this if the project ever
+    // moves to a paid plan with tighter rate limits, lower it if orders
+    // need to appear faster.
+    pollMs: 4000,
+  };
+</script>
+<style>
+  :root {
+    /* Same palette as the marketing site's site.config.ts — keep these two
+       in sync by hand if the brand colors ever change; there's no shared
+       import between the two separate deploys. */
+    --bg: #F7F0DC;
+    --surface: #FFFCF3;
+    --surface-muted: #EFE4C4;
+    --brown: #6B4A34;
+    --brown-dark: #4A2F1F;
+    --green: #3F5D45;
+    --text: #3A2A1E;
+    --text-muted: #7A6A57;
+    --border: rgba(58,42,30,0.16);
+    --danger: #A33A2E;
+    --warn: #A9821C;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--brown);
+    color: #FFFCF3;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 1.1rem; margin: 0; font-weight: 700; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255,255,255,0.4);
+    background: transparent;
+    color: #FFFCF3;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .tab-btn.is-active { background: #FFFCF3; color: var(--brown); border-color: #FFFCF3; }
+  .tab-btn .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+  .tab-btn.is-active .badge { background: var(--danger); color: #fff; }
+  main { padding: 18px; max-width: 1400px; margin: 0 auto; }
+  .view { display: none; }
+  .view.is-active { display: block; }
+
+  .view-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .filter-chip.is-active { background: var(--green); color: #FFFCF3; border-color: var(--green); }
+
+  .status-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .status-cols { grid-template-columns: 1fr; } }
+  .status-col h2 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin: 0 0 10px 2px;
+  }
+  .order-card, .rsv-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .order-card .top-row, .rsv-card .top-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .order-ref, .rsv-name { font-weight: 800; font-size: 0.95rem; }
+  .order-time, .rsv-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+  .order-meta, .rsv-meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+  .order-items { margin: 10px 0; font-size: 0.9rem; }
+  .order-items div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .order-notes, .rsv-notes { font-size: 0.82rem; font-style: italic; color: var(--brown-dark); margin: 6px 0; }
+  .order-total { font-weight: 800; text-align: right; margin-bottom: 10px; }
+  .order-actions, .rsv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--green); color: #FFFCF3; }
+  .btn-secondary { background: var(--surface-muted); color: var(--text); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+  .empty-note { color: var(--text-muted); font-size: 0.85rem; padding: 20px; text-align: center; }
+
+  .status-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .status-badge.pending { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn); }
+  .status-badge.confirmed { background: color-mix(in srgb, var(--green) 18%, var(--surface)); color: var(--green); }
+  .status-badge.cancelled { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); color: var(--danger); }
+
+  .agenda-day { margin-bottom: 22px; }
+  .agenda-day h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--brown);
+    margin: 0 0 10px 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rsv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+  table.menu-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; }
+  table.menu-table th, table.menu-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  table.menu-table th { background: var(--surface-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--text-muted); }
+  table.menu-table input[type="number"] { width: 80px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; }
+  .toggle-available { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .save-hint { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 14px; line-height: 1.5; }
+  .category-heading { font-weight: 800; color: var(--brown); margin: 18px 0 6px; }
+
+  .section-title { font-size: 1rem; font-weight: 800; color: var(--brown-dark); margin: 26px 0 10px; }
+  .custom-dish-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .custom-dish-card .grow { flex: 1; min-width: 200px; }
+  .custom-dish-card .dish-name { font-weight: 800; }
+  .custom-dish-card .dish-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+  .custom-dish-card .dish-cat { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-top: 4px; }
+
+  .inline-form {
+    background: var(--surface);
+    border: 1.5px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .inline-form.is-open { display: block; }
+  .inline-form h3 { margin: 0 0 12px; font-size: 0.95rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .form-field label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 4px; }
+  .form-field input, .form-field select, .form-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+  .form-actions { display: flex; gap: 8px; }
+  .form-error { color: var(--danger); font-size: 0.82rem; margin: -4px 0 10px; }
+
+  .config-warning { background: var(--danger); color: #fff; padding: 10px; text-align: center; font-weight: 700; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Moë Tea Room — Écran</h1>
+    <div class="tabs">
+      <button class="tab-btn is-active" data-tab="orders">Commandes</button>
+      <button class="tab-btn" data-tab="reservations">Réservations <span id="rsv-badge" class="badge" style="display:none">0</span></button>
+      <button class="tab-btn" data-tab="menu">Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= COMMANDES ================= -->
+    <section id="view-orders" class="view is-active">
+      <div class="status-cols">
+        <div class="status-col">
+          <h2>Nouvelles</h2>
+          <div id="col-pending"></div>
+        </div>
+        <div class="status-col">
+          <h2>En préparation</h2>
+          <div id="col-preparing"></div>
+        </div>
+        <div class="status-col">
+          <h2>Prêtes</h2>
+          <div id="col-ready"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RÉSERVATIONS ================= -->
+    <section id="view-reservations" class="view">
+      <div class="view-toolbar">
+        <div class="filter-row" id="rsv-filters">
+          <button type="button" class="filter-chip is-active" data-rsv-filter="upcoming">À venir</button>
+          <button type="button" class="filter-chip" data-rsv-filter="pending">En attente</button>
+          <button type="button" class="filter-chip" data-rsv-filter="all">Toutes</button>
+        </div>
+        <button type="button" class="btn btn-primary" id="rsv-add-toggle">+ Nouvelle réservation</button>
+      </div>
+
+      <form id="rsv-add-form" class="inline-form">
+        <h3>Ajouter une réservation (téléphone / sur place)</h3>
+        <div class="form-grid">
+          <div class="form-field"><label for="rsv-f-name">Nom du client</label><input id="rsv-f-name" required /></div>
+          <div class="form-field"><label for="rsv-f-phone">Téléphone</label><input id="rsv-f-phone" required /></div>
+          <div class="form-field"><label for="rsv-f-date">Date</label><input id="rsv-f-date" type="date" required /></div>
+          <div class="form-field"><label for="rsv-f-time">Heure</label><input id="rsv-f-time" type="time" required /></div>
+          <div class="form-field"><label for="rsv-f-size">Nombre de personnes</label><input id="rsv-f-size" type="number" min="1" value="2" required /></div>
+        </div>
+        <div class="form-grid full">
+          <div class="form-field"><label for="rsv-f-notes">Remarque (optionnel)</label><textarea id="rsv-f-notes" rows="2"></textarea></div>
+        </div>
+        <p class="form-error" id="rsv-f-error" style="display:none"></p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Confirmer la réservation</button>
+          <button type="button" class="btn btn-ghost" id="rsv-add-cancel">Annuler</button>
+        </div>
+      </form>
+
+      <div id="rsv-agenda"></div>
+    </section>
+
+    <!-- ================= MENU ================= -->
+    <section id="view-menu" class="view">
+      <p class="save-hint">
+        Décochez un plat existant pour le marquer épuisé sur le site, ou changez son prix — c'est appliqué immédiatement sur
+        la page Menu des clients. Pour renommer un plat existant ou changer sa description, il faut modifier le code du site
+        (demandez-le à Amplify) — cet écran ne peut que changer son prix ou le marquer épuisé.
+      </p>
+      <div id="menu-editor"></div>
+
+      <div class="section-title">Plats ajoutés depuis cet écran</div>
+      <p class="save-hint">
+        Ces plats n'existent pas dans le code du site — ils sont créés ici et apparaissent automatiquement sur la page Menu,
+        dans la catégorie indiquée (ou dans une section "Nouveautés" si la catégorie ne correspond à aucune catégorie
+        existante).
+      </p>
+      <button type="button" class="btn btn-primary" id="dish-add-toggle" style="margin-bottom: 14px;">+ Ajouter un plat</button>
+
+      <form id="dish-add-form" class="inline-form">
+        <h3>Nouveau plat</h3>
+        <div class="form-grid">
+          <div class="form-field"><label for="dish-f-name">Nom du plat</label><input id="dish-f-name" required /></div>
+          <div class="form-field"><label for="dish-f-category">Catégorie</label><input id="dish-f-category" placeholder="ex. Boissons Chaudes" required /></div>
+          <div class="form-field"><label for="dish-f-price">Prix (MAD)</label><input id="dish-f-price" type="number" step="0.5" min="0" required /></div>
+        </div>
+        <div class="form-grid full">
+          <div class="form-field"><label for="dish-f-desc">Description</label><textarea id="dish-f-desc" rows="2" placeholder="Courte description affichée sous le nom du plat"></textarea></div>
+        </div>
+        <p class="form-error" id="dish-f-error" style="display:none"></p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Ajouter le plat</button>
+          <button type="button" class="btn btn-ghost" id="dish-add-cancel">Annuler</button>
+        </div>
+      </form>
+
+      <div id="custom-dishes"></div>
+    </section>
+  </main>
+
+<script>
+  // ==========================================================================
+  // Master item list — deliberately duplicated from the main site's
+  // src/content/menu-highlights.ts rather than fetched from it (this screen
+  // has no access to that Astro project's source at runtime). Keep this
+  // list's names in sync BY HAND whenever a dish is renamed/added/removed on
+  // the main site — the join key is the exact name string, same as
+  // `item_key` in supabase/schema.sql's menu_items table.
+  //
+  // A dish added FROM this screen (the "custom dishes" section below) does
+  // NOT go in this array — it lives entirely in Supabase (see
+  // loadCustomDishes/renderCustomDishes further down).
+  // ==========================================================================
+  const MENU_ITEMS = [
+    { key: 'Le Cheeseburger Moë', category: 'Menu sur le pouce', price: 90 },
+    { key: 'Le Croque Monsieur Classique', category: 'Menu sur le pouce', price: 65 },
+    { key: 'La Quesadilla au Poulet', category: 'Menu sur le pouce', price: 70 },
+    { key: 'Le Mex', category: 'Menu sur le pouce', price: 80 },
+    { key: 'Le Panini du Chef', category: 'Menu sur le pouce', price: 60 },
+    { key: 'Éclair Vanille', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Café', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Chocolat', category: "Notre Expérience Éclair", price: 28 },
+    { key: 'Éclair Noisette', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Pistache', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Framboise', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Citron', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Mangue', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Tiramisu', category: 'Les Créations', price: 38 },
+    { key: 'Éclair Amlou', category: 'Les Signatures', price: 40 },
+    { key: 'Éclair Signature Moë', category: 'Les Signatures', price: 40 },
+    { key: 'Flan Vanille', category: 'Les Flans', price: 33 },
+    { key: 'Flan Chocolat', category: 'Les Flans', price: 33 },
+    { key: 'Flan Signature Moë', category: 'Les Flans', price: 38 },
+    { key: 'Cookie Gourmand', category: 'Cookies Gourmands', price: 35 },
+    { key: 'Croissant Pur Beurre', category: 'Boulangerie & Viennoiseries', price: 11 },
+    { key: 'Pain au Chocolat', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Pain Suisse', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Pain aux Raisins', category: 'Boulangerie & Viennoiseries', price: 13 },
+    { key: 'Baguette Tradition', category: 'Boulangerie & Viennoiseries', price: 6.5 },
+    { key: 'Brioche Artisanale', category: 'Boulangerie & Viennoiseries', price: 35 },
+  ];
+
+  const cfg = window.__STAFF_CONFIG;
+  const headers = { apikey: cfg.supabaseAnonKey, Authorization: `Bearer ${cfg.supabaseAnonKey}`, 'Content-Type': 'application/json' };
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('is-active'));
+      document.querySelectorAll('.view').forEach((v) => v.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      document.getElementById(`view-${btn.dataset.tab}`).classList.add('is-active');
+    });
+  });
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ==========================================================================
+  // Commandes
+  // ==========================================================================
+  async function loadOrders() {
+    if (!cfg.supabaseUrl) return;
+    try {
+      const res = await fetch(
+        `${cfg.supabaseUrl}/rest/v1/orders?status=in.(pending,preparing,ready)&order=created_at.asc`,
+        { headers }
+      );
+      const orders = await res.json();
+      renderOrders(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      console.warn('[staff-screen] could not load orders', e);
+    }
+  }
+
+  function orderCard(order) {
+    const time = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = { dinein: 'Sur place', takeaway: 'À emporter', delivery: 'Livraison' }[order.order_type] || order.order_type;
+    const itemsHtml = (order.items || [])
+      .map((it) => `<div><span>${it.quantity} × ${escapeHtml(it.name)}</span><span>${it.price * it.quantity} MAD</span></div>`)
+      .join('');
+    const nextStatus = { pending: 'preparing', preparing: 'ready', ready: 'completed' }[order.status];
+    const nextLabel = { preparing: 'Démarrer', ready: 'Prête', completed: 'Terminer' }[nextStatus];
+
+    const el = document.createElement('div');
+    el.className = 'order-card';
+    el.innerHTML = `
+      <div class="top-row">
+        <span class="order-ref">${escapeHtml(order.order_ref || order.customer_name)}</span>
+        <span class="order-time">${time}</span>
+      </div>
+      <div class="order-meta">${typeLabel}${order.address_or_table ? ' · ' + escapeHtml(order.address_or_table) : ''} · ${escapeHtml(order.customer_phone)}</div>
+      <div class="order-items">${itemsHtml}</div>
+      ${order.notes ? `<div class="order-notes">"${escapeHtml(order.notes)}"</div>` : ''}
+      <div class="order-total">${order.total} MAD</div>
+      <div class="order-actions">
+        ${nextStatus ? `<button class="btn btn-primary" data-action="advance">${nextLabel}</button>` : ''}
+        <button class="btn btn-danger" data-action="cancel">Annuler</button>
+      </div>
+    `;
+    el.querySelector('[data-action="advance"]')?.addEventListener('click', () => updateOrderStatus(order.id, nextStatus));
+    el.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+      if (confirm('Annuler cette commande ?')) updateOrderStatus(order.id, 'cancelled');
+    });
+    return el;
+  }
+
+  function renderOrders(orders) {
+    const cols = { pending: document.getElementById('col-pending'), preparing: document.getElementById('col-preparing'), ready: document.getElementById('col-ready') };
+    Object.values(cols).forEach((c) => (c.innerHTML = ''));
+    const byStatus = { pending: [], preparing: [], ready: [] };
+    orders.forEach((o) => byStatus[o.status]?.push(o));
+    Object.entries(byStatus).forEach(([status, list]) => {
+      if (!list.length) {
+        cols[status].innerHTML = '<p class="empty-note">Aucune commande</p>';
+        return;
+      }
+      list.forEach((o) => cols[status].appendChild(orderCard(o)));
+    });
+  }
+
+  async function updateOrderStatus(id, status) {
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/orders?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      alert("Impossible de mettre à jour la commande — vérifiez la connexion.");
+    }
+    loadOrders();
+  }
+
+  // ==========================================================================
+  // Réservations
+  // ==========================================================================
+  let rsvFilter = 'upcoming';
+
+  document.getElementById('rsv-filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-rsv-filter]');
+    if (!btn) return;
+    rsvFilter = btn.dataset.rsvFilter;
+    document.querySelectorAll('#rsv-filters .filter-chip').forEach((c) => c.classList.toggle('is-active', c === btn));
+    renderReservations(lastReservations);
+  });
+
+  let lastReservations = [];
+
+  async function loadReservations() {
+    if (!cfg.supabaseUrl) return;
+    try {
+      const res = await fetch(
+        `${cfg.supabaseUrl}/rest/v1/reservations?order=reservation_date.asc,reservation_time.asc`,
+        { headers }
+      );
+      const rows = await res.json();
+      lastReservations = Array.isArray(rows) ? rows : [];
+      renderReservations(lastReservations);
+    } catch (e) {
+      console.warn('[staff-screen] could not load reservations', e);
+    }
+  }
+
+  function todayIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function dayLabel(iso) {
+    const today = todayIso();
+    const d = new Date(iso + 'T00:00:00');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowIso = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    if (iso === today) return "Aujourd'hui";
+    if (iso === tomorrowIso) return 'Demain';
+    return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  function reservationCard(rsv) {
+    const el = document.createElement('div');
+    el.className = 'rsv-card';
+    const statusLabel = { pending: 'En attente', confirmed: 'Confirmée', cancelled: 'Annulée' }[rsv.status] || rsv.status;
+    el.innerHTML = `
+      <div class="top-row">
+        <span class="rsv-name">${escapeHtml(rsv.name)}</span>
+        <span class="rsv-time">${escapeHtml(rsv.reservation_time)}</span>
+      </div>
+      <div class="rsv-meta">${rsv.party_size} pers. · ${escapeHtml(rsv.phone)}</div>
+      <span class="status-badge ${rsv.status}">${statusLabel}</span>
+      ${rsv.notes ? `<div class="rsv-notes">"${escapeHtml(rsv.notes)}"</div>` : ''}
+      <div class="rsv-actions">
+        ${rsv.status === 'pending' ? '<button class="btn btn-primary" data-action="confirm">Confirmer</button><button class="btn btn-danger" data-action="decline">Refuser</button>' : ''}
+        ${rsv.status === 'confirmed' ? '<button class="btn btn-danger" data-action="cancel">Annuler</button>' : ''}
+      </div>
+    `;
+    el.querySelector('[data-action="confirm"]')?.addEventListener('click', () => updateReservationStatus(rsv.id, 'confirmed'));
+    el.querySelector('[data-action="decline"]')?.addEventListener('click', () => updateReservationStatus(rsv.id, 'cancelled'));
+    el.querySelector('[data-action="cancel"]')?.addEventListener('click', () => {
+      if (confirm('Annuler cette réservation ?')) updateReservationStatus(rsv.id, 'cancelled');
+    });
+    return el;
+  }
+
+  function renderReservations(rows) {
+    const container = document.getElementById('rsv-agenda');
+    container.innerHTML = '';
+    const today = todayIso();
+
+    let filtered = rows;
+    if (rsvFilter === 'upcoming') {
+      filtered = rows.filter((r) => r.status !== 'cancelled' && r.reservation_date >= today);
+    } else if (rsvFilter === 'pending') {
+      filtered = rows.filter((r) => r.status === 'pending');
+    }
+
+    const pendingCount = rows.filter((r) => r.status === 'pending' && r.reservation_date >= today).length;
+    const badge = document.getElementById('rsv-badge');
+    if (pendingCount > 0) {
+      badge.style.display = 'inline-flex';
+      badge.textContent = String(pendingCount);
+    } else {
+      badge.style.display = 'none';
+    }
+
+    if (!filtered.length) {
+      container.innerHTML = '<p class="empty-note">Aucune réservation à afficher pour ce filtre.</p>';
+      return;
+    }
+
+    const byDay = new Map();
+    filtered.forEach((r) => {
+      if (!byDay.has(r.reservation_date)) byDay.set(r.reservation_date, []);
+      byDay.get(r.reservation_date).push(r);
+    });
+
+    [...byDay.keys()].sort().forEach((iso) => {
+      const dayWrap = document.createElement('div');
+      dayWrap.className = 'agenda-day';
+      const heading = document.createElement('h2');
+      heading.textContent = dayLabel(iso);
+      dayWrap.appendChild(heading);
+      const grid = document.createElement('div');
+      grid.className = 'rsv-grid';
+      byDay.get(iso).forEach((r) => grid.appendChild(reservationCard(r)));
+      dayWrap.appendChild(grid);
+      container.appendChild(dayWrap);
+    });
+  }
+
+  async function updateReservationStatus(id, status) {
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/reservations?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status }),
+      });
+    } catch (e) {
+      alert('Impossible de mettre à jour la réservation — vérifiez la connexion.');
+    }
+    loadReservations();
+  }
+
+  // ---- Manual "add reservation" form ----
+  const rsvAddToggle = document.getElementById('rsv-add-toggle');
+  const rsvAddForm = document.getElementById('rsv-add-form');
+  rsvAddToggle.addEventListener('click', () => {
+    rsvAddForm.classList.add('is-open');
+    document.getElementById('rsv-f-date').value = todayIso();
+  });
+  document.getElementById('rsv-add-cancel').addEventListener('click', () => {
+    rsvAddForm.classList.remove('is-open');
+    rsvAddForm.reset();
+  });
+  rsvAddForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('rsv-f-error');
+    errorEl.style.display = 'none';
+    const name = document.getElementById('rsv-f-name').value.trim();
+    const phone = document.getElementById('rsv-f-phone').value.trim();
+    const date = document.getElementById('rsv-f-date').value;
+    const time = document.getElementById('rsv-f-time').value;
+    const partySize = Number(document.getElementById('rsv-f-size').value);
+    const notes = document.getElementById('rsv-f-notes').value.trim();
+    if (!name || !phone || !date || !time || !partySize) {
+      errorEl.textContent = 'Merci de remplir tous les champs obligatoires.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    try {
+      // Staff-entered reservations (phone / walk-in) are already confirmed —
+      // unlike the site's own form, there's no "we'll call you back" step,
+      // staff IS the confirmation.
+      await fetch(`${cfg.supabaseUrl}/rest/v1/reservations`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          name,
+          phone,
+          party_size: partySize,
+          reservation_date: date,
+          reservation_time: time,
+          notes: notes || null,
+          status: 'confirmed',
+        }),
+      });
+      rsvAddForm.reset();
+      rsvAddForm.classList.remove('is-open');
+      loadReservations();
+    } catch (e) {
+      errorEl.textContent = "Impossible d'enregistrer — vérifiez la connexion.";
+      errorEl.style.display = 'block';
+    }
+  });
+
+  // ==========================================================================
+  // Menu — existing-dish price/épuisé editor
+  // ==========================================================================
+  async function loadMenuOverrides() {
+    if (!cfg.supabaseUrl) return {};
+    try {
+      const res = await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?select=item_key,price,available,name`, { headers });
+      const rows = await res.json();
+      const map = {};
+      (Array.isArray(rows) ? rows : []).forEach((r) => (map[r.item_key] = r));
+      return map;
+    } catch (e) {
+      console.warn('[staff-screen] could not load menu overrides', e);
+      return {};
+    }
+  }
+
+  async function renderMenuEditor() {
+    const overrides = await loadMenuOverrides();
+    const container = document.getElementById('menu-editor');
+    container.innerHTML = '';
+    let currentCategory = null;
+    let table, tbody;
+
+    MENU_ITEMS.forEach((item) => {
+      if (item.category !== currentCategory) {
+        currentCategory = item.category;
+        const heading = document.createElement('div');
+        heading.className = 'category-heading';
+        heading.textContent = currentCategory;
+        container.appendChild(heading);
+        table = document.createElement('table');
+        table.className = 'menu-table';
+        table.innerHTML = '<thead><tr><th>Plat</th><th>Disponible</th><th>Prix (MAD)</th><th></th></tr></thead>';
+        tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        container.appendChild(table);
+      }
+      // name-overrides only ever apply to CUSTOM dishes (see below) — an
+      // override row for a static item never carries a name, so this is
+      // always item.key for the existing-dish table.
+      const override = overrides[item.key];
+      const available = override ? override.available !== false : true;
+      const price = override && override.price != null ? override.price : item.price;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${escapeHtml(item.key)}</td>
+        <td><label class="toggle-available"><input type="checkbox" ${available ? 'checked' : ''} data-key="${escapeHtml(item.key)}" data-field="available" /> ${available ? 'Oui' : 'Épuisé'}</label></td>
+        <td><input type="number" step="0.5" value="${price}" data-key="${escapeHtml(item.key)}" data-field="price" /></td>
+        <td><button class="btn btn-secondary" data-action="save" data-key="${escapeHtml(item.key)}">Enregistrer</button></td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    container.querySelectorAll('[data-action="save"]').forEach((btn) => {
+      btn.addEventListener('click', () => saveMenuItem(btn.dataset.key));
+    });
+    container.querySelectorAll('input[type="checkbox"][data-field="available"]').forEach((cb) => {
+      cb.addEventListener('change', () => {
+        const label = cb.parentElement.lastChild;
+        label.textContent = ' ' + (cb.checked ? 'Oui' : 'Épuisé');
+      });
+    });
+  }
+
+  async function saveMenuItem(key) {
+    const row = [...document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`)];
+    const available = row.find((el) => el.dataset.field === 'available')?.checked;
+    const price = Number(row.find((el) => el.dataset.field === 'price')?.value);
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?on_conflict=item_key`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ item_key: key, available, price: Number.isNaN(price) ? null : price }),
+      });
+    } catch (e) {
+      alert('Enregistrement impossible — vérifiez la connexion.');
+    }
+  }
+
+  // ==========================================================================
+  // Menu — custom dishes added entirely from this screen (not in MENU_ITEMS)
+  // ==========================================================================
+  function slugify(name) {
+    return (
+      'custom-' +
+      name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') +
+      '-' +
+      Date.now().toString(36)
+    );
+  }
+
+  const staticKeys = new Set(MENU_ITEMS.map((i) => i.key));
+
+  async function loadCustomDishes() {
+    if (!cfg.supabaseUrl) return [];
+    try {
+      const res = await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?name=not.is.null&order=updated_at.desc`, { headers });
+      const rows = await res.json();
+      // Belt-and-suspenders filter — name is only ever set on custom rows
+      // (see schema.sql), but also exclude anything that happens to share a
+      // static item's key so a future edge case can't double-render a dish.
+      return (Array.isArray(rows) ? rows : []).filter((r) => !staticKeys.has(r.item_key));
+    } catch (e) {
+      console.warn('[staff-screen] could not load custom dishes', e);
+      return [];
+    }
+  }
+
+  function customDishCard(row) {
+    const el = document.createElement('div');
+    el.className = 'custom-dish-card';
+    const available = row.available !== false;
+    el.innerHTML = `
+      <div class="grow">
+        <div class="dish-name">${escapeHtml(row.name)} ${available ? '' : '<span class="status-badge cancelled">Épuisé</span>'}</div>
+        ${row.description ? `<div class="dish-desc">${escapeHtml(row.description)}</div>` : ''}
+        <div class="dish-cat">${escapeHtml(row.category || 'Sans catégorie')} · ${row.price != null ? row.price + ' MAD' : '—'}</div>
+      </div>
+      <div class="order-actions">
+        <button class="btn btn-secondary" data-action="toggle">${available ? 'Marquer épuisé' : 'Marquer disponible'}</button>
+        <button class="btn btn-danger" data-action="delete">Supprimer</button>
+      </div>
+    `;
+    el.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCustomDish(row.id, !available));
+    el.querySelector('[data-action="delete"]').addEventListener('click', () => {
+      if (confirm(`Supprimer "${row.name}" du menu ?`)) deleteCustomDish(row.id);
+    });
+    return el;
+  }
+
+  async function renderCustomDishes() {
+    const rows = await loadCustomDishes();
+    const container = document.getElementById('custom-dishes');
+    container.innerHTML = '';
+    if (!rows.length) {
+      container.innerHTML = '<p class="empty-note">Aucun plat ajouté depuis cet écran pour le moment.</p>';
+      return;
+    }
+    rows.forEach((r) => container.appendChild(customDishCard(r)));
+  }
+
+  async function toggleCustomDish(id, available) {
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?id=eq.${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ available }),
+      });
+    } catch (e) {
+      alert('Impossible de mettre à jour ce plat — vérifiez la connexion.');
+    }
+    renderCustomDishes();
+  }
+
+  async function deleteCustomDish(id) {
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items?id=eq.${id}`, { method: 'DELETE', headers });
+    } catch (e) {
+      alert('Impossible de supprimer ce plat — vérifiez la connexion.');
+    }
+    renderCustomDishes();
+  }
+
+  // ---- Add-dish form ----
+  const dishAddToggle = document.getElementById('dish-add-toggle');
+  const dishAddForm = document.getElementById('dish-add-form');
+  dishAddToggle.addEventListener('click', () => dishAddForm.classList.add('is-open'));
+  document.getElementById('dish-add-cancel').addEventListener('click', () => {
+    dishAddForm.classList.remove('is-open');
+    dishAddForm.reset();
+  });
+  dishAddForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('dish-f-error');
+    errorEl.style.display = 'none';
+    const name = document.getElementById('dish-f-name').value.trim();
+    const category = document.getElementById('dish-f-category').value.trim();
+    const price = Number(document.getElementById('dish-f-price').value);
+    const description = document.getElementById('dish-f-desc').value.trim();
+    if (!name || !category || !price) {
+      errorEl.textContent = 'Merci de remplir le nom, la catégorie et le prix.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    try {
+      await fetch(`${cfg.supabaseUrl}/rest/v1/menu_items`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          item_key: slugify(name),
+          name,
+          description: description || null,
+          category,
+          price,
+          available: true,
+        }),
+      });
+      dishAddForm.reset();
+      dishAddForm.classList.remove('is-open');
+      renderCustomDishes();
+    } catch (e) {
+      errorEl.textContent = "Impossible d'ajouter ce plat — vérifiez la connexion.";
+      errorEl.style.display = 'block';
+    }
+  });
+
+  // ==========================================================================
+  // Boot
+  // ==========================================================================
+  if (!cfg.supabaseUrl || cfg.supabaseUrl.startsWith('REPLACE')) {
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      '<div class="config-warning">⚠️ Config manquante — remplissez supabaseUrl/supabaseAnonKey en haut de ce fichier.</div>'
+    );
+  } else {
+    loadOrders();
+    loadReservations();
+    renderMenuEditor();
+    renderCustomDishes();
+    setInterval(loadOrders, cfg.pollMs);
+    setInterval(loadReservations, cfg.pollMs);
+    setInterval(renderMenuEditor, cfg.pollMs * 3);
+    setInterval(renderCustomDishes, cfg.pollMs * 3);
+  }
+</script>
+</body>
+</html>

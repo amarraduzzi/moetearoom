@@ -42,11 +42,11 @@ to your Supabase project.
 
 ## 5. Wire it into the staff screen
 
-The staff screen lives in this repo under `staff-screen/` (a separate static
-deploy — its own Cloudflare Pages project, not part of this Astro site's
-build). Open `staff-screen/index.html`, fill in the same Project URL and
-anon key from step 3 at the top of the file, and deploy that folder on its
-own — see `staff-screen/README.md`.
+The staff screen now lives AT `moetearoom.pages.dev/screen` — it's part of
+this same Astro site's build (`public/screen/index.html`), not a separate
+deploy. Fill in the same Project URL and anon key from step 3 at the top of
+that file (and, for reference, in the archived copy at
+`staff-screen/index.html` too, so they don't drift apart).
 
 The staff screen has three tabs: live orders, live reservations (the site's
 reservation form writes straight to the `reservations` table this schema
@@ -56,6 +56,23 @@ without a code deploy, AND add a brand new dish straight from the screen
 (writes to the `menu_items` table `schema.sql` created) — the Menu page
 picks up all of this automatically on next page load, no rebuild/redeploy
 of the main site needed.
+
+## 6. Set up the staff screen's login
+
+`/screen` is protected by a real login prompt, enforced server-side by a
+Cloudflare Pages Function (`functions/screen/_middleware.js` in this repo —
+nothing to edit there). You only need to set two environment variables,
+once, in the Cloudflare dashboard:
+
+1. Open the Cloudflare Pages project for this site → **Settings →
+   Environment variables**.
+2. Add `STAFF_USER` (e.g. `personnel`) and `STAFF_PASS` (a strong password
+   of your choice) for **Production** (and Preview too, if you want preview
+   deploys protected as well).
+3. Redeploy once so the Function picks up the new variables.
+
+Until both variables are set, `/screen` deliberately shows an error instead
+of loading — that's the fail-safe working as intended, not a bug.
 
 ## Notes
 
