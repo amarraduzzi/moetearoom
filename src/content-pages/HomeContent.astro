@@ -450,26 +450,28 @@ const path = localizedPath('/', lang);
 
   <Ornament />
 
-  <!-- Signature spotlight -->
-  <section class="relative min-h-[480px] sm:h-[78vh] overflow-hidden" data-reveal="scale">
-    <div class="ken-burns absolute inset-0">
+  <!-- Signature spotlight — was a text-over-photo hero with a gradient
+       overlay, which on this light/cream theme meant dark brown text
+       blended against a warm, busy food photo: never enough contrast, and
+       "vaag" (hazy) rather than crisp at any tuning of the gradient. Redone
+       as a hard-edged split: the quote sits on a solid, flat panel (its own
+       background color, zero blend with the photo) and the photo runs
+       full-bleed beside/below it, untouched and sharp — legibility is now
+       structural, not a matter of overlay opacity. -->
+  <section class="signature-spotlight" data-reveal="scale">
+    <div class="signature-spotlight-text">
+      <span class="signature-kicker">{t(copy.platSignatureKicker, lang)}</span>
+      <p class="pull-quote">
+        {t(copy.platSignatureQuote, lang)}
+      </p>
+      <a href={localizedPath('/menu', lang)} class="signature-cta">{t(common.voirLeMenuComplet, lang)} {arrow(lang)}</a>
+    </div>
+    <div class="signature-spotlight-image ken-burns">
       <img
         src="/images/signature-dish.webp"
         alt={t(copy.platSignatureQuote, lang)}
-        class="absolute inset-0 w-full h-full object-cover"
         loading="lazy"
       />
-    </div>
-    <div class="absolute inset-0 signature-overlay"></div>
-
-    <div class="relative z-10 h-full flex items-center max-w-7xl mx-auto px-5 sm:px-8">
-      <div class="max-w-md signature-text">
-        <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-4" style="color: var(--color-accent)">{t(copy.platSignatureKicker, lang)}</span>
-        <p class="pull-quote">
-          {t(copy.platSignatureQuote, lang)}
-        </p>
-        <a href={localizedPath('/menu', lang)} class="inline-block mt-6 text-sm font-bold" style="color: var(--color-accent)">{t(common.voirLeMenuComplet, lang)} {arrow(lang)}</a>
-      </div>
     </div>
   </section>
 

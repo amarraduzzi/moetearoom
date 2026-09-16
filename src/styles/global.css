@@ -185,40 +185,60 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Signature-spotlight overlay + text — the diagonal gradient behind the
-   "plat signature" pull-quote was too subtle against a busy, often-light
-   food photo (the cheesecake shot in particular), so the italic display
-   font lost most of its edges. Two fixes, both needed: a darker overlay
-   dedicated to this section (kept separate from other uses of the same
-   photo-hero pattern so nothing else gets darkened), and a text-shadow on
-   the quote itself so letterforms hold their edge even where the overlay
-   still lets photo detail through. Mobile gets its own, near-uniform
-   overlay rather than the desktop diagonal: on narrow screens the quote
-   wraps close to full width, so a left-to-right gradient leaves its right
-   half sitting almost directly on the raw photo. */
-.signature-overlay {
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, var(--color-primary-dark) 55%, var(--color-background)) 0%,
-    color-mix(in srgb, var(--color-primary-dark) 38%, color-mix(in srgb, var(--color-background) 60%, transparent)) 42%,
-    color-mix(in srgb, var(--color-background) 22%, transparent) 68%,
-    transparent 100%
-  );
+/* Signature spotlight — hard-edged split instead of text laid over a
+   photo. A solid panel means the quote's contrast is fixed by the theme's
+   own text/surface colors (always correct, on any photo), and the photo
+   stays untouched and sharp instead of dimmed under a gradient. */
+.signature-spotlight {
+  display: flex;
+  flex-direction: column;
 }
-.signature-text .pull-quote {
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.9);
+.signature-spotlight-text {
+  background-color: var(--color-surface);
+  padding: 3.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
-.signature-text span {
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+.signature-kicker {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  margin-bottom: 1rem;
+  color: var(--color-accent);
 }
-@media (max-width: 640px) {
-  .signature-overlay {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-primary-dark) 45%, var(--color-background)) 0%,
-      color-mix(in srgb, var(--color-primary-dark) 62%, var(--color-background)) 45%,
-      color-mix(in srgb, var(--color-primary-dark) 70%, var(--color-background)) 100%
-    );
+.signature-cta {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+.signature-spotlight-image {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+.signature-spotlight-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (min-width: 640px) {
+  .signature-spotlight {
+    flex-direction: row;
+    min-height: 560px;
+  }
+  .signature-spotlight-text {
+    width: 42%;
+    padding: 4rem 3.5rem;
+  }
+  .signature-spotlight-image {
+    width: 58%;
+    aspect-ratio: auto;
   }
 }
 
