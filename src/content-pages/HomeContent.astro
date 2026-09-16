@@ -9,6 +9,7 @@
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import Ornament from '../components/Ornament.astro';
+import LogoWatermark from '../components/LogoWatermark.astro';
 import { siteConfig } from '../config/site.config';
 import { getOrderCtaLabel } from '../lib/nav';
 import { menuHighlights } from '../content/menu-highlights';
@@ -367,7 +368,8 @@ const path = localizedPath('/', lang);
   </div>
 
   <!-- Why us / E-E-A-T signals -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 grid sm:grid-cols-3 gap-8">
+  <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 grid sm:grid-cols-3 gap-8 overflow-hidden">
+    <LogoWatermark size="w-[22rem] h-[22rem]" />
     {copy.whyUs.map((f, i) => (
       <div data-reveal style={`transition-delay: ${i * 100}ms`}>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.5" class="mb-4" style="color: var(--color-accent)">

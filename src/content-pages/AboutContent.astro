@@ -4,6 +4,7 @@
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import Ornament from '../components/Ornament.astro';
+import LogoWatermark from '../components/LogoWatermark.astro';
 import { siteConfig } from '../config/site.config';
 import { aggregateRating } from '../content/testimonials';
 import { t, localizedPath, type Language } from '../i18n/languages';
@@ -77,20 +78,16 @@ const path = localizedPath('/a-propos', lang);
   <PageHero
     kicker={t(copy.kicker, lang)}
     title={t(copy.heroTitle, lang)}
-    image="/images/about-hero.jpg"
+    image="/images/interior-1.webp"
     alt={t(copy.heroAlt, lang)}
   />
   <section class="relative max-w-3xl mx-auto px-5 sm:px-8 pt-12 sm:pt-16 pb-20 overflow-hidden">
     <!-- Large faded emblem behind the copy — the real gold mark, not a
          generic decorative shape, used at a scale it can never appear at
          in the header. A quiet "wow" texture instead of another flat
-         paragraph block. -->
-    <img
-      src="/images/logo-mark.webp"
-      alt=""
-      aria-hidden="true"
-      class="mark-watermark w-[26rem] h-[26rem] -right-32 -top-16 sm:-right-24"
-    />
+         paragraph block. Now shared via LogoWatermark.astro — see that
+         component for why this became the site's one recurring motif. -->
+    <LogoWatermark />
     <div class="relative space-y-5 text-sm sm:text-base leading-relaxed" style="color: var(--color-text-muted)" data-reveal>
       <p>{t(copy.p1, lang)}</p>
       <p>{t(copy.p2, lang)}</p>

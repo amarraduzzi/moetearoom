@@ -1,0 +1,26 @@
+---
+// The one recurring decorative motif repeated across every page — the
+// client's real gold wordmark, used huge and faded (see .mark-watermark in
+// global.css: 8% opacity, grayscaled slightly) as a background texture
+// instead of an invented generic ornament. First shipped on the About
+// page's intro section; now the same treatment, same corner, same size by
+// default, on the first content section of every other page too — a
+// signature that's actually theirs, not a borrowed shape.
+//
+// Always drop this into a section with `relative overflow-hidden` — it's
+// `position: absolute` and needs that positioning context, and
+// overflow-hidden keeps the oversized image from creating horizontal
+// scroll (it deliberately hangs off the section's edge).
+interface Props {
+  side?: 'left' | 'right';
+  size?: string; // Tailwind width/height pair, e.g. 'w-[26rem] h-[26rem]'
+}
+const { side = 'right', size = 'w-[26rem] h-[26rem]' } = Astro.props;
+const positionClass = side === 'right' ? '-right-32 -top-16 sm:-right-24' : '-left-32 -top-16 sm:-left-24';
+---
+<img
+  src="/images/logo-mark.webp"
+  alt=""
+  aria-hidden="true"
+  class={`mark-watermark ${size} ${positionClass}`}
+/>

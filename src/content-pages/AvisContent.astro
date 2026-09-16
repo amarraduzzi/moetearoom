@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import PageHero from '../components/PageHero.astro';
 import Ornament from '../components/Ornament.astro';
+import LogoWatermark from '../components/LogoWatermark.astro';
 import { siteConfig } from '../config/site.config';
 import { testimonials, aggregateRating } from '../content/testimonials';
 import { t, localizedPath, arrow, type Language } from '../i18n/languages';
@@ -107,6 +108,7 @@ const path = localizedPath('/avis', lang);
   {testimonials[0] && (
     <section class="relative max-w-3xl mx-auto px-5 sm:px-8 pb-10 sm:pb-16 text-center overflow-hidden" data-reveal>
       <div class="section-glow" style="width: 360px; height: 360px; background: var(--color-accent); opacity: 0.08; left: -120px; top: -40px;"></div>
+      <LogoWatermark size="w-[20rem] h-[20rem]" />
       <span class="relative font-display block text-6xl leading-none mb-2" style="color: var(--color-accent)">"</span>
       <p class="relative pull-quote -mt-6">{t(testimonials[0].text, lang)}</p>
       <p class="relative mt-6 text-sm font-bold" style="color: var(--color-accent)">
