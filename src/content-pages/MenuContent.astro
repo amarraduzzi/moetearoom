@@ -3,12 +3,10 @@
 // pattern this and every other src/content-pages/*.astro file follows.
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
-import Ornament from '../components/Ornament.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import FormuleSpotlight from '../components/FormuleSpotlight.astro';
 import { siteConfig } from '../config/site.config';
-import { getOrderCtaLabel } from '../lib/nav';
 import { menuHighlights } from '../content/menu-highlights';
 import { menuFormules } from '../content/menu-formules';
 import { t, localizedPath, type Language } from '../i18n/languages';
@@ -22,7 +20,6 @@ const { lang = 'fr' } = Astro.props;
 const { name } = siteConfig.identity;
 const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
 const city = t(place.city, lang);
-const orderCtaLabel = getOrderCtaLabel(lang);
 
 // Which prep station makes each category, keyed by the category's French
 // label (always present, unlike a translated one) — stamped onto each
@@ -70,7 +67,6 @@ const copy = {
     en: 'A selection of our signature dishes. The full menu, with all options and extras, is available at the time of ordering.',
     ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة عند الطلب.',
   },
-  readyToOrder: { fr: 'Prêt à commander ?', en: 'Ready to order?', ar: 'جاهز للطلب؟' },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
   groupDrinksPastry: { fr: 'Boissons & Pâtisserie', en: 'Drinks & Pastries', ar: 'المشروبات والحلويات' },
@@ -332,12 +328,6 @@ const path = localizedPath('/menu', lang);
     <div class="mt-8">
       <Button href={reservationPath} variant="cta">{t(nav.reservation, lang)}</Button>
     </div>
-  </section>
-
-  <Ornament />
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 py-16 text-center">
-    <p class="text-sm mb-4" style="color: var(--color-text-muted)">{t(copy.readyToOrder, lang)}</p>
-    <Button href={orderCtaLabel.href} cartTrigger variant="cta">{orderCtaLabel.label}</Button>
   </section>
 </Layout>
 
