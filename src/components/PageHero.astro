@@ -1,19 +1,12 @@
 ---
 // Compact photo-hero for interior pages — same visual grammar as the big
-// Home hero (full-bleed photo, feathered vignette rising from the bottom,
-// gold kicker + serif H1 sitting in the same spot) but shorter (44-50vh
-// instead of 88vh/min-h-screen). Home's hero is deliberately the one "big"
-// opening moment on the site; repeating it at full size on every page
-// would dilute that and get repetitive fast with only a handful of real
-// photos to draw from. This gives every page the same "opening" feeling
-// without competing with Home for attention.
-//
-// Previously this used a page-cream (var(--color-background)) wash across
-// the WHOLE photo, up to 70% opacity even near the top — every interior
-// page photo read as hazy/washed-out next to Home's crisp one. Fixed to
-// use Home's actual technique instead: a dark, feathered vignette confined
-// to where the text sits, near-white text on top, and the rest of the
-// photo left fully bright and untouched.
+// Home hero (full-bleed photo, dark gradient rising from the bottom, gold
+// kicker + serif H1 sitting in the same spot) but shorter (44-50vh instead
+// of 88vh/min-h-screen). Home's hero is deliberately the one "big" opening
+// moment on the site; repeating it at full size on every page would dilute
+// that and get repetitive fast with only a handful of real photos to draw
+// from. This gives every page the same "opening" feeling without
+// competing with Home for attention.
 interface Props {
   kicker: string;
   title: string;
@@ -24,21 +17,29 @@ interface Props {
 const { kicker, title, subtitle, image, alt } = Astro.props;
 ---
 <section class="relative h-[42vh] min-h-[320px] sm:h-[48vh] sm:min-h-[380px] flex items-end overflow-hidden">
-  <img src={image} alt={alt} class="absolute inset-0 w-full h-full object-cover" style="filter: saturate(1.1) contrast(1.05)" />
+  <img src={image} alt={alt} class="absolute inset-0 w-full h-full object-cover" />
+  <!-- Same fix as Menu/Reservation's own heroes (see MenuContent.astro's
+       comment) — a light cream tint over these photos washed them out
+       instead of darkening them, and dark-brown heading text only worked
+       against that same wash. A dark photographic vignette + near-white
+       text keeps the photo crisp with guaranteed contrast, matching every
+       other hero on the site now instead of being the one still-washed
+       pattern. This is the shared component, so About/Contact/FAQ/Avis all
+       get it at once. -->
   <div
     class="absolute inset-0"
-    style="background: linear-gradient(0deg, rgba(20,14,8,0.68) 0%, rgba(20,14,8,0.4) 30%, rgba(20,14,8,0.08) 60%, transparent 78%)"
+    style="background: linear-gradient(0deg, rgba(58,42,30,0.78) 0%, rgba(58,42,30,0.4) 45%, rgba(58,42,30,0.08) 75%, transparent 100%)"
   ></div>
 
   <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-10 sm:pb-14 w-full">
-    <span class="hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style="color: var(--color-accent)">
+    <span class="page-hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style="color: #F7F0DC">
       {kicker}
     </span>
-    <h1 class="hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">
+    <h1 class="page-hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">
       {title}
     </h1>
     {subtitle && (
-      <p class="hero-shadow mt-3 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.92)">
+      <p class="page-hero-shadow mt-3 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.9)">
         {subtitle}
       </p>
     )}
@@ -46,11 +47,9 @@ const { kicker, title, subtitle, image, alt } = Astro.props;
 </section>
 
 <style>
-  /* Same rationale as Home's hero-shadow: a soft, tight drop-shadow so the
-     near-white text keeps a hairline of separation from the photo in the
-     few spots the vignette runs light, without resorting to a text-stroke
-     "sticker" look. */
-  .hero-shadow {
+  /* Same text-shadow used on Home/Menu/Reservation's heroes — kept local
+     since Astro scopes <style> per component. */
+  .page-hero-shadow {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 18px rgba(0, 0, 0, 0.45);
   }
 </style>
