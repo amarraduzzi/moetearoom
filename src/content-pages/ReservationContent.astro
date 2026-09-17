@@ -102,13 +102,27 @@ const copy = {
 // Time-slot options generated straight from siteConfig.contact.hours — same
 // single source of truth the "open now" badge and the footer hours line
 // use. Last slot is closing time minus 1h, not closing time itself.
+//
+// Real bug fixed here (Amar, Sept 2026 — reported as "de tijdaanduiding is
+// niet juist"): open/close are fractional HOURS (8.5 = 08:30, 23.5 = 23:30,
+// see site.config.ts), but the old loop did `for (let h = open; ...; h++)`
+// and glued minutes on with string concatenation — that walks 8.5, 9.5,
+// 10.5… and printed garbled slots like "8.5:00", never a real time. Fixed
+// by working in whole minutes instead of fractional hours, so half-hour
+// opening times are handled correctly rather than by accident. Written as
+// "19.00" (period, not colon) — the locally-familiar way to write a time
+// here. Plain text end to end (schema.sql's reservation_time is `text`,
+// and the staff screen only ever displays/sorts it as a string), so this
+// is a pure display/value fix with no knock-on parsing anywhere.
 const { open, close } = siteConfig.contact.hours;
+const openMinutes = Math.round(open * 60);
+const closeMinutes = Math.round(close * 60);
 const timeSlots: string[] = [];
-for (let h = open; h < close - 1; h++) {
-  timeSlots.push(`${String(h).padStart(2, '0')}:00`);
-  timeSlots.push(`${String(h).padStart(2, '0')}:30`);
+for (let m = openMinutes; m <= closeMinutes - 60; m += 30) {
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  timeSlots.push(`${String(h).padStart(2, '0')}.${String(mm).padStart(2, '0')}`);
 }
-timeSlots.push(`${String(close - 1).padStart(2, '0')}:00`);
 
 const partySizes = [1, 2, 3, 4, 5, 6, 7, 8];
 

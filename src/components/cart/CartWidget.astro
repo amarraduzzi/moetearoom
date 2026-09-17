@@ -860,6 +860,21 @@ const { currency, name: restaurantName } = siteConfig.identity;
         showStep(stepLines);
         openDrawer();
       });
+
+      // Auto-open on add-to-cart (Amar, Sept 2026): "als er een bestelling
+      // wordt gedaan dat meteen de order in zicht komt" — a tap on the FAB
+      // badge alone wasn't a strong enough signal on mobile that an item
+      // actually landed in the order. MenuContent.astro's add-to-cart
+      // buttons dispatch this event right after cart.addToCart() succeeds;
+      // this is the only listener for it, so quantity +/- inside the
+      // drawer itself and the post-checkout cart clear (both of which go
+      // through cart.ts's generic 'moe:cart-updated' event instead) don't
+      // re-trigger the drawer while it's already open or just closed.
+      document.addEventListener('moe:item-added', () => {
+        showStep(stepLines);
+        openDrawer();
+      });
+
       closeBtn.addEventListener('click', closeDrawer);
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeDrawer();

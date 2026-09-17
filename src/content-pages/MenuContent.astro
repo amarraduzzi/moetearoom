@@ -757,6 +757,10 @@ const path = localizedPath('/menu', lang);
           const station = btn.getAttribute('data-station') === 'bar' ? 'bar' : 'cuisine';
           if (!id || !name || Number.isNaN(price)) return;
           addToCart(id, name, price, 1, station);
+          // Tells CartWidget.astro to pop the cart drawer open right away
+          // so the order is immediately visible on mobile instead of only
+          // bumping the FAB's badge count (Amar, Sept 2026).
+          document.dispatchEvent(new CustomEvent('moe:item-added'));
 
           btn.classList.add('is-added');
           window.setTimeout(() => btn.classList.remove('is-added'), 500);
