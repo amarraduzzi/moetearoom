@@ -108,14 +108,14 @@ export const faqItems: FaqItem[] = [
   },
   {
     question: {
-      fr: 'Quels moyens de paiement acceptez-vous ?', // ⚠ VÉRIFIER avec le client avant publication
-      en: 'What payment methods do you accept?', // ⚠ VERIFY with the client before publishing
-      ar: 'ما هي وسائل الدفع التي تقبلونها؟', // ⚠ تحقق من العميل قبل النشر
+      fr: 'Quels moyens de paiement acceptez-vous ?',
+      en: 'What payment methods do you accept?',
+      ar: 'ما هي وسائل الدفع التي تقبلونها؟',
     },
     answer: {
-      fr: 'REMPLACER — confirmer avec le client, ne jamais deviner (carte bancaire, espèces, etc.).',
-      en: 'REPLACE — confirm with the client, never guess (card, cash, etc.).',
-      ar: 'استبدل هذا — تأكّد من العميل، ولا تخمّن أبدًا.',
+      fr: 'Nous acceptons le paiement en espèces et par carte bancaire.',
+      en: 'We accept cash and card payments.',
+      ar: 'نقبل الدفع نقدًا وبالبطاقة البنكية.',
     },
     category: 'paiement',
   },
