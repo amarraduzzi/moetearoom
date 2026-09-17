@@ -79,6 +79,7 @@ const copy = {
   successAnother: { fr: 'Nouvelle commande', en: 'New order', ar: 'طلب جديد' },
   close: { fr: 'Fermer', en: 'Close', ar: 'إغلاق' },
   remove: { fr: 'Retirer', en: 'Remove', ar: 'إزالة' },
+  clearCart: { fr: 'Vider le panier', en: 'Clear cart', ar: 'إفراغ السلة' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
 
 const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
@@ -96,6 +97,41 @@ const { currency, name: restaurantName } = siteConfig.identity;
     </svg>
     <span id="cart-fab-badge" class="cart-fab-badge hidden">0</span>
   </button>
+
+  <!-- Sticky bottom order bar (Amar, Sept 2026 — reference: Indian
+       Flavors' own order bar, same idea, this site's own colors/shape):
+       pinned to the bottom of the viewport whenever the cart has at least
+       one line, so the order is always in view while browsing the menu —
+       no need to open anything to see it's there. Replaces an earlier
+       attempt that auto-opened the full drawer on every add-to-cart,
+       which was too disruptive. Hidden by default via .is-visible,
+       toggled in renderLines() below. The FAB above still exists for
+       reaching the cart from anywhere (e.g. a page without this bar), but
+       hides itself while this bar is showing so the two don't stack. -->
+  <div id="cart-bar" class="cart-bar" aria-hidden="true">
+    <button id="cart-bar-clear" type="button" class="cart-bar-icon-btn" aria-label={t(copy.clearCart, lang)}>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7h16 M9 7V4.6a1 1 0 011-1h4a1 1 0 011 1V7 M6.5 7l1 12.4a2 2 0 002 1.6h5a2 2 0 002-1.6L17.5 7" />
+      </svg>
+    </button>
+    <button id="cart-bar-open" type="button" class="cart-bar-icon-btn" aria-label={t(copy.cartTitle, lang)}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="21" r="1.4" fill="currentColor" stroke="none" />
+        <circle cx="18" cy="21" r="1.4" fill="currentColor" stroke="none" />
+        <path d="M2.5 3h2.4l2.2 11.6a2 2 0 002 1.6h8.6a2 2 0 002-1.6L20.5 7H6" />
+      </svg>
+      <span id="cart-bar-badge" class="cart-bar-badge">0</span>
+    </button>
+    <button id="cart-bar-checkout" type="button" class="cart-bar-checkout">
+      <span class="cart-bar-checkout-text">
+        <span>{t(copy.continue, lang)}</span>
+        <span id="cart-bar-total" class="cart-bar-checkout-total">0 {currency}</span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </button>
+  </div>
 
   <!-- Overlay + drawer — hidden by default, toggled via .is-open (no
        framework, plain class toggles + a couple of CSS transitions). -->
@@ -308,6 +344,108 @@ const { currency, name: restaurantName } = siteConfig.identity;
   }
   .cart-fab-badge.hidden {
     display: none;
+  }
+  .cart-fab.is-hidden-by-bar {
+    display: none;
+  }
+
+  /* Sticky bottom order bar — a fixed, full-width strip instead of the
+     round FAB once there's something to show, so the order is visible at
+     a glance without opening anything. env(safe-area-inset-bottom) keeps
+     it clear of a phone's home-swipe gesture bar. */
+  .cart-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  .cart-bar.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cart-bar-icon-btn {
+    position: relative;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-primary);
+  }
+  .cart-bar-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: var(--color-background);
+    border: 2px solid var(--color-surface);
+    font-size: 0.6rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  [dir='rtl'] .cart-bar-badge {
+    right: auto;
+    left: -2px;
+  }
+  .cart-bar-checkout {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    height: 46px;
+    padding: 0 1rem;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: var(--color-background);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .cart-bar-checkout-text {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .cart-bar-checkout-total {
+    font-weight: 800;
+  }
+  @media (min-width: 640px) {
+    .cart-bar {
+      left: 50%;
+      right: auto;
+      bottom: 24px;
+      transform: translate(-50%, 130%);
+      max-width: 30rem;
+      width: calc(100% - 3rem);
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.18);
+    }
+    .cart-bar.is-visible {
+      transform: translate(-50%, 0);
+    }
   }
 
   .cart-overlay {
@@ -727,6 +865,12 @@ const { currency, name: restaurantName } = siteConfig.identity;
     function wire(cart) {
       const fab = document.getElementById('cart-fab');
       const badge = document.getElementById('cart-fab-badge');
+      const bar = document.getElementById('cart-bar');
+      const barBadge = document.getElementById('cart-bar-badge');
+      const barTotal = document.getElementById('cart-bar-total');
+      const barClearBtn = document.getElementById('cart-bar-clear');
+      const barOpenBtn = document.getElementById('cart-bar-open');
+      const barCheckoutBtn = document.getElementById('cart-bar-checkout');
       const overlay = document.getElementById('cart-overlay');
       const closeBtn = document.getElementById('cart-close');
       const linesEl = document.getElementById('cart-lines');
@@ -806,6 +950,16 @@ const { currency, name: restaurantName } = siteConfig.identity;
         badge.textContent = String(count);
         badge.classList.toggle('hidden', count === 0);
         itemsCountEl.textContent = ITEMS_COUNT_LABEL(count);
+
+        // Sticky bottom order bar — see its markup comment above. Mirrors
+        // the same count/total as the FAB badge and the drawer's subtotal;
+        // the FAB itself hides while this bar is visible so they never
+        // show side by side.
+        barBadge.textContent = String(count);
+        barTotal.textContent = `${total} ${currency}`;
+        bar.classList.toggle('is-visible', hasLines);
+        bar.setAttribute('aria-hidden', String(!hasLines));
+        fab.classList.toggle('is-hidden-by-bar', hasLines);
       }
 
       function escapeHtml(str) {
@@ -861,18 +1015,16 @@ const { currency, name: restaurantName } = siteConfig.identity;
         openDrawer();
       });
 
-      // Auto-open on add-to-cart (Amar, Sept 2026): "als er een bestelling
-      // wordt gedaan dat meteen de order in zicht komt" — a tap on the FAB
-      // badge alone wasn't a strong enough signal on mobile that an item
-      // actually landed in the order. MenuContent.astro's add-to-cart
-      // buttons dispatch this event right after cart.addToCart() succeeds;
-      // this is the only listener for it, so quantity +/- inside the
-      // drawer itself and the post-checkout cart clear (both of which go
-      // through cart.ts's generic 'moe:cart-updated' event instead) don't
-      // re-trigger the drawer while it's already open or just closed.
-      document.addEventListener('moe:item-added', () => {
+      barOpenBtn.addEventListener('click', () => {
         showStep(stepLines);
         openDrawer();
+      });
+      barCheckoutBtn.addEventListener('click', () => {
+        showStep(stepLines);
+        openDrawer();
+      });
+      barClearBtn.addEventListener('click', () => {
+        cart.clearCart();
       });
 
       closeBtn.addEventListener('click', closeDrawer);
