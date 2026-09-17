@@ -11,15 +11,8 @@ interface Props {
   external?: boolean;
   variant?: 'outline' | 'filled' | 'cta';
   class?: string;
-  // Set on every "Commander" CTA sitewide (see src/lib/nav.ts) — opens the
-  // in-site cart drawer (src/components/cart/CartWidget.astro) via a
-  // delegated click listener instead of navigating. `href` stays a real,
-  // working link to /menu underneath (no-JS fallback + still a valid,
-  // crawlable link), so this is progressive enhancement, not the only way
-  // the button works.
-  cartTrigger?: boolean;
 }
-const { href, external = false, variant = 'outline', class: className = '', cartTrigger = false } = Astro.props;
+const { href, external = false, variant = 'outline', class: className = '' } = Astro.props;
 // `cta` now stacks on the FILLED look, not outline — this is the one
 // button on the page meant to visually win at a glance (the header CTA and
 // hero's primary action), so it needs solid contrast, not the same
@@ -32,7 +25,6 @@ const variantClass = variant === 'outline' ? 'amp-btn-outline' : variant === 'ct
   target={external ? '_blank' : undefined}
   rel={external ? 'noreferrer' : undefined}
   data-magnetic={variant === 'cta' ? 'true' : undefined}
-  data-cart-trigger={cartTrigger ? 'open' : undefined}
   class:list={[
     'amp-btn relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg px-6 py-3.5 text-sm font-bold tracking-wide transition-colors duration-200',
     variantClass,

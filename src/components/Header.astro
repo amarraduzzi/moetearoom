@@ -24,16 +24,11 @@ interface Props {
 }
 const { lang = 'fr' } = Astro.props;
 const orderCtaLabel = getOrderCtaLabel(lang);
-// The header's three "Commander" links (desktop bar, mobile top bar, mobile
-// hamburger panel) deliberately do NOT carry `data-cart-trigger` the way
-// every other "Commander" CTA on the site does (see nav.ts's comment) — a
-// plain link straight to /menu instead. Amar's own request (Sept 2026):
-// clicking Commander from the header should always land on the menu to
-// browse/pick dishes first, not pop the cart drawer straight away (that
-// felt like a bug — "Nu leiden ze naar de winkelwagen dat is niet juist").
-// Every other Commander CTA elsewhere on a page (footer, page-bottom CTAs)
-// keeps the cart-drawer behavior, since those sit right after someone has
-// already been looking at dishes.
+// The header's three CTA links (desktop bar, mobile top bar, mobile
+// hamburger panel) are plain links to /reservation via getOrderCtaLabel
+// (see nav.ts). This used to be "Commander" → the in-site cart/checkout;
+// both are gone now (Amar, Sept 2026 — the menu is browse-only, ordering
+// removed sitewide) and every one of these CTAs is "Réserver" instead.
 
 const nav = [
   { href: '/', label: t(navUi.accueil, lang) },

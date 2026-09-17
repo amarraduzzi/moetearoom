@@ -61,9 +61,9 @@ export const faqItems: FaqItem[] = [
       ar: 'كيف يمكنني تقديم طلب؟',
     },
     answer: {
-      fr: "Le plus simple est de nous écrire directement sur WhatsApp via le bouton \"Commander\" du site.",
-      en: 'The easiest way is to message us directly on WhatsApp via the "Order" button on the site.',
-      ar: 'أسهل طريقة هي مراسلتنا مباشرة عبر واتساب من خلال زر "اطلب" في الموقع.',
+      fr: "Le plus simple est de nous écrire directement sur WhatsApp via le bouton WhatsApp du site, ou de nous appeler.",
+      en: 'The easiest way is to message us directly on WhatsApp via the WhatsApp button on the site, or to call us.',
+      ar: 'أسهل طريقة هي مراسلتنا مباشرة عبر واتساب من خلال زر واتساب في الموقع، أو الاتصال بنا.',
     },
     category: 'pratique',
   },

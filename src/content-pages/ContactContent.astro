@@ -124,7 +124,7 @@ const path = localizedPath('/contact', lang);
       </div>
 
       <div class="mt-8 flex flex-wrap gap-3">
-        <Button href={orderCtaLabel.href} cartTrigger variant="cta">{orderCtaLabel.label}</Button>
+        <Button href={orderCtaLabel.href} variant="cta">{orderCtaLabel.label}</Button>
         {siteConfig.contact.mapsUrl && (
           <Button href={siteConfig.contact.mapsUrl} external variant="filled">{t(copy.itineraire, lang)}</Button>
         )}

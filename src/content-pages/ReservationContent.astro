@@ -40,12 +40,26 @@ const copy = {
     en: `Reserve your table at ${name}, ${primaryKeyword} in ${city}. Confirmation by phone or WhatsApp.`,
     ar: `احجز طاولتك في ${name}, ${primaryKeyword} في ${city}. التأكيد عبر الهاتف أو واتساب.`,
   },
-  heroTitle: { fr: 'Réserver une table', en: 'Book a table', ar: 'احجز طاولة' },
+  // Replaced (Amar, Sept 2026) with the client's own hero copy for this
+  // page — no longer "book a table, we'll take care of the rest" but a
+  // pitch that leads with dinner reservations and opens up the private
+  // events/birthdays angle explicitly. heroTagline is the client's own
+  // "MOË — Majestueux, Élégant, Opulent" wordplay on the brand name —
+  // kept verbatim in every language rather than translated, same
+  // treatment as the site's other French dish/formule names (see
+  // menu-formules.ts) that stay French in the EN/AR copy too.
+  heroTitle: { fr: 'Réservez chez Moë', en: 'Reserve at Moë', ar: 'احجزوا عند موي' },
   heroSubtitle: {
-    fr: 'Dites-nous quand vous venez, on s’occupe du reste. Chaque demande est confirmée par notre équipe par téléphone ou WhatsApp.',
-    en: 'Tell us when you’re coming, we’ll take care of the rest. Every request is confirmed by our team by phone or WhatsApp.',
-    ar: 'أخبرونا بموعد قدومكم، ونحن نهتم بالباقي. يتم تأكيد كل طلب من فريقنا عبر الهاتف أو واتساب.',
+    fr: 'Réservez votre table pour votre dîner du soir ou célébrez chez Moë vos anniversaires et événements privés.',
+    en: 'Reserve your table for an evening dinner, or celebrate your birthdays and private events at Moë.',
+    ar: 'احجزوا طاولتكم لعشاء المساء، أو احتفلوا في موي بأعياد ميلادكم ومناسباتكم الخاصة.',
   },
+  heroEventsNote: {
+    fr: 'Événements & anniversaires : restauration et attentions personnalisées sur réservation 24h à l’avance.',
+    en: 'Events & birthdays: catering and personal touches with 24-hour advance booking.',
+    ar: 'المناسبات وأعياد الميلاد: تقديم طعام ولمسات خاصة بحجز مسبق قبل 24 ساعة.',
+  },
+  heroTagline: { fr: 'MOË — Majestueux, Élégant, Opulent', en: 'MOË — Majestueux, Élégant, Opulent', ar: 'MOË — Majestueux, Élégant, Opulent' },
   heroAlt: { fr: `Intérieur de ${name}`, en: `Interior of ${name}`, ar: `داخل ${name}` },
 
   formKicker: { fr: 'Votre table vous attend', en: 'Your table awaits', ar: 'طاولتكم في انتظاركم' },
@@ -99,26 +113,27 @@ const copy = {
   trustRatingSuffix: { fr: 'sur Google', en: 'on Google', ar: 'على Google' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
 
-// Time-slot options generated straight from siteConfig.contact.hours — same
-// single source of truth the "open now" badge and the footer hours line
-// use. Last slot is closing time minus 1h, not closing time itself.
+// Time-slot options generated from siteConfig.contact.reservationHours —
+// the dinner-only booking window (18.00–21.30, Amar Sept 2026), separate
+// from siteConfig.contact.hours (the restaurant's full 8.30–23.30 opening
+// hours, used by the "open now" badge and the footer hours line). Both
+// ends of reservationHours are inclusive bookable slots.
 //
-// Real bug fixed here (Amar, Sept 2026 — reported as "de tijdaanduiding is
-// niet juist"): open/close are fractional HOURS (8.5 = 08:30, 23.5 = 23:30,
-// see site.config.ts), but the old loop did `for (let h = open; ...; h++)`
-// and glued minutes on with string concatenation — that walks 8.5, 9.5,
-// 10.5… and printed garbled slots like "8.5:00", never a real time. Fixed
-// by working in whole minutes instead of fractional hours, so half-hour
-// opening times are handled correctly rather than by accident. Written as
-// "19.00" (period, not colon) — the locally-familiar way to write a time
-// here. Plain text end to end (schema.sql's reservation_time is `text`,
-// and the staff screen only ever displays/sorts it as a string), so this
-// is a pure display/value fix with no knock-on parsing anywhere.
-const { open, close } = siteConfig.contact.hours;
+// Real bug fixed earlier the same day (reported as "de tijdaanduiding is
+// niet juist"): open/close are fractional HOURS (e.g. 21.5 = 21:30), but an
+// older version of this loop did `for (let h = open; ...; h++)` and glued
+// minutes on with string concatenation — that walks 18.5, 19.5, 20.5… and
+// printed garbled slots like "18.5:00", never a real time. Fixed by
+// working in whole minutes instead of fractional hours. Written as "19.00"
+// (period, not colon) — the locally-familiar way to write a time here.
+// Plain text end to end (schema.sql's reservation_time is `text`, and the
+// staff screen only ever displays/sorts it as a string), so this is a
+// pure display/value choice with no knock-on parsing anywhere.
+const { open, close } = siteConfig.contact.reservationHours;
 const openMinutes = Math.round(open * 60);
 const closeMinutes = Math.round(close * 60);
 const timeSlots: string[] = [];
-for (let m = openMinutes; m <= closeMinutes - 60; m += 30) {
+for (let m = openMinutes; m <= closeMinutes; m += 30) {
   const h = Math.floor(m / 60);
   const mm = m % 60;
   timeSlots.push(`${String(h).padStart(2, '0')}.${String(mm).padStart(2, '0')}`);
@@ -149,6 +164,8 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
         <span class="rsv-hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
         <h1 class="rsv-hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">{t(copy.heroTitle, lang)}</h1>
         <p class="rsv-hero-shadow mt-4 text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.9)">{t(copy.heroSubtitle, lang)}</p>
+        <p class="rsv-hero-shadow mt-3 text-sm leading-relaxed" style="color: rgba(255,252,243,0.8)">{t(copy.heroEventsNote, lang)}</p>
+        <p class="rsv-hero-shadow mt-4 font-display text-sm sm:text-base tracking-wide" style="color: var(--color-accent)">{t(copy.heroTagline, lang)}</p>
       </div>
     </div>
   </section>
@@ -395,9 +412,8 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
 
 <script
   define:vars={{
-    supabaseUrl,
-    supabaseAnonKey,
     whatsappHref,
+    restaurantName: name,
     labels: {
       submitting: t(copy.formSubmitting, lang),
       submit: t(copy.formSubmit, lang),
@@ -433,7 +449,17 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
       if (submitBtn) submitBtn.classList.toggle('hidden', isLarge);
     });
 
-    form.addEventListener('submit', async (e) => {
+    // WhatsApp-only, no Supabase (Amar, Sept 2026 — "de rrservering moet
+    // doorgestuurd worden naar het whatsapp nummer"): a request no longer
+    // gets inserted into the reservations table, so it stops appearing on
+    // the staff screen's agenda tab too — it now travels the exact same
+    // way an order used to (see CartWidget.astro's checkout handler for
+    // the same pattern): build the message and open the WhatsApp chat
+    // synchronously, in the same click-event tick as the submit, so a
+    // popup blocker doesn't catch it the way it would after an `await`.
+    let lastWaUrl = null;
+
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
       statusEl.innerHTML = '';
 
@@ -464,45 +490,34 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
       const partySizeRaw = partySelect ? partySelect.value : '';
       if (partySizeRaw === 'large') return;
 
-      if (!supabaseUrl || !supabaseAnonKey) {
-        renderError();
-        return;
-      }
+      const msgLines = [];
+      msgLines.push(`*NOUVELLE DEMANDE DE RÉSERVATION — ${restaurantName.toUpperCase()}*`);
+      msgLines.push('---------------------------------------');
+      msgLines.push(`*Nom:* ${nameInput.value.trim()}`);
+      msgLines.push(`*Téléphone:* ${phoneInput.value.trim()}`);
+      msgLines.push(`*Date:* ${dateInput.value}`);
+      msgLines.push(`*Heure:* ${timeSelect.value}`);
+      msgLines.push(`*Personnes:* ${partySizeRaw}`);
+      if (notesInput.value.trim()) msgLines.push(`*Remarque:* ${notesInput.value.trim()}`);
 
-      submitBtn.disabled = true;
-      submitLabel.textContent = labels.submitting;
-
-      const payload = {
-        name: nameInput.value.trim(),
-        phone: phoneInput.value.trim(),
-        party_size: Number(partySizeRaw),
-        reservation_date: dateInput.value,
-        reservation_time: timeSelect.value,
-        notes: notesInput.value.trim() || null,
-        status: 'pending',
-      };
+      const waUrl = `${whatsappHref}?text=${encodeURIComponent(msgLines.join('\n'))}`;
+      lastWaUrl = waUrl;
 
       try {
-        const res = await fetch(`${supabaseUrl}/rest/v1/reservations`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: supabaseAnonKey,
-            Authorization: `Bearer ${supabaseAnonKey}`,
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`Supabase insert failed: ${res.status}`);
+        // Not checking window.open()'s return value to detect a blocked
+        // popup: with the 'noopener' flag set, browsers return null here
+        // even on a SUCCESSFUL open (the whole point of noopener is that
+        // the new tab gets no window reference back) — same as
+        // CartWidget's checkout flow before it, which never checked this
+        // either. The try/catch is only for a genuinely thrown error
+        // (e.g. a browser that disallows window.open outright).
+        window.open(waUrl, '_blank', 'noopener');
         renderSuccess();
         form.reset();
         form.querySelectorAll('.rsv-invalid').forEach((el) => el.classList.remove('rsv-invalid'));
       } catch (err) {
         console.error('[reservation]', err);
-        renderError();
-      } finally {
-        submitBtn.disabled = false;
-        submitLabel.textContent = labels.submit;
+        renderError(waUrl);
       }
     });
 
@@ -521,7 +536,7 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
       statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    function renderError() {
+    function renderError(waUrl) {
       statusEl.innerHTML = `
         <div class="rsv-status-error">
           <span class="rsv-status-icon">
@@ -530,7 +545,7 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
           <div>
             <p>${labels.errorTitle}</p>
             <p>${labels.errorBody}</p>
-            <a href="${whatsappHref}" target="_blank" rel="noreferrer" class="rsv-btn rsv-btn-filled mt-3">${labels.errorCallOrWhatsapp}</a>
+            <a href="${waUrl || whatsappHref}" target="_blank" rel="noreferrer" class="rsv-btn rsv-btn-filled mt-3">${labels.errorCallOrWhatsapp}</a>
           </div>
         </div>
       `;

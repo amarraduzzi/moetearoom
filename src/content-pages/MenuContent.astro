@@ -1,6 +1,16 @@
 ---
 // See HomeContent.astro's top comment for the shared-body-per-route
 // pattern this and every other src/content-pages/*.astro file follows.
+//
+// Browse-only menu (Amar, Sept 2026 — "de klant wil opeens de menu pagina
+// niet meer doorlinken naar het scherm. Het menu moet gewoon alleen
+// visueel zijn"): no "add to cart"/ordering here anymore — the in-site
+// cart + checkout (CartWidget.astro, src/lib/cart.ts) was removed
+// sitewide. Prices still sync live from the staff screen's menu_items
+// table (see the fetch below) so a price change or sold-out flag set in
+// the restaurant still reaches this page — only the ability to actually
+// order from it is gone. Ordering/booking now happens by phone, WhatsApp,
+// or the reservation form (see ReservationContent.astro).
 import Layout from '../layouts/Layout.astro';
 import Button from '../components/Button.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
@@ -21,28 +31,6 @@ const { name } = siteConfig.identity;
 const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
 const city = t(place.city, lang);
 
-// Which prep station makes each category, keyed by the category's French
-// label (always present, unlike a translated one) — stamped onto each
-// "Add to cart" button below as data-station, read by cart.ts's addToCart
-// so an order line carries its station from the moment it's added, rather
-// than the staff screen trying to re-derive it later by matching names
-// against a second, easily-stale list (see the standing note on the old
-// staff-screen MENU_ITEMS array being incomplete/out of sync with this
-// file — a brand-new dish added from the staff screen sets its own station
-// explicitly in that form instead, see staff-screen/index.html).
-const STATION_BY_CATEGORY: Record<string, 'bar' | 'cuisine'> = {
-  'Menu sur le pouce': 'cuisine',
-  'Boissons Chaudes': 'bar',
-  'Thés et Infusions': 'bar',
-  'Notre Expérience Éclair': 'cuisine',
-  'Boulangerie et Viennoiseries': 'cuisine',
-  'Jus Frais & Mocktails': 'bar',
-  'Milkshakes, Frappés & Glacés': 'bar',
-};
-function stationFor(categoryLabelFr: string): 'bar' | 'cuisine' {
-  return STATION_BY_CATEGORY[categoryLabelFr] ?? 'cuisine';
-}
-
 const copy = {
   metaTitle: {
     fr: `Menu — ${primaryKeyword} à ${city} | ${name}`,
@@ -52,9 +40,9 @@ const copy = {
   // REPLACE — mention the actual dish categories once this client's menu
   // is filled in (menu-highlights.ts).
   metaDescription: {
-    fr: `Découvrez le menu complet de ${name}, ${primaryKeyword} à ${city}. Commandez en ligne ou sur place.`,
-    en: `Discover the full menu of ${name}, ${primaryKeyword} in ${city}. Order online or dine in.`,
-    ar: `اكتشف القائمة الكاملة لـ${name}, ${primaryKeyword} في ${city}. اطلب أونلاين أو تناول الطعام في المطعم.`,
+    fr: `Découvrez le menu complet de ${name}, ${primaryKeyword} à ${city}.`,
+    en: `Discover the full menu of ${name}, ${primaryKeyword} in ${city}.`,
+    ar: `اكتشف القائمة الكاملة لـ${name}, ${primaryKeyword} في ${city}.`,
   },
   heroAlt: {
     fr: `Plats du menu de ${name}`,
@@ -63,17 +51,17 @@ const copy = {
   },
   heroTitle: { fr: `Le menu de notre ${primaryKeyword}`, en: `Our ${primaryKeyword}'s menu`, ar: `قائمة ${primaryKeyword} الخاص بنا` },
   heroSubtitle: {
-    fr: 'Une sélection de nos plats signature. Le menu complet, avec toutes les options et suppléments, est disponible au moment de la commande.',
-    en: 'A selection of our signature dishes. The full menu, with all options and extras, is available at the time of ordering.',
-    ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة عند الطلب.',
+    fr: 'Une sélection de nos plats signature. Le menu complet, avec toutes les options et suppléments, est disponible sur place.',
+    en: 'A selection of our signature dishes. The full menu, with all options and extras, is available in the restaurant.',
+    ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة في المطعم.',
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
   groupDrinksPastry: { fr: 'Boissons & Pâtisserie', en: 'Drinks & Pastries', ar: 'المشروبات والحلويات' },
   formulesSubtitle: {
-    fr: "Selon le jour et l'heure — pas de commande en ligne pour ces formules, la réservation est recommandée.",
-    en: 'Depending on the day and time — these formules aren\'t available for online ordering; reservation is recommended.',
-    ar: 'حسب اليوم والوقت — لا يتوفر الطلب أونلاين لهذه العروض، ويُنصح بالحجز.',
+    fr: "Selon le jour et l'heure — la réservation est recommandée.",
+    en: 'Depending on the day and time — reservation is recommended.',
+    ar: 'حسب اليوم والوقت — يُنصح بالحجز.',
   },
   // Heading for dishes added from the staff screen (see the
   // menu-extra-dishes section below) — deliberately generic rather than
@@ -238,17 +226,6 @@ const path = localizedPath('/menu', lang);
                   </div>
                   <div class="flex flex-col items-end gap-2 shrink-0">
                     <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
-                    <button
-                      type="button"
-                      class="js-add-to-cart menu-add-btn"
-                      data-id={`${i}-${j}`}
-                      data-name={item.name}
-                      data-price={item.price}
-                      data-station={stationFor(category.label.fr)}
-                      aria-label={`${t(common.ajouterAuPanier, lang)} — ${item.name}`}
-                    >
-                      + {t(common.ajouter, lang)}
-                    </button>
                   </div>
                 </div>
               ))}
@@ -291,11 +268,11 @@ const path = localizedPath('/menu', lang);
   <!-- Formules & moments — the client's day/time-window offers (Good
        Morning brunch, Déjeuner Moë, Rfissa/Couscous, Soirées, weekend
        brunch, Gastronomie Dima Maghreb). Deliberately NOT rendered inside
-       the menuHighlights loop above and NOT addable to the cart: these
-       carry no fixed item list or price in the client's own PDF, so an
-       "add to cart" control here would invent a price that doesn't exist.
-       Each card links to the reservation form instead, matching the
-       source PDF's own "réservation recommandée" note. -->
+       the menuHighlights loop above: these carry no fixed item list or
+       price in the client's own PDF. Each card links to the reservation
+       form instead, matching the source PDF's own "réservation
+       recommandée" note (all the more true now the whole menu is
+       browse-only — see the top of this file). -->
   <section id="formules-moments" class="relative max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14 scroll-mt-24 overflow-hidden" data-reveal>
     <LogoWatermark size="w-[22rem] h-[22rem]" />
     <div class="mb-8 max-w-2xl">
@@ -401,28 +378,6 @@ const path = localizedPath('/menu', lang);
       color 0.15s ease,
       background-color 0.15s ease,
       border-color 0.15s ease;
-  }
-  .menu-add-btn {
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    padding: 0.3rem 0.65rem;
-    border-radius: 999px;
-    border: 1.5px solid var(--color-accent);
-    color: var(--color-accent);
-    background-color: transparent;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
-  }
-  .menu-add-btn:hover {
-    background-color: var(--color-accent);
-    color: var(--color-background);
-  }
-  .menu-add-btn:active {
-    transform: scale(0.96);
-  }
-  .menu-add-btn.is-added {
-    background-color: var(--color-accent);
-    color: var(--color-background);
   }
   .menu-filter-btn.is-active {
     color: var(--color-background);
@@ -572,7 +527,6 @@ const path = localizedPath('/menu', lang);
     supabaseUrl: siteConfig.ordering.supabaseUrl,
     supabaseAnonKey: siteConfig.ordering.supabaseAnonKey,
     currency: siteConfig.identity.currency,
-    labels: { epuise: t(common.epuise, lang), ajouterAuPanier: t(common.ajouterAuPanier, lang), ajouter: t(common.ajouter, lang) },
   }}
 >
   // Applies staff-screen changes from the `menu_items` table on top of the
@@ -589,10 +543,9 @@ const path = localizedPath('/menu', lang);
   //      comment for why it's separate from the search/filter system).
   //
   // Safe no-op until siteConfig.ordering.supabaseUrl/supabaseAnonKey are
-  // set (same "still works without it" pattern as the cart's checkout —
-  // see CartWidget.astro), and safe to fail silently on a flaky
-  // connection: worst case the customer just sees the site's normal
-  // static menu with no staff-screen changes applied.
+  // set, and safe to fail silently on a flaky connection: worst case the
+  // customer just sees the site's normal static menu with no staff-screen
+  // changes applied.
   document.addEventListener('astro:page-load', () => {
     if (!supabaseUrl || !supabaseAnonKey) return;
 
@@ -629,29 +582,21 @@ const path = localizedPath('/menu', lang);
         const override = key ? overrides.get(key) : null;
         if (!override) return;
 
-        const addBtn = card.querySelector('.js-add-to-cart');
         if (override.available === false) {
           card.querySelector('.js-sold-out-badge')?.classList.remove('hidden');
           card.style.opacity = '0.55';
-          if (addBtn) {
-            addBtn.setAttribute('disabled', 'true');
-            addBtn.style.pointerEvents = 'none';
-            addBtn.style.opacity = '0.5';
-          }
         }
         if (override.price != null) {
           const priceEl = card.querySelector('.js-item-price');
           if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
-          if (addBtn) addBtn.setAttribute('data-price', String(override.price));
         }
         // Renamed/re-described from the staff screen — the join key
-        // (data-item-key / data-id) never changes, only what's displayed.
+        // (data-item-key) never changes, only what's displayed.
         let nameText = null;
         let descText = null;
         if (override.name) {
           const nameEl = card.querySelector('.js-item-name');
           if (nameEl) nameEl.textContent = override.name;
-          if (addBtn) addBtn.setAttribute('data-name', override.name);
           nameText = override.name;
         }
         if (override.description != null) {
@@ -684,7 +629,6 @@ const path = localizedPath('/menu', lang);
       grid.innerHTML = available
         .map((row) => {
           const search = `${row.name} ${row.description || ''}`.toLowerCase();
-          const station = row.station === 'bar' ? 'bar' : 'cuisine';
           return `
             <div class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-item-key="${escapeHtml(row.item_key)}" data-search="${escapeHtml(search)}">
               <div class="min-w-0 flex-1">
@@ -694,9 +638,6 @@ const path = localizedPath('/menu', lang);
               </div>
               <div class="flex flex-col items-end gap-2 shrink-0">
                 <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">${row.price != null ? row.price : '—'} ${currency}</span>
-                <button type="button" class="js-add-to-cart menu-add-btn" data-id="${escapeHtml(row.item_key)}" data-name="${escapeHtml(row.name)}" data-price="${row.price != null ? row.price : 0}" data-station="${station}" aria-label="${escapeHtml(labels.ajouterAuPanier)} — ${escapeHtml(row.name)}">
-                  + ${escapeHtml(labels.ajouter)}
-                </button>
               </div>
             </div>
           `;
@@ -704,64 +645,6 @@ const path = localizedPath('/menu', lang);
         .join('');
 
       section.classList.remove('hidden');
-
-      // Wiring the new "Add" buttons happens in the OTHER script below
-      // (plain, no define:vars) rather than here — deliberately, not
-      // duplicated by accident. A `define:vars` script is never run
-      // through Vite (it has to stay literal inline HTML so Astro can
-      // inject the server value), so a dynamic `import('/src/lib/cart.ts')`
-      // written in THIS script would ship as a literal, unbundled path
-      // that 404s in production — that exact bug shipped here once already
-      // and was caught by testing this feature end-to-end against a built
-      // (not dev-server) copy of the site before delivering it, not just
-      // eyeballing the code. The plain script below IS run through Vite,
-      // where the same-looking import correctly resolves to a real bundled
-      // chunk — so this dispatches an event and lets that script do the
-      // wiring with its own already-working import.
-      document.dispatchEvent(new CustomEvent('menu-extra-dishes-rendered', { detail: { grid } }));
     }
   });
-</script>
-
-<script>
-  // "Add to cart" buttons — one per menu item (see the data-id/data-name/
-  // data-price attributes rendered above). Delegated + dynamically imports
-  // src/lib/cart.ts, same pattern as CartWidget.astro, so this file doesn't
-  // need to know anything about the cart's internals beyond addToCart().
-  //
-  // Also wires the extra "Add" buttons the menu-items-sync script above
-  // injects for staff-screen-added dishes, via the 'menu-extra-dishes-
-  // rendered' event that script dispatches instead of importing cart.ts
-  // itself — that script runs as `define:vars`, which Astro never sends
-  // through Vite (it has to stay literal inline HTML), so a dynamic
-  // import written there would ship as an unbundled path and 404 in
-  // production. This script is a normal module Vite DOES bundle, so the
-  // same import here resolves correctly — see that script's own comment.
-  document.addEventListener('astro:page-load', () => {
-    wireAddToCartButtons(document.querySelectorAll('.js-add-to-cart'));
-
-    document.addEventListener('menu-extra-dishes-rendered', (e) => {
-      wireAddToCartButtons(e.detail.grid.querySelectorAll('.js-add-to-cart'));
-    });
-  });
-
-  function wireAddToCartButtons(buttons) {
-    if (!buttons.length) return;
-
-    import('/src/lib/cart.ts').then(({ addToCart }) => {
-      buttons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          const name = btn.getAttribute('data-name');
-          const price = Number(btn.getAttribute('data-price'));
-          const station = btn.getAttribute('data-station') === 'bar' ? 'bar' : 'cuisine';
-          if (!id || !name || Number.isNaN(price)) return;
-          addToCart(id, name, price, 1, station);
-
-          btn.classList.add('is-added');
-          window.setTimeout(() => btn.classList.remove('is-added'), 500);
-        });
-      });
-    });
-  }
 </script>

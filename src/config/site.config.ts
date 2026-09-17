@@ -115,6 +115,14 @@ export interface SiteConfig {
     // true for this client, this becomes a per-day structure instead of two
     // flat numbers (and OpenStatusBadge.astro needs a matching update).
     hours: { open: number; close: number };
+    // Separate from `hours` above on purpose: the restaurant is open all
+    // day (8:30–23:30), but table reservations are only taken for a
+    // narrower dinner window (Amar, Sept 2026 — "de reservering is
+    // mogelijk alleen van 18.00-21.30"). Read only by
+    // ReservationContent.astro's time-slot dropdown; both ends are
+    // inclusive bookable slots, not "closing time minus a buffer" like
+    // `hours` is.
+    reservationHours: { open: number; close: number };
     instagramUrl?: string;
     facebookUrl?: string;
   };
@@ -200,6 +208,7 @@ export const siteConfig: SiteConfig = {
       ar: 'مفتوح كل يوم: 08:30 - 23:30',
     },
     hours: { open: 8.5, close: 23.5 },
+    reservationHours: { open: 18, close: 21.5 },
     instagramUrl: 'https://www.instagram.com/moe_rabat/',
     facebookUrl: 'https://www.facebook.com/61580975256089/',
   },

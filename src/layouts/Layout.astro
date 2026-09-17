@@ -4,7 +4,6 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Seo from '../components/Seo.astro';
 import WhatsAppButton from '../components/WhatsAppButton.astro';
-import CartWidget from '../components/cart/CartWidget.astro';
 import { siteConfig } from '../config/site.config';
 import { isRTL, type Language } from '../i18n/languages';
 import '../styles/global.css';
@@ -87,14 +86,20 @@ const colorOverrides = `:root{--color-primary:${c.primary} !important;--color-pr
   </head>
   <body>
     <div class="grain-overlay"></div>
-    <div class="mint-motif-overlay"></div>
     <Header lang={lang} />
     <main>
       <slot />
     </main>
     <Footer lang={lang} />
     <WhatsAppButton lang={lang} />
-    <CartWidget lang={lang} />
+    <!-- CartWidget.astro (in-site cart + checkout) removed sitewide (Amar,
+         Sept 2026 — "de klant wil opeens de menu pagina niet meer
+         doorlinken naar het scherm... Het menu moet gewoon alleen
+         visueel zijn dus. Dus winkelwagen eruit"): the menu is
+         browse-only now, ordering happens by phone/WhatsApp/reservation
+         instead. The component file itself was deleted along with
+         src/lib/cart.ts and the "+Ajouter" wiring in MenuContent.astro. -->
+
 
     <script>
       // Sitewide scroll-reveal — see the [data-reveal] rules in global.css
