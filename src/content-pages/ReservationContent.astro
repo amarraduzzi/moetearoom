@@ -40,34 +40,38 @@ const copy = {
     en: `Reserve your table at ${name}, ${primaryKeyword} in ${city}. Confirmation by phone or WhatsApp.`,
     ar: `احجز طاولتك في ${name}, ${primaryKeyword} في ${city}. التأكيد عبر الهاتف أو واتساب.`,
   },
-  // Replaced (Amar, Sept 2026) with the client's own hero copy for this
-  // page — no longer "book a table, we'll take care of the rest" but a
-  // pitch that leads with dinner reservations and opens up the private
-  // events/birthdays angle explicitly. heroTagline is the client's own
-  // "MOË — Majestueux, Élégant, Opulent" wordplay on the brand name —
-  // kept verbatim in every language rather than translated, same
+  // Hero stays the original "book a table" pitch (Amar, Sept 2026 — the
+  // client's own copy below was first tried here, overlaid on the hero
+  // photo, but the client rejected that placement: "de tekst moet niet in
+  // de hero afbeelding staan... De tekst in de hero hetzelfde zijn als van
+  // te voren"). The client's copy now lives in the form card instead — see
+  // formKicker/formLead/formEventsNote/formTagline below.
+  heroTitle: { fr: 'Réserver une table', en: 'Book a table', ar: 'احجز طاولة' },
+  heroSubtitle: {
+    fr: 'Dites-nous quand vous venez, on s’occupe du reste. Chaque demande est confirmée par notre équipe par téléphone ou WhatsApp.',
+    en: 'Tell us when you’re coming, we’ll take care of the rest. Every request is confirmed by our team by phone or WhatsApp.',
+    ar: 'أخبرونا بموعد قدومكم، ونحن نهتم بالباقي. يتم تأكيد كل طلب من فريقنا عبر الهاتف أو واتساب.',
+  },
+  heroAlt: { fr: `Intérieur de ${name}`, en: `Interior of ${name}`, ar: `داخل ${name}` },
+
+  // Client's own copy (Amar, Sept 2026) — now placed directly above "Nom
+  // complet" in the form card instead of the hero. formTagline is the
+  // client's "MOË — Majestueux, Élégant, Opulent" wordplay on the brand
+  // name — kept verbatim in every language rather than translated, same
   // treatment as the site's other French dish/formule names (see
   // menu-formules.ts) that stay French in the EN/AR copy too.
-  heroTitle: { fr: 'Réservez chez Moë', en: 'Reserve at Moë', ar: 'احجزوا عند موي' },
-  heroSubtitle: {
+  formKicker: { fr: 'Réservez chez Moë', en: 'Reserve at Moë', ar: 'احجزوا عند موي' },
+  formLead: {
     fr: 'Réservez votre table pour votre dîner du soir ou célébrez chez Moë vos anniversaires et événements privés.',
     en: 'Reserve your table for an evening dinner, or celebrate your birthdays and private events at Moë.',
     ar: 'احجزوا طاولتكم لعشاء المساء، أو احتفلوا في موي بأعياد ميلادكم ومناسباتكم الخاصة.',
   },
-  heroEventsNote: {
+  formEventsNote: {
     fr: 'Événements & anniversaires : restauration et attentions personnalisées sur réservation 24h à l’avance.',
     en: 'Events & birthdays: catering and personal touches with 24-hour advance booking.',
     ar: 'المناسبات وأعياد الميلاد: تقديم طعام ولمسات خاصة بحجز مسبق قبل 24 ساعة.',
   },
-  heroTagline: { fr: 'MOË — Majestueux, Élégant, Opulent', en: 'MOË — Majestueux, Élégant, Opulent', ar: 'MOË — Majestueux, Élégant, Opulent' },
-  heroAlt: { fr: `Intérieur de ${name}`, en: `Interior of ${name}`, ar: `داخل ${name}` },
-
-  formKicker: { fr: 'Votre table vous attend', en: 'Your table awaits', ar: 'طاولتكم في انتظاركم' },
-  formLead: {
-    fr: 'Quelques informations et notre équipe s’occupe du reste.',
-    en: 'A few details and our team takes care of the rest.',
-    ar: 'بضع معلومات وفريقنا يهتم بالباقي.',
-  },
+  formTagline: { fr: 'MOË — Majestueux, Élégant, Opulent', en: 'MOË — Majestueux, Élégant, Opulent', ar: 'MOË — Majestueux, Élégant, Opulent' },
   formName: { fr: 'Nom complet', en: 'Full name', ar: 'الاسم الكامل' },
   formPhone: { fr: 'Téléphone (WhatsApp de préférence)', en: 'Phone (WhatsApp preferred)', ar: 'الهاتف (يفضل واتساب)' },
   formDate: { fr: 'Date', en: 'Date', ar: 'التاريخ' },
@@ -164,8 +168,6 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
         <span class="rsv-hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
         <h1 class="rsv-hero-shadow font-display text-3xl sm:text-5xl font-semibold" style="color: #FFFCF3">{t(copy.heroTitle, lang)}</h1>
         <p class="rsv-hero-shadow mt-4 text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.9)">{t(copy.heroSubtitle, lang)}</p>
-        <p class="rsv-hero-shadow mt-3 text-sm leading-relaxed" style="color: rgba(255,252,243,0.8)">{t(copy.heroEventsNote, lang)}</p>
-        <p class="rsv-hero-shadow mt-4 font-display text-sm sm:text-base tracking-wide" style="color: var(--color-accent)">{t(copy.heroTagline, lang)}</p>
       </div>
     </div>
   </section>
@@ -178,7 +180,9 @@ const { googleRating, googleReviewsUrl } = siteConfig.social;
     <FloralSprig corner="bottom-left" />
     <div class="relative rounded-2xl p-6 sm:p-9 max-w-2xl" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-reveal>
       <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style="color: var(--color-accent)">{t(copy.formKicker, lang)}</span>
-      <p class="font-display text-xl sm:text-2xl mb-7" style="color: var(--color-text-primary)">{t(copy.formLead, lang)}</p>
+      <p class="font-display text-xl sm:text-2xl" style="color: var(--color-text-primary)">{t(copy.formLead, lang)}</p>
+      <p class="mt-3 text-sm leading-relaxed" style="color: var(--color-text-muted)">{t(copy.formEventsNote, lang)}</p>
+      <p class="mt-3 mb-7 font-display text-sm sm:text-base tracking-wide" style="color: var(--color-accent)">{t(copy.formTagline, lang)}</p>
 
       <form id="reservation-form" novalidate>
         <div class="grid sm:grid-cols-2 gap-5">
