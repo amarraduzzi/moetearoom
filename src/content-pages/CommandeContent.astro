@@ -315,6 +315,13 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     .item-row .item-name { font-size: 0.85rem; }
     .item-row .item-desc { font-size: 0.72rem; margin-top: 1px; }
     .row-main { flex: 1; min-width: 0; }
+    .row-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
     .row-price {
       font-weight: 700;
       font-size: 0.82rem;
@@ -744,13 +751,13 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
         { id: 'dr-chocolat-chaud', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Chocolat Chaud', price: 35 },
         { id: 'dr-caramel-macchiato', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Caramel Macchiato', price: 35 },
         // ---- Boissons — Moëtcha ----
-        { id: 'dr-moetcha-classic', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38 },
-        { id: 'dr-moetcha-classic-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic Glacé', price: 42 },
+        { id: 'dr-moetcha-classic', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38, image: '/images/dr-moetcha-classic.webp' },
+        { id: 'dr-moetcha-classic-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic Glacé', price: 42, image: '/images/dr-moetcha-classic-glace.webp' },
         { id: 'dr-moetcha-nana', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42 },
         { id: 'dr-moetcha-nana-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana Glacé', price: 46 },
-        { id: 'dr-moetcha-amlou', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48 },
+        { id: 'dr-moetcha-amlou', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48, image: '/images/dr-moetcha-amlou.webp' },
         { id: 'dr-moetcha-amlou-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou Glacé', price: 52 },
-        { id: 'dr-moetcha-zahr', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42 },
+        { id: 'dr-moetcha-zahr', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42, image: '/images/dr-moetcha-zahr.webp' },
         { id: 'dr-moetcha-zahr-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr Glacé', price: 46 },
         // ---- Boissons — Thés & Infusions ----
         { id: 'dr-the-vert-marocain', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Marocain', price: 28 },
@@ -913,6 +920,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
               var row = document.createElement('div');
               row.className = 'item-row';
               row.innerHTML =
+                (it.image ? '<img class="row-thumb" src="' + it.image + '" alt="" loading="lazy">' : '') +
                 '<div class="row-main"><div class="item-name">' + it.name + '</div>' +
                 (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '') + '</div>' +
                 '<span class="row-price tabular">' + currency(it.price) + '</span>' +
