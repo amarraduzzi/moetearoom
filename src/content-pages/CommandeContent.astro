@@ -320,6 +320,128 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       -webkit-mask-image: linear-gradient(to right, transparent 0, black 18px, black calc(100% - 28px), transparent 100%);
     }
     .catnav-scroll::-webkit-scrollbar { display: none; }
+
+    /* ---------- search + dietary filters ---------- */
+    .filter-row {
+      max-width: 720px;
+      margin: 8px auto 0;
+      padding-inline: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1 1 200px;
+      min-width: 140px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 8px 30px 8px 32px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: inherit;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-clear {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      background: transparent;
+    }
+    .search-clear svg { width: 12px; height: 12px; }
+    .diet-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .diet-chip {
+      flex-shrink: 0;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .diet-chip.is-active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .filter-disclaimer {
+      max-width: 720px;
+      margin: 6px auto 0;
+      padding-inline: 16px;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .no-results {
+      max-width: 720px;
+      margin: 40px auto;
+      padding-inline: 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ---------- item badges & dietary tags on cards ---------- */
+    .item-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--surface);
+      background: var(--accent);
+      z-index: 1;
+    }
+    .item-badge.badge-chef { background: var(--brown); }
+    .item-row-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--surface);
+      background: var(--accent);
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .item-row-badge.badge-chef { background: var(--brown); }
+    .item-tags {
+      font-size: 0.66rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-top: -2px;
+    }
     .catpill {
       flex-shrink: 0;
       display: flex;
@@ -518,6 +640,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       .card-grid { grid-template-columns: 1fr; }
     }
     .item-card {
+      position: relative;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -589,7 +712,10 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       color: var(--accent);
       margin: 18px 0 8px;
     }
-    .subgroup-label:first-child { margin-top: 0; }
+    .subgroup:first-child .subgroup-label { margin-top: 0; }
+    /* Filtering hides a whole .subgroup (or .category) at once when none
+       of its items match — see applyFilters() in the script below. */
+    .subgroup[hidden], .category[hidden] { display: none; }
     .row-list { display: flex; flex-direction: column; gap: 6px; }
     .item-row {
       display: flex;
@@ -1274,9 +1400,26 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
 
   <nav class="catnav">
     <div class="catnav-scroll" id="catnav"></div>
+    <div class="filter-row">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="menu-search" class="search-input" placeholder="Rechercher un plat, une boisson…" autocomplete="off" />
+        <button type="button" class="search-clear" id="search-clear" hidden aria-label="Effacer la recherche">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="diet-chips" id="diet-chips">
+        <button type="button" class="diet-chip" data-diet="vegetarien">Végétarien</button>
+        <button type="button" class="diet-chip" data-diet="vegan">Vegan</button>
+        <button type="button" class="diet-chip" data-diet="epice">Épicé</button>
+      </div>
+    </div>
   </nav>
 
+  <p class="filter-disclaimer">Filtres indicatifs — signalez toute allergie à notre équipe en salle.</p>
+
   <main id="main"></main>
+  <p class="no-results" id="no-results" hidden>Aucun résultat pour cette recherche. Essayez un autre terme ou retirez un filtre.</p>
 
   <button class="cart-fab" id="cart-fab" hidden>
     <span class="badge" id="fab-count">0</span>
@@ -1598,6 +1741,34 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         return null;
       }
 
+      // ---------------------------------------------------------------------
+      // Dietary tags & badges — small merchandising/filtering layer on top
+      // of the catalog. TAG_LABELS is the single place that turns a raw
+      // tag id into what the customer reads, shared between the item
+      // cards/rows and the filter chip row.
+      // ---------------------------------------------------------------------
+      var TAG_LABELS = { vegan: 'Vegan', epice: 'Épicé', viande: 'Viande' };
+      var BADGE_LABELS = { populaire: 'Populaire', chef: 'Coup de cœur' };
+
+      function badgeBlockHtml(it) {
+        if (!it.badge) return '';
+        return '<span class="item-badge badge-' + it.badge + '">' + BADGE_LABELS[it.badge] + '</span>';
+      }
+      function badgeInlineHtml(it) {
+        if (!it.badge) return '';
+        return '<span class="item-row-badge badge-' + it.badge + '">' + BADGE_LABELS[it.badge] + '</span>';
+      }
+      // "Végétarien" isn't a stored tag — everything on this menu is
+      // vegetarian except the handful explicitly tagged 'viande', so the
+      // display line only ever needs to call out vegan/épicé.
+      function tagsLineHtml(it) {
+        if (!it.tags || !it.tags.length) return '';
+        var shown = it.tags.filter(function (t) { return t === 'vegan' || t === 'epice'; });
+        if (!shown.length) return '';
+        return '<div class="item-tags">' + shown.map(function (t) { return TAG_LABELS[t]; }).join(' · ') + '</div>';
+      }
+      function isVegetarian(it) { return !it.tags || it.tags.indexOf('viande') === -1; }
+
       CATEGORIES.forEach(function (cat) {
         var section = document.createElement('section');
         section.className = 'category';
@@ -1636,13 +1807,16 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
           items.forEach(function (it) {
             var card = document.createElement('div');
             card.className = 'item-card' + (it.id === heroId ? ' is-hero' : '');
+            card.dataset.id = it.id;
             var tileInner = it.image
               ? '<img src="' + it.image + '" alt="" loading="lazy">'
               : cat.icon;
             card.innerHTML =
+              badgeBlockHtml(it) +
               '<div class="item-tile">' + tileInner + '</div>' +
               '<div class="item-name">' + it.name + '</div>' +
               (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '<div class="item-desc"></div>') +
+              tagsLineHtml(it) +
               '<div class="item-foot"><span class="item-price tabular">' + currency(it.price) + '</span><span class="qty-slot" data-slot="' + it.id + '">' + qtyControlHtml(it.id) + '</span></div>';
             grid.appendChild(card);
           });
@@ -1652,10 +1826,16 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
           items.forEach(function (it) { if (it.sub && subs.indexOf(it.sub) === -1) subs.push(it.sub); });
           var list = document.createElement('div');
           subs.forEach(function (subLabel) {
+            // Wrapped as one unit (label + its items) so the filter pass
+            // below can hide/show a whole subgroup — e.g. all of "Chaud"
+            // — as soon as none of its items match, instead of leaving a
+            // dangling subheading over an empty grid.
+            var subWrap = document.createElement('div');
+            subWrap.className = 'subgroup';
             var subEl = document.createElement('div');
             subEl.className = 'subgroup-label';
             subEl.textContent = subLabel;
-            list.appendChild(subEl);
+            subWrap.appendChild(subEl);
             var subItems = items.filter(function (it) { return it.sub === subLabel; });
             // A subgroup with real photography (e.g. Moëtcha) gets the same
             // full-photo card treatment as the dish categories, instead of
@@ -1668,17 +1848,21 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
               subItems.forEach(function (it) {
                 var card = document.createElement('div');
                 card.className = 'item-card' + (it.id === subHeroId ? ' is-hero' : '');
+                card.dataset.id = it.id;
                 var tileInner = it.image
                   ? '<img src="' + it.image + '" alt="" loading="lazy">'
                   : cat.icon;
                 card.innerHTML =
+                  badgeBlockHtml(it) +
                   '<div class="item-tile">' + tileInner + '</div>' +
                   '<div class="item-name">' + it.name + '</div>' +
                   (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '<div class="item-desc"></div>') +
+                  tagsLineHtml(it) +
                   '<div class="item-foot"><span class="item-price tabular">' + currency(it.price) + '</span><span class="qty-slot" data-slot="' + it.id + '">' + qtyControlHtml(it.id) + '</span></div>';
                 subGrid.appendChild(card);
               });
-              list.appendChild(subGrid);
+              subWrap.appendChild(subGrid);
+              list.appendChild(subWrap);
               return;
             }
             var rowList = document.createElement('div');
@@ -1686,19 +1870,92 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
             subItems.forEach(function (it) {
               var row = document.createElement('div');
               row.className = 'item-row';
+              row.dataset.id = it.id;
               row.innerHTML =
-                '<div class="row-main"><div class="item-name">' + it.name + '</div>' +
-                (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '') + '</div>' +
+                '<div class="row-main"><div class="item-name">' + it.name + badgeInlineHtml(it) + '</div>' +
+                (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '') +
+                tagsLineHtml(it) + '</div>' +
                 '<span class="row-price tabular">' + currency(it.price) + '</span>' +
                 '<span class="qty-slot" data-slot="' + it.id + '">' + qtyControlHtml(it.id) + '</span>';
               rowList.appendChild(row);
             });
-            list.appendChild(rowList);
+            subWrap.appendChild(rowList);
+            list.appendChild(subWrap);
           });
           section.appendChild(list);
         }
 
         mainEl.appendChild(section);
+      });
+
+      // ---------------------------------------------------------------------
+      // Search + dietary filters. Runs after the static render above (item
+      // count is small — under 100 — so a direct DOM show/hide pass on
+      // every keystroke/toggle is plenty fast, no need to diff or rebuild).
+      // Hides, in order: individual cards/rows that don't match → any
+      // .subgroup left with nothing visible → any .category section left
+      // with nothing visible → shows the page-level "no results" message
+      // only if every category ends up empty.
+      // ---------------------------------------------------------------------
+      var searchInput = document.getElementById('menu-search');
+      var searchClearBtn = document.getElementById('search-clear');
+      var dietChipsEl = document.getElementById('diet-chips');
+      var noResultsEl = document.getElementById('no-results');
+      var activeDiets = {};
+
+      function normalize(s) {
+        return (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      }
+
+      function itemMatchesDiets(it) {
+        for (var diet in activeDiets) {
+          if (!activeDiets[diet]) continue;
+          if (diet === 'vegetarien') { if (!isVegetarian(it)) return false; }
+          else if (!it.tags || it.tags.indexOf(diet) === -1) return false;
+        }
+        return true;
+      }
+
+      function applyFilters() {
+        var query = normalize(searchInput.value.trim());
+        searchClearBtn.hidden = query.length === 0;
+
+        document.querySelectorAll('.item-card[data-id], .item-row[data-id]').forEach(function (el) {
+          var it = ITEMS_BY_ID[el.dataset.id];
+          var matchesSearch = !query || normalize(it.name).indexOf(query) !== -1 || normalize(it.desc).indexOf(query) !== -1;
+          var visible = matchesSearch && itemMatchesDiets(it);
+          el.hidden = !visible;
+        });
+
+        document.querySelectorAll('.subgroup').forEach(function (sub) {
+          var anyVisible = sub.querySelector('.item-card:not([hidden]), .item-row:not([hidden])');
+          sub.hidden = !anyVisible;
+        });
+
+        var anyCategoryVisible = false;
+        document.querySelectorAll('.category').forEach(function (section) {
+          var anyVisible = section.querySelector('.item-card:not([hidden]), .item-row:not([hidden])');
+          section.hidden = !anyVisible;
+          if (anyVisible) anyCategoryVisible = true;
+        });
+
+        noResultsEl.hidden = anyCategoryVisible;
+        updateStickyOffsets();
+      }
+
+      searchInput.addEventListener('input', applyFilters);
+      searchClearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        applyFilters();
+        searchInput.focus();
+      });
+      dietChipsEl.addEventListener('click', function (e) {
+        var chip = e.target.closest('.diet-chip');
+        if (!chip) return;
+        var diet = chip.getAttribute('data-diet');
+        activeDiets[diet] = !activeDiets[diet];
+        chip.classList.toggle('is-active', !!activeDiets[diet]);
+        applyFilters();
       });
 
       // Delegate qty-button clicks (+, -, add) — one listener instead of one
