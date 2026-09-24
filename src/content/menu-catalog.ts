@@ -143,14 +143,14 @@ export const ITEMS: CatalogItem[] = [
   { id: 'dr-moetcha-nana', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42, image: '/images/dr-moetcha-nana.webp' },
   { id: 'dr-moetcha-nana-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana Glacé', price: 46, image: '/images/dr-moetcha-nana-glace.webp' },
   { id: 'dr-moetcha-amlou', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48, image: '/images/dr-moetcha-amlou.webp' },
-  { id: 'dr-moetcha-amlou-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou Glacé', price: 52 },
+  { id: 'dr-moetcha-amlou-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou Glacé', price: 52, image: '/images/dr-moetcha-amlou-glace.webp' },
   { id: 'dr-moetcha-zahr', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42, image: '/images/dr-moetcha-zahr.webp' },
-  { id: 'dr-moetcha-zahr-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr Glacé', price: 46 },
+  { id: 'dr-moetcha-zahr-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr Glacé', price: 46, image: '/images/dr-moetcha-zahr-glace.webp' },
 
   // ---- Boissons — Thés & Infusions ----
   { id: 'dr-the-vert-marocain', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Marocain', price: 28, image: '/images/the-vert-marocain.webp' },
-  { id: 'dr-the-vert-jasmin', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Jasmin', price: 30 },
-  { id: 'dr-the-citron-gingembre', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Citron Gingembre', price: 30 },
+  { id: 'dr-the-vert-jasmin', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Jasmin', price: 30, image: '/images/the-vert-jasmin.webp' },
+  { id: 'dr-the-citron-gingembre', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Citron Gingembre', price: 30, image: '/images/the-citron-gingembre.webp' },
   { id: 'dr-the-fruits-rouges', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Fruits Rouges', price: 30 },
   { id: 'dr-infusion-verveine', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Infusion Verveine', price: 25 },
   { id: 'dr-the-curcuma', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Curcuma', price: 30 },
