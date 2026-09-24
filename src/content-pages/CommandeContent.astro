@@ -261,8 +261,14 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
     .item-tile svg { width: 30px; height: 30px; color: var(--accent); opacity: 0.75; }
+    .item-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
     .item-name {
       font-weight: 700;
       font-size: 0.92rem;
@@ -605,7 +611,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       <div class="wordmark">Moë<small>COMMANDE À TABLE</small></div>
       <button class="table-chip" id="table-chip-btn" type="button"><span class="dot"></span><span id="table-label">Table —</span></button>
     </div>
-    <p class="draft-banner"><strong>Version test.</strong> Les commandes envoyées apparaissent en direct sur l'écran du personnel (bar &amp; cuisine). Les visuels seront remplacés par les vraies photos.</p>
+    <p class="draft-banner"><strong>Version test.</strong> Les commandes envoyées apparaissent en direct sur l'écran du personnel (bar &amp; cuisine). Les photos des autres sections arrivent au fur et à mesure.</p>
   </header>
 
   <nav class="catnav">
@@ -698,14 +704,14 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
 
       var ITEMS = [
         // ---- Petit-déjeuner (8) ----
-        { id: 'bf-msemen', cat: 'breakfast', station: 'cuisine', name: 'Msemen & Amlou Miel', desc: 'Mini msemen tiède, amlou maison, filet de miel.', price: 35 },
-        { id: 'bf-baghrir', cat: 'breakfast', station: 'cuisine', name: 'Baghrir Beurre-Miel Fleur d’Oranger', desc: 'Mini baghrir, beurre fondu, miel à la fleur d’oranger.', price: 35 },
-        { id: 'bf-tartine', cat: 'breakfast', station: 'cuisine', name: 'Tartine Huile d’Olive & Tomate Confite', desc: 'Pain maison, huile d’olive, za’atar, tomate confite.', price: 32 },
-        { id: 'bf-oeuf', cat: 'breakfast', station: 'cuisine', name: 'Oeuf Mollé, Dukkah & Pain Grillé', desc: 'Oeuf mollé, dukkah, pain grillé.', price: 38 },
-        { id: 'bf-yaourt', cat: 'breakfast', station: 'cuisine', name: 'Yaourt, Granola Maison & Fruits Secs', desc: 'Yaourt nature, granola maison, fruits secs.', price: 32 },
-        { id: 'bf-viennoiserie', cat: 'breakfast', station: 'cuisine', name: 'Viennoiserie Chocolat-Amande', desc: 'Mini viennoiserie façon française, coeur amande.', price: 28 },
-        { id: 'bf-dattes', cat: 'breakfast', station: 'cuisine', name: 'Dattes Farcies Amande & Cannelle', desc: 'Dattes deglet nour, pâte d’amande, cannelle.', price: 30 },
-        { id: 'bf-assiette', cat: 'breakfast', station: 'cuisine', name: 'Assiette Marocaine Traditionnelle', desc: 'Huile d’olive, olives beldi, khobz maison.', price: 30 },
+        { id: 'bf-msemen', cat: 'breakfast', station: 'cuisine', name: 'Msemen & Amlou Miel', desc: 'Mini msemen tiède, amlou maison, filet de miel.', price: 35, image: '/images/bf-msemen-amlou.webp' },
+        { id: 'bf-baghrir', cat: 'breakfast', station: 'cuisine', name: 'Baghrir Beurre-Miel Fleur d’Oranger', desc: 'Mini baghrir, beurre fondu, miel à la fleur d’oranger.', price: 35, image: '/images/bf-baghrir.webp' },
+        { id: 'bf-tartine', cat: 'breakfast', station: 'cuisine', name: 'Tartine Huile d’Olive & Tomate Confite', desc: 'Pain maison, huile d’olive, za’atar, tomate confite.', price: 32, image: '/images/bf-tartine-tomate.webp' },
+        { id: 'bf-oeuf', cat: 'breakfast', station: 'cuisine', name: 'Oeuf Mollé, Dukkah & Pain Grillé', desc: 'Oeuf mollé, dukkah, pain grillé.', price: 38, image: '/images/bf-oeuf-mole-dukkah.webp' },
+        { id: 'bf-yaourt', cat: 'breakfast', station: 'cuisine', name: 'Yaourt, Granola Maison & Fruits Secs', desc: 'Yaourt nature, granola maison, fruits secs.', price: 32, image: '/images/bf-yaourt-granola.webp' },
+        { id: 'bf-viennoiserie', cat: 'breakfast', station: 'cuisine', name: 'Viennoiserie Chocolat-Amande', desc: 'Mini viennoiserie façon française, coeur amande.', price: 28, image: '/images/bf-viennoiserie-chocolat-amande.webp' },
+        { id: 'bf-dattes', cat: 'breakfast', station: 'cuisine', name: 'Dattes Farcies Amande & Cannelle', desc: 'Dattes deglet nour, pâte d’amande, cannelle.', price: 30, image: '/images/bf-dattes-farcies.webp' },
+        { id: 'bf-assiette', cat: 'breakfast', station: 'cuisine', name: 'Assiette Marocaine Traditionnelle', desc: 'Huile d’olive, olives beldi, khobz maison.', price: 30, image: '/images/bf-assiette-marocaine.webp' },
 
         // ---- Brunch / Lunch (8) ----
         { id: 'br-shakshuka', cat: 'brunch', station: 'cuisine', name: 'Shakshuka Ras el Hanout', desc: 'Format individuel, oeufs pochés, pain maison.', price: 48 },
@@ -881,8 +887,11 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
           items.forEach(function (it) {
             var card = document.createElement('div');
             card.className = 'item-card';
+            var tileInner = it.image
+              ? '<img src="' + it.image + '" alt="" loading="lazy">'
+              : cat.icon;
             card.innerHTML =
-              '<div class="item-tile">' + cat.icon + '</div>' +
+              '<div class="item-tile">' + tileInner + '</div>' +
               '<div class="item-name">' + it.name + '</div>' +
               (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '<div class="item-desc"></div>') +
               '<div class="item-foot"><span class="item-price tabular">' + currency(it.price) + '</span><span class="qty-slot" data-slot="' + it.id + '">' + qtyControlHtml(it.id) + '</span></div>';
