@@ -140,8 +140,8 @@ export const ITEMS: CatalogItem[] = [
   // ---- Boissons — Moëtcha ----
   { id: 'dr-moetcha-classic', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38, image: '/images/dr-moetcha-classic.webp' },
   { id: 'dr-moetcha-classic-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic Glacé', price: 42, image: '/images/dr-moetcha-classic-glace.webp' },
-  { id: 'dr-moetcha-nana', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42 },
-  { id: 'dr-moetcha-nana-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana Glacé', price: 46 },
+  { id: 'dr-moetcha-nana', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42, image: '/images/dr-moetcha-nana.webp' },
+  { id: 'dr-moetcha-nana-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana Glacé', price: 46, image: '/images/dr-moetcha-nana-glace.webp' },
   { id: 'dr-moetcha-amlou', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48, image: '/images/dr-moetcha-amlou.webp' },
   { id: 'dr-moetcha-amlou-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou Glacé', price: 52 },
   { id: 'dr-moetcha-zahr', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42, image: '/images/dr-moetcha-zahr.webp' },
