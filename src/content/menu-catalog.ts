@@ -126,16 +126,16 @@ export const ITEMS: CatalogItem[] = [
   { id: 'pc-fruits', cat: 'pancakes', station: 'cuisine', name: 'Pile Fruits de Saison', desc: 'Fruits frais, coulis maison.', price: 55, image: '/images/pc-fruits.webp' },
 
   // ---- Boissons — Chaud ----
-  { id: 'dr-espresso', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Espresso', price: 22 },
-  { id: 'dr-double-espresso', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Double Espresso', price: 25 },
-  { id: 'dr-americano', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Americano', price: 25 },
-  { id: 'dr-cappuccino', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Cappuccino', price: 30 },
-  { id: 'dr-cortado', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Cortado', price: 30 },
-  { id: 'dr-latte', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Latte', price: 30 },
-  { id: 'dr-flatwhite', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Flat White', price: 30 },
+  { id: 'dr-espresso', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Espresso', price: 22, image: '/images/espresso.webp' },
+  { id: 'dr-double-espresso', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Double Espresso', price: 25, image: '/images/double-espresso.webp' },
+  { id: 'dr-americano', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Americano', price: 25, image: '/images/americano.webp' },
+  { id: 'dr-cappuccino', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Cappuccino', price: 30, image: '/images/cappuccino.webp' },
+  { id: 'dr-cortado', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Cortado', price: 30, image: '/images/cortado.webp' },
+  { id: 'dr-latte', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Latte', price: 30, image: '/images/latte.webp' },
+  { id: 'dr-flatwhite', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Flat White', price: 30, image: '/images/flatwhite.webp' },
   { id: 'dr-mocaccino', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Mocaccino', price: 35 },
-  { id: 'dr-chocolat-chaud', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Chocolat Chaud', price: 35 },
-  { id: 'dr-caramel-macchiato', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Caramel Macchiato', price: 35 },
+  { id: 'dr-chocolat-chaud', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Chocolat Chaud', price: 35, image: '/images/chocolat-chaud.webp' },
+  { id: 'dr-caramel-macchiato', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Caramel Macchiato', price: 35, image: '/images/caramel-macchiato.webp' },
 
   // ---- Boissons — Moëtcha ----
   { id: 'dr-moetcha-classic', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38, image: '/images/dr-moetcha-classic.webp' },
