@@ -195,12 +195,12 @@ export const ITEMS: CatalogItem[] = [
   { id: 'pa-eclair-amlou', cat: 'patisserie', station: 'cuisine', sub: 'Éclairs', name: 'Éclair Amlou', desc: 'Amande, miel, argan.', price: 40, image: '/images/eclair-amlou.webp' },
   { id: 'pa-eclair-signature', cat: 'patisserie', station: 'cuisine', sub: 'Éclairs', name: 'Éclair Signature Moë', desc: 'Création du moment.', price: 42, image: '/images/eclair-signature.webp' },
   // ---- Pâtisserie — Boulangerie ----
-  { id: 'pa-croissant', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Croissant Pur Beurre', price: 11 },
-  { id: 'pa-pain-chocolat', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain au Chocolat', price: 13 },
-  { id: 'pa-pain-suisse', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain Suisse', price: 13 },
-  { id: 'pa-pain-raisins', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain aux Raisins', price: 13 },
-  { id: 'pa-baguette', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Baguette Tradition', price: 6.5 },
-  { id: 'pa-brioche', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Brioche Artisanale', price: 35 },
+  { id: 'pa-croissant', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Croissant Pur Beurre', price: 11, image: '/images/croissant.webp' },
+  { id: 'pa-pain-chocolat', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain au Chocolat', price: 13, image: '/images/pain-chocolat.webp' },
+  { id: 'pa-pain-suisse', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain Suisse', price: 13, image: '/images/pain-suisse.webp' },
+  { id: 'pa-pain-raisins', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Pain aux Raisins', price: 13, image: '/images/pain-raisins.webp' },
+  { id: 'pa-baguette', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Baguette Tradition', price: 6.5, image: '/images/baguette.webp' },
+  { id: 'pa-brioche', cat: 'patisserie', station: 'cuisine', sub: 'Boulangerie', name: 'Brioche Artisanale', price: 35, image: '/images/brioche.webp' },
 ];
 export const ITEMS_BY_ID: Record<string, CatalogItem> = {};
 ITEMS.forEach((it) => { ITEMS_BY_ID[it.id] = it; });
