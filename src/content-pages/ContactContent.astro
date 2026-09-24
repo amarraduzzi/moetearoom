@@ -6,6 +6,7 @@ import Button from '../components/Button.astro';
 import PageHero from '../components/PageHero.astro';
 import OpenStatusBadge from '../components/OpenStatusBadge.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
+import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
 import { getOrderCtaLabel } from '../lib/nav';
 import { t, localizedPath, type Language } from '../i18n/languages';
@@ -94,6 +95,11 @@ const path = localizedPath('/contact', lang);
        the same sentence as the opening question. -->
   <section class="relative max-w-5xl mx-auto px-5 sm:px-8 pt-12 sm:pt-16 pb-6 overflow-hidden" data-reveal>
     <LogoWatermark size="w-[22rem] h-[22rem]" />
+    {/* Same printed-menu sprig used on the Menu/Home/À propos/Réservation
+        pages (see FloralSprig.astro) — bottom-left, away from the gold
+        wordmark watermark above. Contact was the one page it hadn't
+        reached yet. */}
+    <FloralSprig corner="bottom-left" />
     <p class="pull-quote max-w-2xl">{t(copy.quoteQuestion, lang)}</p>
     <p class="mt-3 max-w-xl text-sm sm:text-base" style="color: var(--color-text-muted)">{t(copy.quoteLocation, lang)}</p>
   </section>

@@ -854,10 +854,27 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     }
 
     .confirm-view {
+      position: relative;
+      overflow: hidden;
       padding: 30px 20px 10px;
       text-align: center;
     }
+    /* Same sprig as the gate screen — the order-confirmation moment is the
+       other quiet, non-functional beat in this page, a natural bookend to
+       the numpad screen it opened on. */
+    .confirm-floral {
+      position: absolute;
+      top: -12px;
+      right: -14px;
+      width: 92px;
+      height: auto;
+      opacity: 0.16;
+      pointer-events: none;
+      z-index: 0;
+    }
     .confirm-icon {
+      position: relative;
+      z-index: 1;
       width: 52px; height: 52px;
       border-radius: 50%;
       background: var(--accent-soft);
@@ -866,8 +883,8 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       margin: 0 auto 14px;
     }
     .confirm-icon svg { width: 26px; height: 26px; }
-    .confirm-view h3 { margin: 0 0 6px; }
-    .confirm-view p { color: var(--text-muted); font-size: 0.85rem; margin: 0 0 18px; }
+    .confirm-view h3 { position: relative; z-index: 1; margin: 0 0 6px; }
+    .confirm-view p { position: relative; z-index: 1; color: var(--text-muted); font-size: 0.85rem; margin: 0 0 18px; }
     .confirm-close {
       background: var(--brown);
       color: var(--surface);
@@ -889,8 +906,26 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       justify-content: center;
       padding: 24px 16px;
       padding-block: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+    }
+    /* Same printed-menu sprig used sitewide (see FloralSprig.astro on the
+       marketing pages) — this page ships its own standalone <html> with
+       no Tailwind/Layout, so it's hand-rolled here with plain CSS instead
+       of that component. Quiet corner accent behind the numpad card, not
+       inside it, so it never competes with the tap targets. */
+    .gate-floral {
+      position: absolute;
+      bottom: -24px;
+      right: -28px;
+      width: 190px;
+      height: auto;
+      opacity: 0.16;
+      pointer-events: none;
+      z-index: 0;
     }
     .gate-card {
+      position: relative;
+      z-index: 1;
       width: 100%;
       max-width: 340px;
       text-align: center;
@@ -1073,6 +1108,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
 </head>
 <body>
   <div class="gate-overlay" id="gate">
+    <img class="gate-floral" src="/images/floral-sprig-flip.webp" alt="" aria-hidden="true" loading="eager" decoding="async">
     <div class="gate-card">
       <img class="gate-logo" src="/images/logo-moe.png" alt="Moë Tea Room">
       <div class="gate-eyebrow">COMMANDE À TABLE</div>
@@ -1178,6 +1214,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     </div>
     <div id="sheet-confirm-view" hidden>
       <div class="confirm-view">
+        <img class="confirm-floral" src="/images/floral-sprig.webp" alt="" aria-hidden="true" loading="lazy" decoding="async">
         <div class="confirm-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
         </div>

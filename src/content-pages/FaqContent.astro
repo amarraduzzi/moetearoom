@@ -4,6 +4,7 @@
 import Layout from '../layouts/Layout.astro';
 import PageHero from '../components/PageHero.astro';
 import LogoWatermark from '../components/LogoWatermark.astro';
+import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
 import { faqItems, faqCategoryLabels, type FaqItem } from '../content/faq';
 import { t, localizedPath, type Language } from '../i18n/languages';
@@ -92,6 +93,10 @@ const path = localizedPath('/faq', lang);
       <div class={warm ? 'section-tint-warm' : ''}>
         <section class={`relative max-w-3xl mx-auto px-5 sm:px-8 py-10 sm:py-12 ${gi === 0 ? 'overflow-hidden' : ''}`}>
           {gi === 0 && <LogoWatermark size="w-[20rem] h-[20rem]" />}
+          {/* Same printed-menu sprig used on the other pages (see
+              FloralSprig.astro) — bottom-left, away from the gold wordmark
+              watermark above. FAQ was the one page it hadn't reached yet. */}
+          {gi === 0 && <FloralSprig corner="bottom-left" size="w-32 sm:w-44" />}
           <h2 class="flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.2em] mb-5" style="color: var(--color-accent)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.8">
               <path d={categoryIcon[group.category]} stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" />
