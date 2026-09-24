@@ -133,7 +133,7 @@ export const ITEMS: CatalogItem[] = [
   { id: 'dr-cortado', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Cortado', price: 30, image: '/images/cortado.webp' },
   { id: 'dr-latte', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Latte', price: 30, image: '/images/latte.webp' },
   { id: 'dr-flatwhite', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Flat White', price: 30, image: '/images/flatwhite.webp' },
-  { id: 'dr-mocaccino', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Mocaccino', price: 35 },
+  { id: 'dr-mocaccino', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Mocaccino', price: 35, image: '/images/mocaccino.webp' },
   { id: 'dr-chocolat-chaud', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Chocolat Chaud', price: 35, image: '/images/chocolat-chaud.webp' },
   { id: 'dr-caramel-macchiato', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Caramel Macchiato', price: 35, image: '/images/caramel-macchiato.webp' },
 
@@ -151,7 +151,7 @@ export const ITEMS: CatalogItem[] = [
   { id: 'dr-the-vert-marocain', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Marocain', price: 28, image: '/images/the-vert-marocain.webp' },
   { id: 'dr-the-vert-jasmin', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Jasmin', price: 30, image: '/images/the-vert-jasmin.webp' },
   { id: 'dr-the-citron-gingembre', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Citron Gingembre', price: 30, image: '/images/the-citron-gingembre.webp' },
-  { id: 'dr-the-fruits-rouges', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Fruits Rouges', price: 30 },
+  { id: 'dr-the-fruits-rouges', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Fruits Rouges', price: 30, image: '/images/the-fruits-rouges.webp' },
   { id: 'dr-infusion-verveine', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Infusion Verveine', price: 25 },
   { id: 'dr-the-curcuma', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Curcuma', price: 30 },
   { id: 'dr-the-noir-assam', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Noir Assam', price: 30 },
