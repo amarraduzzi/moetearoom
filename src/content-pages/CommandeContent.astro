@@ -315,13 +315,6 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     .item-row .item-name { font-size: 0.85rem; }
     .item-row .item-desc { font-size: 0.72rem; margin-top: 1px; }
     .row-main { flex: 1; min-width: 0; }
-    .row-thumb {
-      width: 44px;
-      height: 44px;
-      border-radius: 8px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
     .row-price {
       font-weight: 700;
       font-size: 0.82rem;
@@ -914,13 +907,36 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
             subEl.className = 'subgroup-label';
             subEl.textContent = subLabel;
             list.appendChild(subEl);
+            var subItems = items.filter(function (it) { return it.sub === subLabel; });
+            // A subgroup with real photography (e.g. Moëtcha) gets the same
+            // full-photo card treatment as the dish categories, instead of
+            // the compact thumbnail row used for un-photographed subgroups.
+            var hasPhotos = subItems.some(function (it) { return !!it.image; });
+            if (hasPhotos) {
+              var subGrid = document.createElement('div');
+              subGrid.className = 'card-grid';
+              subItems.forEach(function (it) {
+                var card = document.createElement('div');
+                card.className = 'item-card';
+                var tileInner = it.image
+                  ? '<img src="' + it.image + '" alt="" loading="lazy">'
+                  : cat.icon;
+                card.innerHTML =
+                  '<div class="item-tile">' + tileInner + '</div>' +
+                  '<div class="item-name">' + it.name + '</div>' +
+                  (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '<div class="item-desc"></div>') +
+                  '<div class="item-foot"><span class="item-price tabular">' + currency(it.price) + '</span><span class="qty-slot" data-slot="' + it.id + '">' + qtyControlHtml(it.id) + '</span></div>';
+                subGrid.appendChild(card);
+              });
+              list.appendChild(subGrid);
+              return;
+            }
             var rowList = document.createElement('div');
             rowList.className = 'row-list';
-            items.filter(function (it) { return it.sub === subLabel; }).forEach(function (it) {
+            subItems.forEach(function (it) {
               var row = document.createElement('div');
               row.className = 'item-row';
               row.innerHTML =
-                (it.image ? '<img class="row-thumb" src="' + it.image + '" alt="" loading="lazy">' : '') +
                 '<div class="row-main"><div class="item-name">' + it.name + '</div>' +
                 (it.desc ? '<div class="item-desc">' + it.desc + '</div>' : '') + '</div>' +
                 '<span class="row-price tabular">' + currency(it.price) + '</span>' +
