@@ -17,10 +17,33 @@ import LogoWatermark from '../components/LogoWatermark.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import FormuleSpotlight from '../components/FormuleSpotlight.astro';
 import { siteConfig } from '../config/site.config';
-import { menuHighlights } from '../content/menu-highlights';
+// Same catalog as /commande now (Amar, Sept 2026 — "het menu wat de
+// hoofdsite staat moet hetzelfde worden" as the QR ordering page) — see
+// menu-catalog.ts's own top comment for what that unification does and
+// does not cover yet (translations, in particular). menu-highlights.ts
+// is retired; this page no longer imports it.
+import { CATEGORIES, ITEMS, type CatalogItem } from '../content/menu-catalog';
 import { menuFormules } from '../content/menu-formules';
 import { t, localizedPath, type Language } from '../i18n/languages';
 import { common, place, nav } from '../i18n/ui';
+
+// Group the flat item list by category, and — for the two 'list'-style
+// categories (Boissons, Pâtisserie), which are too long to browse as one
+// undifferentiated block — by each item's `sub` within it, in first-seen
+// order (matches how /commande groups the exact same data).
+function itemsForCategory(catId: string): CatalogItem[] {
+  return ITEMS.filter((it) => it.cat === catId);
+}
+function subGroups(items: CatalogItem[]): { sub: string; items: CatalogItem[] }[] {
+  const order: string[] = [];
+  const map = new Map<string, CatalogItem[]>();
+  items.forEach((it) => {
+    const key = it.sub || '';
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key)!.push(it);
+  });
+  return order.map((sub) => ({ sub, items: map.get(sub)! }));
+}
 
 interface Props {
   lang?: Language;
@@ -37,8 +60,6 @@ const copy = {
     en: `Menu — ${primaryKeyword} in ${city} | ${name}`,
     ar: `القائمة — ${primaryKeyword} في ${city} | ${name}`,
   },
-  // REPLACE — mention the actual dish categories once this client's menu
-  // is filled in (menu-highlights.ts).
   metaDescription: {
     fr: `Découvrez le menu complet de ${name}, ${primaryKeyword} à ${city}.`,
     en: `Discover the full menu of ${name}, ${primaryKeyword} in ${city}.`,
@@ -57,7 +78,6 @@ const copy = {
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
-  groupDrinksPastry: { fr: 'Boissons & Pâtisserie', en: 'Drinks & Pastries', ar: 'المشروبات والحلويات' },
   formulesSubtitle: {
     fr: "Selon le jour et l'heure — la réservation est recommandée.",
     en: 'Depending on the day and time — reservation is recommended.',
@@ -75,13 +95,13 @@ const menuJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Menu',
   name: `Menu — ${name}`,
-  hasMenuSection: menuHighlights.map((cat) => ({
+  hasMenuSection: CATEGORIES.map((cat) => ({
     '@type': 'MenuSection',
     name: t(cat.label, lang),
-    hasMenuItem: cat.items.map((item) => ({
+    hasMenuItem: itemsForCategory(cat.id).map((item) => ({
       '@type': 'MenuItem',
       name: item.name,
-      description: t(item.description, lang),
+      description: item.desc ?? undefined,
       offers: { '@type': 'Offer', price: item.price, priceCurrency: siteConfig.identity.currency },
     })),
   })),
@@ -131,47 +151,26 @@ const path = localizedPath('/menu', lang);
     </div>
   </section>
 
-  <!-- Filter (final punch-list item #3, extended) — a real, useful
-       interaction, not decoration. The category chips act as a
-       table-of-contents: clicking one jumps straight to that section
-       further down the page instead of hiding everything else (that was
-       the original behaviour; the client asked for a direct scroll
-       instead, since the categories are always there in the normal page
-       flow anyway). The "Végétarien" chip is the one true filter left —
-       it's the one dietary fact readable straight off each dish's own
-       description (see menu-highlights.ts's comment for why it doesn't go
-       further, e.g. vegan/spice-level). The free-text search box that used
-       to sit here was removed on the client's own request (Sept 2026:
-       "Haal de functie rechercher un plat eruit. Dat heeft geen functie in
-       de site.") — the category chips below already cover finding a dish,
-       so the search box was pure decoration to them, not a used feature. -->
+  <!-- Category chips — a table-of-contents, not a filter: clicking one
+       jumps straight to that section further down the page (the
+       categories are always there in the normal page flow anyway). One
+       flat row now, matching /commande's own single-row category nav
+       instead of the old three-way "menu sur le pouce / boissons &
+       pâtisserie / formules" tab split — that grouping was built around
+       the old, now-retired category set (see menu-catalog.ts).
+       "Végétarien" and the free-text search that used to live here are
+       both gone: the client removed search on request (Sept 2026:
+       "Haal de functie rechercher un plat eruit"), and the new shared
+       catalog doesn't carry a vegetarian flag per item yet — re-add the
+       chip once that field exists on menu-catalog.ts rather than fake
+       it from here. -->
   <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
-    <!-- Three-menu tab strip — this client runs three genuinely different
-         menus on one page (savoury "Menu sur le pouce", the drinks/pâtisserie
-         card, and the day/time formules further down), which used to read as
-         one long list. These tabs group the category chips below by which
-         menu they belong to, instead of adding a second, competing
-         navigation system.
-
-         Grid, not the horizontal-scroll strip used below for the (much
-         longer) category-chip row: only 3 tabs live here, and the client
-         asked for exactly these three to be visible at a glance on mobile
-         instead of requiring a left/right swipe to see all of them (Sept
-         2026 feedback, with a screenshot of the cut-off "Boisson…" tab).
-         Equal thirds fit on any phone width; a tab's own label is allowed
-         to wrap to two lines rather than truncate or force horizontal
-         scroll back in. -->
-    <div class="menu-group-row grid grid-cols-3 gap-2 mb-2">
-      <button type="button" class="menu-group-btn" data-group="pouce" data-group-scroll={`cat-section-0`}>{t(menuHighlights[0].label, lang)}</button>
-      <button type="button" class="menu-group-btn" data-group="drinks" data-group-scroll={`cat-section-1`}>{t(copy.groupDrinksPastry, lang)}</button>
-      <button type="button" class="menu-group-btn" data-group="formules" data-group-scroll="formules-moments">{t(copy.formulesTitle, lang)}</button>
-    </div>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
-      {menuHighlights.map((category, i) => (
-        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`} data-group={i === 0 ? 'pouce' : 'drinks'}>{t(category.label, lang)}</button>
+      {CATEGORIES.map((category, i) => (
+        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>{t(category.label, lang)}</button>
       ))}
-      <button type="button" class="menu-filter-btn shrink-0" data-filter="vegetarian">🌱 {t(common.vegetarienUniquement, lang)}</button>
+      <button type="button" class="menu-filter-btn shrink-0" data-scroll-to="formules-moments">{t(copy.formulesTitle, lang)}</button>
     </div>
   </section>
 
@@ -185,15 +184,18 @@ const path = localizedPath('/menu', lang);
        plain grey — the deep wine tone from the order-engine, applied
        here rather than À propos/Avis because it's food, and warmth fits
        a menu the way it doesn't fit an editorial about-page. -->
-  {menuHighlights.map((category, i) => (
+  {CATEGORIES.map((category, i) => {
+    const items = itemsForCategory(category.id);
+    const groups = category.style === 'list' ? subGroups(items) : null;
+    return (
     <div id={`cat-section-${i}`} class={`scroll-mt-24 ${i % 2 === 1 ? 'section-tint-warm' : ''}`} data-menu-category data-cat-index={i}>
-      <section class={`relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 ${i === 0 || i === menuHighlights.length - 1 ? 'overflow-hidden' : ''}`}>
+      <section class={`relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 ${i === 0 || i === CATEGORIES.length - 1 ? 'overflow-hidden' : ''}`}>
         {/* The client's own printed-menu sprig (see FloralSprig.astro), used
             just twice — opening and closing the à-la-carte list like a
             printed card's own corner flourish, not repeated on every
             category, which would turn a quiet accent into wallpaper. */}
         {i === 0 && <FloralSprig corner="top-right" />}
-        {i === menuHighlights.length - 1 && <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />}
+        {i === CATEGORIES.length - 1 && <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />}
         <div class="relative">
           <div>
             <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
@@ -201,61 +203,107 @@ const path = localizedPath('/menu', lang);
                 <span class="text-xs font-bold" style="color: var(--color-accent)">{String(i + 1).padStart(2, '0')}</span>
                 {t(category.label, lang)}
               </h2>
-              {/* Moëtcha's wordmark subtext ("MATCHA · BY MOË TEA ROOM") —
-                  optional field, only categories that set brandLine render
-                  this, see menu-highlights.ts's comment on the field. */}
-              {category.brandLine && (
-                <span class="block mt-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style="color: var(--color-accent)">
-                  {t(category.brandLine, lang)}
-                </span>
+              {/* category.sub/combo are FR-only for now (see menu-catalog.ts's
+                  TRANSLATION STATUS note) — shown as-is on every language
+                  until translated, same tradeoff as every item name/desc
+                  below. */}
+              {category.sub && (
+                <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{category.sub}</p>
               )}
-              {category.intro && (
-                <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{t(category.intro, lang)}</p>
+              {category.combo && (
+                <p class="mt-2 text-sm max-w-2xl leading-relaxed italic" style="color: var(--color-primary)">{category.combo}</p>
               )}
             </div>
-            <div class="grid sm:grid-cols-2 gap-4">
-              {category.items.map((item, j) => (
-                <div
-                  class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4"
-                  style={`background-color: ${i % 2 === 1 ? 'color-mix(in srgb, var(--color-primary-dark) 14%, var(--color-surface-muted))' : 'var(--color-surface)'}; border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
-                  data-reveal
-                  data-veg={item.vegetarian ? 'true' : 'false'}
-                  data-item-key={item.name}
-                  data-cat={i}
-                  data-search={`${item.name} ${t(item.description, lang)}`.toLowerCase()}
-                >
-                  {/* Photo (or branded placeholder until the real shot
-                      exists) — only rendered for photoForward categories
-                      (Moëtcha for now) so every other category's card stays
-                      pixel-identical to before. */}
-                  {category.photoForward && (
-                    <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 24%, var(--color-surface-muted)), var(--color-surface-muted))">
+
+            {category.style === 'cards' ? (
+              <div class="grid sm:grid-cols-2 gap-4">
+                {items.map((item, j) => (
+                  <div
+                    class="js-menu-item card-lift rounded-xl overflow-hidden"
+                    style={`background-color: ${i % 2 === 1 ? 'color-mix(in srgb, var(--color-primary-dark) 14%, var(--color-surface-muted))' : 'var(--color-surface)'}; border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+                    data-reveal
+                    data-item-key={item.name}
+                    data-cat={i}
+                    data-search={`${item.name} ${item.desc ?? ''}`.toLowerCase()}
+                  >
+                    {/* Photo-forward card — the real shot when Amar has
+                        produced it (see menu-catalog.ts), a quiet branded
+                        placeholder tile otherwise so an unphotographed dish
+                        never looks broken, just "photo coming". */}
+                    <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
                       {item.image ? (
                         <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
                       ) : (
-                        <span class="w-full h-full flex items-center justify-center text-2xl" aria-hidden="true">🍵</span>
+                        <span class="w-full h-full flex items-center justify-center text-3xl" aria-hidden="true">🍽️</span>
                       )}
                     </div>
-                  )}
-                  <div class="min-w-0 flex-1">
-                    <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
-                      <span class="js-item-name">{item.name}</span>
-                      {item.vegetarian && <span class="text-xs align-middle" title={t(common.vegetarienUniquement, lang)}>🌱</span>}
-                      <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
-                        {t(common.epuise, lang)}
-                      </span>
-                    </h3>
-                    {item.tagline && (
-                      <p class="text-xs italic mt-0.5" style="color: var(--color-primary)">{t(item.tagline, lang)}</p>
+                    <div class="p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
+                          <span class="js-item-name">{item.name}</span>
+                          <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
+                            {t(common.epuise, lang)}
+                          </span>
+                        </h3>
+                        <span class="js-item-price menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
+                      </div>
+                      {item.desc && (
+                        <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{item.desc}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div class="space-y-6">
+                {groups!.map((group) => (
+                  <div>
+                    {group.sub && (
+                      <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{group.sub}</h3>
                     )}
-                    <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{t(item.description, lang)}</p>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      {group.items.map((item, j) => (
+                        <div
+                          class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4"
+                          style={`background-color: ${i % 2 === 1 ? 'color-mix(in srgb, var(--color-primary-dark) 14%, var(--color-surface-muted))' : 'var(--color-surface)'}; border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+                          data-reveal
+                          data-item-key={item.name}
+                          data-cat={i}
+                          data-search={`${item.name} ${item.desc ?? ''}`.toLowerCase()}
+                        >
+                          {/* Thumbnail only once a real photo exists for this
+                              item — most drinks/pâtisserie rows don't have
+                              one yet (see menu-catalog.ts), so this stays a
+                              plain text row until Amar's photography lands,
+                              same upgrade-when-photographed pattern used on
+                              /commande. */}
+                          {item.image && (
+                            <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0">
+                              <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
+                            </div>
+                          )}
+                          <div class="min-w-0 flex-1">
+                            <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
+                              <span class="js-item-name">{item.name}</span>
+                              <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
+                                {t(common.epuise, lang)}
+                              </span>
+                            </h3>
+                            {item.desc && (
+                              <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{item.desc}</p>
+                            )}
+                          </div>
+                          <div class="flex flex-col items-end gap-2 shrink-0">
+                            <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div class="flex flex-col items-end gap-2 shrink-0">
-                    <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
             <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">
               {t(copy.backToMenu, lang)}
             </a>
@@ -263,27 +311,18 @@ const path = localizedPath('/menu', lang);
         </div>
       </section>
     </div>
-  ))}
-
-  <p id="menu-no-results" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-10 text-sm text-center" style="color: var(--color-text-muted)">
-    {t(common.aucunPlatTrouve, lang)}
-  </p>
+    );
+  })}
 
   <!-- Dishes added from the in-restaurant staff screen (menu_items rows
        with no matching static item_key — see supabase/schema.sql's
        comment on that table) — populated client-side by the
        menu-items-sync script below. Deliberately its own section outside
-       the search/category-filter system above rather than injected into
-       one of the menuHighlights.map(...) categories: those categories and
-       the filter chips that drive them are static, built at build time,
-       while this content can appear seconds after a staff member adds it.
-       Bolting a live section onto a static filter index would mean either
-       re-querying every DOM list the filter script already captured (see
-       that script's own comment) or silently letting these dishes fall
-       outside search/category filtering while still claiming to be
-       filterable — same "don't half-support something" standard as the
-       rest of this project. Hidden until the sync script finds at least
-       one row. -->
+       the categories above rather than injected into one of the
+       CATEGORIES.map(...) sections (see menu-catalog.ts): those categories
+       are static, built at build time, while this content can appear
+       seconds after a staff member adds it. Hidden until the sync script
+       finds at least one row. -->
   <section id="menu-extra-dishes" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 scroll-mt-24">
     <h2 class="font-display text-2xl font-semibold mb-5 pb-3" style="color: var(--color-text-primary); border-bottom: 1px solid var(--color-border)">
       {t(copy.nouveautesTitle, lang)}
@@ -294,7 +333,7 @@ const path = localizedPath('/menu', lang);
   <!-- Formules & moments — the client's day/time-window offers (Good
        Morning brunch, Déjeuner Moë, Rfissa/Couscous, Soirées, weekend
        brunch, Gastronomie Dima Maghreb). Deliberately NOT rendered inside
-       the menuHighlights loop above: these carry no fixed item list or
+       the CATEGORIES loop above: these carry no fixed item list or
        price in the client's own PDF. Each card links to the reservation
        form instead, matching the source PDF's own "réservation
        recommandée" note (all the more true now the whole menu is
@@ -349,49 +388,6 @@ const path = localizedPath('/menu', lang);
   .menu-filter-row::-webkit-scrollbar {
     display: none;
   }
-  /* Deliberately a different shape from .menu-filter-btn (rounded rectangle,
-     uppercase, wider tracking vs. the pills below) so the hierarchy reads at
-     a glance: these three group the menu, the pills below navigate within
-     whichever menu is selected. Grid-of-3 (see the markup above) means each
-     button's width is fixed by its column, not its own text — center the
-     label and let it wrap onto a second line instead of overflowing or
-     forcing the row into horizontal scroll. */
-  .menu-group-btn {
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    padding: 0.5rem 0.4rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--color-border);
-    color: var(--color-text-muted);
-    background-color: var(--color-surface);
-    text-align: center;
-    line-height: 1.25;
-    white-space: normal;
-    transition:
-      color 0.15s ease,
-      background-color 0.15s ease,
-      border-color 0.15s ease;
-  }
-  @media (min-width: 640px) {
-    .menu-group-btn {
-      font-size: 0.7rem;
-      padding: 0.45rem 0.9rem;
-    }
-  }
-  .menu-group-btn.is-active {
-    color: var(--color-background);
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-  }
-  .menu-group-btn:not(.is-active):hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-  .menu-filter-btn.is-group-hidden {
-    display: none;
-  }
   .menu-filter-btn {
     font-size: 0.8rem;
     font-weight: 700;
@@ -426,125 +422,43 @@ const path = localizedPath('/menu', lang);
 </style>
 
 <script>
-  // Client-side only, no reload — see the filter section's comment above
-  // for why this exists. Wrapped in 'astro:page-load' (same pattern as
-  // Layout.astro's sitewide scripts) so this re-initializes correctly if
-  // the Menu page is reached via a View Transitions client-side
-  // navigation, not just a hard load.
+  // Client-side only, no reload. Wrapped in 'astro:page-load' (same
+  // pattern as Layout.astro's sitewide scripts) so this re-initializes
+  // correctly if the Menu page is reached via a View Transitions
+  // client-side navigation, not just a hard load.
+  //
+  // Simplified alongside the menu-catalog.ts unification (Sept 2026):
+  // every chip here is a table-of-contents link now (scroll straight to
+  // its section), never a show/hide filter — the old "Végétarien" chip
+  // was the one real filter and is gone along with it (the shared
+  // catalog doesn't carry that flag yet, see menu-catalog.ts), so there
+  // is nothing left to actually filter and no "no results" state to
+  // handle. What's left: scroll-to-section on click, with the clicked
+  // chip marked active for orientation.
   document.addEventListener('astro:page-load', () => {
     const filterButtons = document.querySelectorAll('.menu-filter-btn');
-    const groupButtons = document.querySelectorAll('.menu-group-btn');
     if (!filterButtons.length) return;
-
-    const items = document.querySelectorAll('[data-veg]');
-    const categories = document.querySelectorAll('[data-menu-category]');
-    const noResults = document.getElementById('menu-no-results');
-    const categoryChips = document.querySelectorAll('.menu-filter-btn[data-group]');
-
-    let activeFilter = 'all';
-
-    // Any direct interaction with the chip row below (a category chip, "Tout
-    // le menu", or "Végétarien") means the visitor wants the full picture
-    // again — clear whichever group tab was narrowing the chip row so it
-    // doesn't silently keep hiding categories.
-    function resetGroupView() {
-      groupButtons.forEach((b) => b.classList.remove('is-active'));
-      categoryChips.forEach((c) => c.classList.remove('is-group-hidden'));
-    }
-
-    function applyFilters() {
-      let anyVisible = false;
-
-      items.forEach((item) => {
-        const isVeg = item.getAttribute('data-veg') === 'true';
-        const catIndex = item.getAttribute('data-cat');
-        const show =
-          activeFilter === 'all' ||
-          (activeFilter === 'vegetarian' && isVeg) ||
-          activeFilter === `cat-${catIndex}`;
-        item.style.display = show ? '' : 'none';
-        if (show) anyVisible = true;
-      });
-
-      categories.forEach((cat) => {
-        const hasVisibleItem = Array.from(cat.querySelectorAll('[data-veg]')).some((item) => item.style.display !== 'none');
-        cat.style.display = hasVisibleItem ? '' : 'none';
-      });
-
-      if (noResults) noResults.classList.toggle('hidden', anyVisible);
-    }
 
     const scrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
     filterButtons.forEach((btn) => {
       const scrollTargetId = btn.getAttribute('data-scroll-to');
-
-      // Category chips (e.g. "Menu sur le pouce") are a table-of-contents,
-      // not a filter — clicking one resets any active filter/search (so the
-      // section you land on is guaranteed to actually show its dishes) and
-      // scrolls straight to it, instead of hiding every other category the
-      // way "Tout le menu" / "Végétarien" still do below.
-      if (scrollTargetId) {
-        btn.addEventListener('click', () => {
-          resetGroupView();
-          activeFilter = 'all';
-          filterButtons.forEach((b) => b.classList.remove('is-active'));
-          document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
-          applyFilters();
-
-          document.getElementById(scrollTargetId)?.scrollIntoView({ behavior: scrollBehavior });
-        });
-        return;
-      }
-
+      if (!scrollTargetId) return;
       btn.addEventListener('click', () => {
-        resetGroupView();
         filterButtons.forEach((b) => b.classList.remove('is-active'));
         btn.classList.add('is-active');
-        activeFilter = btn.getAttribute('data-filter') || 'all';
-        applyFilters();
-      });
-    });
-
-    // Group tabs — narrow the category-chip row to the selected menu and
-    // jump to it, instead of hiding items like the "Tout le menu" /
-    // "Végétarien" filters do (a group is a set of whole categories, not a
-    // dish-level filter).
-    groupButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const group = btn.getAttribute('data-group');
-        const scrollTarget = btn.getAttribute('data-group-scroll');
-
-        groupButtons.forEach((b) => b.classList.remove('is-active'));
-        btn.classList.add('is-active');
-
-        if (group === 'formules') {
-          categoryChips.forEach((c) => c.classList.remove('is-group-hidden'));
-        } else {
-          categoryChips.forEach((c) => {
-            c.classList.toggle('is-group-hidden', c.getAttribute('data-group') !== group);
-          });
-          activeFilter = 'all';
-          filterButtons.forEach((b) => b.classList.remove('is-active'));
-          document.querySelector('.menu-filter-btn[data-filter="all"]')?.classList.add('is-active');
-          applyFilters();
-        }
-
-        if (scrollTarget) document.getElementById(scrollTarget)?.scrollIntoView({ behavior: scrollBehavior });
+        document.getElementById(scrollTargetId)?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
 
     // "Back to menu" link under each category — same scroll-to-top-of-list
-    // behaviour, but doesn't need the filter reset above since it never
-    // changes what's currently shown.
+    // behaviour.
     document.querySelectorAll('.back-to-menu-link').forEach((link) => {
       link.addEventListener('click', (event) => {
         event.preventDefault();
         document.getElementById('menu-list')?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
-
-    applyFilters();
   });
 </script>
 
