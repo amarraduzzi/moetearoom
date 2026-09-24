@@ -196,13 +196,23 @@ const path = localizedPath('/menu', lang);
         {i === menuHighlights.length - 1 && <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />}
         <div class="relative">
           <div>
-            <h2
-              class="font-display text-2xl font-semibold mb-5 pb-3 flex items-baseline gap-3"
-              style="color: var(--color-text-primary); border-bottom: 1px solid var(--color-border)"
-            >
-              <span class="text-xs font-bold" style="color: var(--color-accent)">{String(i + 1).padStart(2, '0')}</span>
-              {t(category.label, lang)}
-            </h2>
+            <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+              <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+                <span class="text-xs font-bold" style="color: var(--color-accent)">{String(i + 1).padStart(2, '0')}</span>
+                {t(category.label, lang)}
+              </h2>
+              {/* Moëtcha's wordmark subtext ("MATCHA · BY MOË TEA ROOM") —
+                  optional field, only categories that set brandLine render
+                  this, see menu-highlights.ts's comment on the field. */}
+              {category.brandLine && (
+                <span class="block mt-1.5 text-[10px] font-bold uppercase tracking-[0.22em]" style="color: var(--color-accent)">
+                  {t(category.brandLine, lang)}
+                </span>
+              )}
+              {category.intro && (
+                <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{t(category.intro, lang)}</p>
+              )}
+            </div>
             <div class="grid sm:grid-cols-2 gap-4">
               {category.items.map((item, j) => (
                 <div
@@ -214,6 +224,19 @@ const path = localizedPath('/menu', lang);
                   data-cat={i}
                   data-search={`${item.name} ${t(item.description, lang)}`.toLowerCase()}
                 >
+                  {/* Photo (or branded placeholder until the real shot
+                      exists) — only rendered for photoForward categories
+                      (Moëtcha for now) so every other category's card stays
+                      pixel-identical to before. */}
+                  {category.photoForward && (
+                    <div class="w-16 h-16 rounded-lg overflow-hidden shrink-0" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 24%, var(--color-surface-muted)), var(--color-surface-muted))">
+                      {item.image ? (
+                        <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <span class="w-full h-full flex items-center justify-center text-2xl" aria-hidden="true">🍵</span>
+                      )}
+                    </div>
+                  )}
                   <div class="min-w-0 flex-1">
                     <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
                       <span class="js-item-name">{item.name}</span>
@@ -222,6 +245,9 @@ const path = localizedPath('/menu', lang);
                         {t(common.epuise, lang)}
                       </span>
                     </h3>
+                    {item.tagline && (
+                      <p class="text-xs italic mt-0.5" style="color: var(--color-primary)">{t(item.tagline, lang)}</p>
+                    )}
                     <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{t(item.description, lang)}</p>
                   </div>
                   <div class="flex flex-col items-end gap-2 shrink-0">

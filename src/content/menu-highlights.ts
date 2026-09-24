@@ -17,12 +17,30 @@ export interface MenuHighlightItem {
   image?: string;
   imageAlt?: LocalizedText;
   vegetarian?: boolean;
+  // Short subtitle under the item name (e.g. "la rencontre des deux
+  // thés") — added for the Moëtcha sub-line (Amar, Sept 2026), optional
+  // so every other category's cards render exactly as before.
+  tagline?: LocalizedText;
 }
 export interface MenuHighlightCategory {
   label: LocalizedText;
   items: MenuHighlightItem[];
   image?: string;
   imageAlt?: LocalizedText;
+  // Sub-brand fields, added for Moëtcha (Amar, Sept 2026) — all optional,
+  // so only a category that sets them gets the extra visual treatment in
+  // MenuContent.astro; every existing category is unaffected.
+  // brandLine: small wordmark subtext under the category title (e.g.
+  //   "MATCHA · BY MOË TEA ROOM") — kept verbatim across fr/en/ar, same
+  //   treatment as the site's other untranslated brand wordplay (see
+  //   ReservationContent.astro's "MOË — Majestueux, Élégant, Opulent").
+  // intro: one short paragraph telling the category's own story.
+  // photoForward: true renders a photo (or a branded placeholder tile
+  //   until the real photo exists) next to each item instead of the
+  //   plain text-only card every other category uses.
+  brandLine?: LocalizedText;
+  intro?: LocalizedText;
+  photoForward?: boolean;
 }
 
 export const menuHighlights: MenuHighlightCategory[] = [
@@ -167,22 +185,6 @@ export const menuHighlights: MenuHighlightCategory[] = [
         vegetarian: true,
       },
       {
-        name: 'Matcha Latte',
-        description: {
-          fr: 'Thé matcha avec lait chaud.',
-          en: 'Matcha tea with steamed milk.',
-          ar: 'شاي ماتشا مع حليب ساخن.',
-        },
-        price: 45,
-        vegetarian: true,
-        image: '/images/matcha-latte.webp',
-        imageAlt: {
-          fr: 'Matcha latte avec mousse de lait en forme de cœur',
-          en: 'Matcha latte with heart-shaped milk foam art',
-          ar: 'ماتشا لاتيه مع رغوة حليب على شكل قلب',
-        },
-      },
-      {
         name: 'Caramel Macchiato',
         description: {
           fr: 'Espresso, lait et sirop de caramel.',
@@ -190,6 +192,121 @@ export const menuHighlights: MenuHighlightCategory[] = [
           ar: 'إسبريسو مع حليب وشراب الكراميل.',
         },
         price: 35,
+        vegetarian: true,
+      },
+    ],
+  },
+  // Moëtcha — matcha sub-line with a Moroccan twist (Amar, Sept 2026).
+  // Replaces the old single generic "Matcha Latte" (Boissons Chaudes) and
+  // the 4 generic iced fruit-matcha items that used to sit unrelated in
+  // "Milkshakes, Frappés & Glacés" (Iced Matcha Latte, Strawberry/Mango/
+  // Coconut Matcha Latte) — folded in here as the iced ("Glacé") variant
+  // of each of the same 4 flavors, so the site tells ONE coherent matcha
+  // story instead of two competing ones. Positioning: not the priciest/
+  // chicest matcha in town (see matchai.ma) — accessible entry price,
+  // Moroccan storytelling, quality sourcing as the actual selling point
+  // (see `intro` below). Photos: `photoForward: true` below renders a
+  // photo next to each item once one is set — leave `image`/`imageAlt`
+  // unset until the real Nano Banana product shots + the Moëtcha logo
+  // arrive, a branded placeholder tile shows meanwhile. Suggested filenames
+  // once ready: /images/moetcha-classic.webp, -classic-glace, -nana,
+  // -nana-glace, -amlou, -amlou-glace, -zahr, -zahr-glace (all .webp).
+  {
+    label: { fr: 'Moëtcha', en: 'Moëtcha', ar: 'موتشا' },
+    brandLine: { fr: 'MATCHA · BY MOË TEA ROOM', en: 'MATCHA · BY MOË TEA ROOM', ar: 'MATCHA · BY MOË TEA ROOM' },
+    intro: {
+      fr: 'Une matcha de haute qualité, sourcée avec soin, réinventée avec des saveurs marocaines accessibles à tous — pas la matcha la plus chic de la ville, la plus nôtre.',
+      en: 'High-quality matcha, carefully sourced, reimagined with accessible Moroccan flavors — not the fanciest matcha in town, the one that’s truly ours.',
+      ar: 'ماتشا عالية الجودة، مصدرها موثوق، بنكهات مغربية في متناول الجميع — ليست الأفخم في المدينة، بل الأقرب إلينا.',
+    },
+    photoForward: true,
+    items: [
+      {
+        name: 'Moëtcha Classic',
+        tagline: { fr: 'le pur matcha', en: 'pure matcha', ar: 'الماتشا النقية' },
+        description: {
+          fr: "Matcha latte pur, lait chaud, sans fioriture — le point d'entrée dans l'univers Moëtcha.",
+          en: 'Pure matcha latte with steamed milk, no frills — the entry point into the Moëtcha world.',
+          ar: 'ماتشا لاتيه نقية مع حليب ساخن، بدون إضافات، بوابتكم إلى عالم موتشا.',
+        },
+        price: 38,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Classic Glacé',
+        tagline: { fr: 'la version fraîche', en: 'the iced version', ar: 'النسخة المثلجة' },
+        description: {
+          fr: 'Le Classic servi glacé, pour les journées chaudes de Rabat.',
+          en: "The Classic served over ice, for Rabat's warm days.",
+          ar: 'نسخة الكلاسيك مثلجة، مثالية لأيام الرباط الحارة.',
+        },
+        price: 42,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Nana',
+        tagline: { fr: 'la rencontre des deux thés', en: 'where two teas meet', ar: 'لقاء الشايين' },
+        description: {
+          fr: 'Matcha et menthe fraîche — le pont entre notre thé vert marocain et le matcha japonais.',
+          en: "Matcha and fresh mint — the bridge between our Moroccan mint tea and Japanese matcha.",
+          ar: 'ماتشا ونعناع طازج، جسر بين شاينا الأخضر المغربي والماتشا اليابانية.',
+        },
+        price: 42,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Nana Glacé',
+        tagline: { fr: 'fraîcheur marocaine', en: 'Moroccan freshness', ar: 'انتعاش مغربي' },
+        description: {
+          fr: 'Le Nana glacé, aussi rafraîchissant qu’un thé à la menthe bien frappé.',
+          en: 'Nana served iced, as refreshing as a well-chilled mint tea.',
+          ar: 'نانا مثلجة، منعشة كالشاي بالنعناع البارد.',
+        },
+        price: 46,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Amlou',
+        tagline: { fr: 'la douceur du Maroc', en: 'the sweetness of Morocco', ar: 'حلاوة المغرب' },
+        description: {
+          fr: 'Matcha, amlou maison (amande, argan, miel) — onctueux et généreux.',
+          en: 'Matcha with house amlou (almond, argan, honey) — creamy and indulgent.',
+          ar: 'ماتشا مع أملو منزلي (لوز، أركان، عسل)، قوام كريمي وغني.',
+        },
+        price: 48,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Amlou Glacé',
+        tagline: { fr: 'gourmand et frais', en: 'indulgent, served cold', ar: 'غني ومنعش' },
+        description: {
+          fr: "L'Amlou glacé, tout aussi crémeux, servi frappé.",
+          en: 'The Amlou, just as creamy, served over ice.',
+          ar: 'أملو مثلج بنفس القوام الكريمي.',
+        },
+        price: 52,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Zahr',
+        tagline: { fr: 'la fleur d’oranger en tasse', en: 'orange blossom in a cup', ar: 'زهر البرتقال في كوب' },
+        description: {
+          fr: 'Matcha et eau de fleur d’oranger — un clin d’œil floral à la pâtisserie marocaine.',
+          en: 'Matcha and orange blossom water — a floral nod to Moroccan pastry.',
+          ar: 'ماتشا وماء زهر البرتقال، لمسة عطرية من الحلويات المغربية.',
+        },
+        price: 42,
+        vegetarian: true,
+      },
+      {
+        name: 'Moëtcha Zahr Glacé',
+        tagline: { fr: 'légère et florale', en: 'light and floral', ar: 'خفيفة وعطرية' },
+        description: {
+          fr: "Le Zahr glacé, léger et parfumé, pour l'après-midi.",
+          en: 'Zahr served iced, light and fragrant, for the afternoon.',
+          ar: 'زهر مثلج، خفيف وعطري، مثالي لبعد الظهر.',
+        },
+        price: 46,
         vegetarian: true,
       },
     ],
@@ -676,34 +793,10 @@ export const menuHighlights: MenuHighlightCategory[] = [
         price: 40,
         vegetarian: true,
       },
-      {
-        name: 'Iced Matcha Latte',
-        description: { fr: 'Matcha latte glacé maison.', en: 'House-made iced matcha latte.', ar: 'ماتشا لاتيه مثلج، صنع منزلي.' },
-        price: 50,
-        vegetarian: true,
-      },
-      {
-        name: 'Strawberry Matcha Latte',
-        description: { fr: 'Matcha latte glacé à la fraise.', en: 'Iced matcha latte with strawberry.', ar: 'ماتشا لاتيه مثلج بالفراولة.' },
-        price: 55,
-        vegetarian: true,
-      },
-      {
-        name: 'Mango Matcha Latte',
-        description: { fr: 'Matcha latte glacé à la mangue.', en: 'Iced matcha latte with mango.', ar: 'ماتشا لاتيه مثلج بالمانجو.' },
-        price: 55,
-        vegetarian: true,
-      },
-      {
-        name: 'Coconut Matcha Latte',
-        description: {
-          fr: 'Matcha latte glacé à la noix de coco.',
-          en: 'Iced matcha latte with coconut.',
-          ar: 'ماتشا لاتيه مثلج بجوز الهند.',
-        },
-        price: 55,
-        vegetarian: true,
-      },
+      // The 4 generic iced matcha items that used to live here (Iced Matcha
+      // Latte, Strawberry/Mango/Coconut Matcha Latte) moved into the new
+      // "Moëtcha" category above, as the "Glacé" variant of each Moëtcha
+      // flavor (Amar, Sept 2026) — one coherent matcha story instead of two.
     ],
   },
 ];

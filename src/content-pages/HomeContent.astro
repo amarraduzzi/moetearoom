@@ -167,11 +167,15 @@ const restaurantJsonLd = {
 const highlightBadges: Record<string, LocalizedText> = {
   'Éclair Signature Moë': { fr: 'Signature', en: 'Signature', ar: 'مميز' },
   'Thé Vert Marocain': { fr: 'Incontournable', en: 'Classic', ar: 'أساسي' },
+  // 'Matcha Latte' swapped for the new Moëtcha sub-line's flagship flavor
+  // (Amar, Sept 2026) — same slot, badge changed from nothing to "Nouveau"
+  // since this is a genuinely new product launch, not just a rename.
+  'Moëtcha Classic': { fr: 'Nouveau', en: 'New', ar: 'جديد' },
 };
 const allMenuItems = menuHighlights.flatMap((c) =>
   c.items.map((item) => ({ ...item, image: item.image ?? c.image, imageAlt: item.imageAlt ?? c.imageAlt }))
 );
-const highlightItems = ['Éclair Signature Moë', 'Thé Vert Marocain', 'Matcha Latte', 'Frappé Café Lotus']
+const highlightItems = ['Éclair Signature Moë', 'Thé Vert Marocain', 'Moëtcha Classic', 'Frappé Café Lotus']
   .map((name) => allMenuItems.find((item) => item.name === name))
   .filter((item): item is (typeof allMenuItems)[number] => Boolean(item));
 
