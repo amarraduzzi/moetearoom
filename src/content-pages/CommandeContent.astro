@@ -152,11 +152,79 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     }
     .draft-banner strong { color: var(--text); }
 
+    /* ---------- live order strip ----------
+       Shows, as soon as the cart has items, a horizontally scrolling row
+       of thumbnails for everything ordered so far — the "see what you've
+       ordered" visual the table itself asked for, always visible without
+       opening the cart sheet. --topbar-h / --strip-h are measured in JS
+       (updateStickyOffsets) so the catnav below always stacks correctly
+       whether or not the strip is showing. */
+    .order-strip {
+      position: sticky;
+      top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h, 62px));
+      z-index: 29;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .order-strip[hidden] { display: none; }
+    .order-strip-scroll {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 9px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .order-strip-scroll::-webkit-scrollbar { display: none; }
+    .order-chip {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 12px 4px 4px;
+      animation: chipIn 0.25s ease;
+    }
+    @keyframes chipIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .order-chip-thumb {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .order-chip-thumb svg { width: 14px; height: 14px; color: var(--accent); }
+    .order-chip-name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text);
+      max-width: 86px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .order-chip-qty {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: 'Bodoni Moda', Georgia, serif;
+    }
+
     /* ---------- category nav ---------- */
     .catnav {
       position: sticky;
-      top: calc(env(safe-area-inset-top, 0px) + 62px);
-      z-index: 29;
+      top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h, 62px) + var(--strip-h, 0px));
+      z-index: 28;
       background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding-block: 10px;
@@ -389,6 +457,16 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       padding: 0 5px;
     }
     .cart-fab .total { font-family: 'Bodoni Moda', Georgia, serif; }
+    .cart-fab.is-pulsing .badge { animation: fabBadgePulse 0.45s ease; }
+    @keyframes fabBadgePulse {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cart-fab.is-pulsing .badge { animation: none; }
+      .order-chip { animation: none; }
+    }
 
     .sheet-overlay {
       position: fixed; inset: 0;
@@ -614,6 +692,10 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     <p class="draft-banner"><strong>Version test.</strong> Les commandes envoyées apparaissent en direct sur l'écran du personnel (bar &amp; cuisine). Les photos des autres sections arrivent au fur et à mesure.</p>
   </header>
 
+  <div class="order-strip" id="order-strip" hidden>
+    <div class="order-strip-scroll" id="order-strip-scroll"></div>
+  </div>
+
   <nav class="catnav">
     <div class="catnav-scroll" id="catnav"></div>
   </nav>
@@ -701,6 +783,8 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
         { id: 'drinks', label: 'Boissons', icon: ICONS.drinks, style: 'list' },
         { id: 'patisserie', label: 'Pâtisserie', icon: ICONS.patisserie, style: 'list' },
       ];
+      var CATEGORIES_BY_ID = {};
+      CATEGORIES.forEach(function (c) { CATEGORIES_BY_ID[c.id] = c; });
 
       var ITEMS = [
         // ---- Petit-déjeuner (8) ----
@@ -838,6 +922,105 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
         renderQtyControls();
         renderCartSheet();
         renderFab();
+        renderOrderStrip();
+      }
+
+      // ---------------------------------------------------------------------
+      // Live order strip — sits between the header and the category nav,
+      // shows a running row of everything ordered so far so the table can
+      // always see their build without opening the cart sheet.
+      // ---------------------------------------------------------------------
+      var orderStripEl = document.getElementById('order-strip');
+      var orderStripScrollEl = document.getElementById('order-strip-scroll');
+
+      function renderOrderStrip() {
+        var ids = Object.keys(cart);
+        if (ids.length === 0) {
+          orderStripEl.hidden = true;
+        } else {
+          orderStripScrollEl.innerHTML = ids.map(function (id) {
+            var it = ITEMS_BY_ID[id];
+            var qty = cart[id];
+            var cat = CATEGORIES_BY_ID[it.cat];
+            var thumb = it.image
+              ? '<img class="order-chip-thumb" src="' + it.image + '" alt="">'
+              : '<span class="order-chip-thumb">' + cat.icon + '</span>';
+            return '<div class="order-chip">' + thumb +
+              '<span class="order-chip-name">' + it.name + '</span>' +
+              '<span class="order-chip-qty tabular">×' + qty + '</span></div>';
+          }).join('');
+          orderStripEl.hidden = false;
+        }
+        updateStickyOffsets();
+      }
+      orderStripScrollEl.addEventListener('click', function () { openSheet(); });
+
+      // The header's height isn't fixed (the strip toggles, the banner can
+      // wrap on narrow phones), so the catnav's sticky offset is measured
+      // in JS rather than hardcoded — keeps the two sticky layers stacked
+      // correctly under every state instead of overlapping.
+      function updateStickyOffsets() {
+        var topbarH = document.querySelector('.topbar').offsetHeight;
+        var stripH = orderStripEl.hidden ? 0 : orderStripEl.offsetHeight;
+        document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
+        document.documentElement.style.setProperty('--strip-h', stripH + 'px');
+      }
+      window.addEventListener('resize', updateStickyOffsets);
+      updateStickyOffsets();
+
+      // ---------------------------------------------------------------------
+      // "Fly to cart" micro-interaction: a small ghost of the dish photo
+      // (or the category icon, for un-photographed items) arcs toward the
+      // cart button on every add, then the button badge pulses. Purely a
+      // Web Animations API tween — no library needed.
+      // ---------------------------------------------------------------------
+      function flyToCart(sourceCard) {
+        if (!sourceCard || !fab || fab.hidden) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { pulseFab(); return; }
+        var imgEl = sourceCard.querySelector('.item-tile img');
+        var size = 44;
+        var ghost = document.createElement('div');
+        var srcRect;
+        if (imgEl) {
+          srcRect = imgEl.getBoundingClientRect();
+          ghost.style.backgroundImage = 'url(' + imgEl.getAttribute('src') + ')';
+          ghost.style.backgroundSize = 'cover';
+          ghost.style.backgroundPosition = 'center';
+        } else {
+          var tile = sourceCard.querySelector('.item-tile') || sourceCard;
+          srcRect = tile.getBoundingClientRect();
+          ghost.style.background = 'var(--accent)';
+        }
+        ghost.style.position = 'fixed';
+        ghost.style.width = size + 'px';
+        ghost.style.height = size + 'px';
+        ghost.style.left = (srcRect.left + srcRect.width / 2 - size / 2) + 'px';
+        ghost.style.top = (srcRect.top + srcRect.height / 2 - size / 2) + 'px';
+        ghost.style.borderRadius = '50%';
+        ghost.style.zIndex = '60';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.boxShadow = '0 6px 18px rgba(0,0,0,0.3)';
+        document.body.appendChild(ghost);
+
+        var fabRect = fab.getBoundingClientRect();
+        var dx = (fabRect.left + 24) - (srcRect.left + srcRect.width / 2 - size / 2);
+        var dy = (fabRect.top + fabRect.height / 2) - (srcRect.top + srcRect.height / 2 - size / 2);
+        var anim = ghost.animate([
+          { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+          { transform: 'translate(' + (dx * 0.6) + 'px, ' + (dy * 0.35) + 'px) scale(0.7)', opacity: 1, offset: 0.6 },
+          { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(0.15)', opacity: 0.4 },
+        ], { duration: 500, easing: 'cubic-bezier(0.3, 0.7, 0.35, 1)' });
+        anim.onfinish = function () {
+          ghost.remove();
+          pulseFab();
+        };
+      }
+
+      function pulseFab() {
+        if (!fab) return;
+        fab.classList.remove('is-pulsing');
+        void fab.offsetWidth;
+        fab.classList.add('is-pulsing');
       }
 
       var catnavEl = document.getElementById('catnav');
@@ -957,8 +1140,9 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
         var addId = e.target.closest('[data-add]');
         var incId = e.target.closest('[data-inc]');
         var decId = e.target.closest('[data-dec]');
-        if (addId) setQty(addId.getAttribute('data-add'), 1);
-        else if (incId) setQty(incId.getAttribute('data-inc'), (cart[incId.getAttribute('data-inc')] || 0) + 1);
+        var sourceCard = e.target.closest('.item-card') || e.target.closest('.item-row');
+        if (addId) { setQty(addId.getAttribute('data-add'), 1); flyToCart(sourceCard); }
+        else if (incId) { setQty(incId.getAttribute('data-inc'), (cart[incId.getAttribute('data-inc')] || 0) + 1); flyToCart(sourceCard); }
         else if (decId) setQty(decId.getAttribute('data-dec'), (cart[decId.getAttribute('data-dec')] || 0) - 1);
       });
 
