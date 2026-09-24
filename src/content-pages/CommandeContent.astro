@@ -269,9 +269,18 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       margin: 0 auto;
       padding: 0 16px 140px;
     }
+    section.category, .plate-builder {
+      /* Kept in sync with the actual sticky header stack (topbar + live
+         order strip + catnav) via JS, instead of a hardcoded guess — the
+         strip's height changes as the cart fills, so a fixed value would
+         drift and tuck section headings (or the plate dock's scroll
+         target) behind the sticky bars. Applied to .plate-builder too,
+         since the plate dock scrolls straight to that element rather
+         than to the whole section. */
+      scroll-margin-top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h, 62px) + var(--strip-h, 0px) + var(--catnav-h, 54px) + 12px);
+    }
     section.category {
       padding-block: 28px 8px;
-      scroll-margin-top: 140px;
     }
     .cat-head {
       display: flex;
@@ -574,6 +583,81 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     @media (prefers-reduced-motion: reduce) {
       .cart-fab.is-pulsing .badge { animation: none; }
       .order-chip { animation: none; }
+    }
+
+    /* ---------- plate dock ----------
+       Once the full plate-builder scrolls out of view (above the sticky
+       header stack) while still inside its category, this small floating
+       badge takes over: a miniature of the same plate, always in view,
+       tappable to jump straight back to the full widget. Sits opposite
+       the cart button so the two never collide. */
+    .plate-dock {
+      position: fixed;
+      left: 16px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      z-index: 39;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      background: var(--surface);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: plateDockIn 0.25s ease;
+    }
+    .plate-dock[hidden] { display: none; }
+    @keyframes plateDockIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .plate-dock-avatars {
+      position: relative;
+      width: 42px;
+      height: 40px;
+    }
+    .plate-dock-avatar {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid var(--surface);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+    .plate-dock-avatar img, .plate-dock-avatar .plate-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+    }
+    .plate-dock-avatar .plate-icon svg { width: 11px; height: 11px; color: var(--accent); }
+    .plate-dock-avatar-0 { left: 0; top: 0; z-index: 3; }
+    .plate-dock-avatar-1 { left: 9px; top: 7px; z-index: 2; }
+    .plate-dock-avatar-2 { left: 18px; top: 14px; z-index: 1; }
+    .plate-dock-count {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--accent);
+      color: var(--surface);
+      font-size: 0.62rem;
+      font-weight: 800;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .plate-dock { animation: none; }
     }
 
     .sheet-overlay {
@@ -918,6 +1002,11 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
     <span class="total tabular" id="fab-total">0</span>
   </button>
 
+  <button class="plate-dock" id="plate-dock" type="button" hidden aria-label="Voir votre assiette en cours">
+    <span class="plate-dock-avatars" id="plate-dock-avatars"></span>
+    <span class="plate-dock-count" id="plate-dock-count">0</span>
+  </button>
+
   <div class="sheet-overlay" id="overlay"></div>
   <div class="sheet" id="sheet">
     <div class="sheet-handle"></div>
@@ -1134,6 +1223,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
         renderFab();
         renderOrderStrip();
         renderPlateBuilders();
+        updateActivePill(); // also refreshes the plate dock's count/photos
       }
 
       // ---------------------------------------------------------------------
@@ -1206,8 +1296,10 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
       function updateStickyOffsets() {
         var topbarH = document.querySelector('.topbar').offsetHeight;
         var stripH = orderStripEl.hidden ? 0 : orderStripEl.offsetHeight;
+        var catnavH = document.querySelector('.catnav').offsetHeight;
         document.documentElement.style.setProperty('--topbar-h', topbarH + 'px');
         document.documentElement.style.setProperty('--strip-h', stripH + 'px');
+        document.documentElement.style.setProperty('--catnav-h', catnavH + 'px');
       }
       window.addEventListener('resize', updateStickyOffsets);
       updateStickyOffsets();
@@ -1317,7 +1409,7 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
           // appear scattered on a plate graphic, live, so composing a
           // combo actually looks like composing a plate.
           head +=
-            '<div class="plate-builder">' +
+            '<div class="plate-builder" id="plate-builder-' + cat.id + '">' +
               '<div class="plate-visual">' +
                 '<div class="plate-items" id="plate-items-' + cat.id + '"></div>' +
                 '<p class="plate-empty" id="plate-empty-' + cat.id + '">Composez<br>votre assiette</p>' +
@@ -1432,8 +1524,48 @@ const { supabaseUrl, supabaseAnonKey } = siteConfig.ordering;
           if (sec.getBoundingClientRect().top - probeY <= 0) activeIdx = i;
         });
         pills.forEach(function (p, i) { p.classList.toggle('is-active', i === activeIdx); });
+        updatePlateDock(CATEGORIES[activeIdx]);
       }
       window.addEventListener('scroll', updateActivePill, { passive: true });
+      window.addEventListener('resize', updateActivePill);
+
+      // ---------------------------------------------------------------------
+      // Plate dock — the mini floating version of the plate builder (see
+      // renderPlateBuilder above). Shows only once the full-size plate for
+      // the currently-viewed category has scrolled above the sticky header
+      // stack, and only while that category still has items on it.
+      // ---------------------------------------------------------------------
+      var plateDockEl = document.getElementById('plate-dock');
+      var plateDockAvatarsEl = document.getElementById('plate-dock-avatars');
+      var plateDockCountEl = document.getElementById('plate-dock-count');
+
+      function updatePlateDock(activeCat) {
+        if (!activeCat || !activeCat.combo) { plateDockEl.hidden = true; return; }
+        var plateEl = document.getElementById('plate-builder-' + activeCat.id);
+        if (!plateEl) { plateDockEl.hidden = true; return; }
+
+        var catItems = ITEMS.filter(function (it) { return it.cat === activeCat.id; });
+        var selected = catItems.filter(function (it) { return (cart[it.id] || 0) > 0; });
+        if (selected.length === 0) { plateDockEl.hidden = true; return; }
+
+        var headerH = document.querySelector('.topbar').offsetHeight +
+          (orderStripEl.hidden ? 0 : orderStripEl.offsetHeight) +
+          document.querySelector('.catnav').offsetHeight;
+        var scrolledPast = plateEl.getBoundingClientRect().bottom < headerH;
+        plateDockEl.hidden = !scrolledPast;
+        if (!scrolledPast) return;
+
+        plateDockAvatarsEl.innerHTML = selected.slice(0, 3).map(function (it, i) {
+          var inner = it.image
+            ? '<img src="' + it.image + '" alt="">'
+            : '<span class="plate-icon">' + activeCat.icon + '</span>';
+          return '<span class="plate-dock-avatar plate-dock-avatar-' + i + '">' + inner + '</span>';
+        }).join('');
+        plateDockCountEl.textContent = selected.length;
+        plateDockEl.onclick = function () {
+          plateEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+      }
       updateActivePill();
 
       // ---------------------------------------------------------------------
