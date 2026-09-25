@@ -82,6 +82,19 @@ export const CATEGORIES: CatalogCategory[] = [
     combo: 'Composez votre brunch ou déjeuner : ces 8 assiettes se combinent entre elles comme celles du petit-déjeuner.',
   },
   {
+    // Own top-level category (Amar, Sept 2026: "ik wil een aparte
+    // categorie Moetcha, niet onder Boissons") — was a `sub`-grouped
+    // subsection inside 'drinks' before. Kept `style: 'cards'` since
+    // every Moëtcha drink already has real photography and rendered as
+    // full photo cards even as a subgroup (see CommandeContent.astro's
+    // "hasPhotos" branch) — moving it out one level just drops the
+    // in-between "Moëtcha" subheading, the cards look identical.
+    id: 'moetcha',
+    label: { fr: 'Moëtcha', en: 'Moëtcha', ar: 'موتشا' },
+    style: 'cards',
+    sub: 'Notre gamme matcha maison, servie chaude ou glacée.',
+  },
+  {
     id: 'sandwichs',
     label: { fr: 'Sandwichs', en: 'Sandwiches', ar: 'ساندويتشات' },
     style: 'cards',
@@ -148,15 +161,15 @@ export const ITEMS: CatalogItem[] = [
   { id: 'dr-chocolat-chaud', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Chocolat Chaud', desc: 'Chocolat noir fondu, lait chaud.', price: 35, image: '/images/chocolat-chaud.webp' },
   { id: 'dr-caramel-macchiato', cat: 'drinks', station: 'bar', sub: 'Chaud', name: 'Caramel Macchiato', desc: 'Espresso, lait, caramel maison.', price: 35, image: '/images/caramel-macchiato.webp' },
 
-  // ---- Boissons — Moëtcha ----
-  { id: 'dr-moetcha-classic', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38, image: '/images/dr-moetcha-classic.webp' },
-  { id: 'dr-moetcha-classic-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Classic Glacé', desc: 'Le pur matcha, glacé.', price: 42, image: '/images/dr-moetcha-classic-glace.webp' },
-  { id: 'dr-moetcha-nana', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42, badge: 'populaire', image: '/images/dr-moetcha-nana.webp' },
-  { id: 'dr-moetcha-nana-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Nana Glacé', desc: 'Matcha et menthe fraîche, glacé.', price: 46, image: '/images/dr-moetcha-nana-glace.webp' },
-  { id: 'dr-moetcha-amlou', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48, image: '/images/dr-moetcha-amlou.webp' },
-  { id: 'dr-moetcha-amlou-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Amlou Glacé', desc: 'Matcha, amlou maison, glacé.', price: 52, image: '/images/dr-moetcha-amlou-glace.webp' },
-  { id: 'dr-moetcha-zahr', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42, image: '/images/dr-moetcha-zahr.webp' },
-  { id: 'dr-moetcha-zahr-glace', cat: 'drinks', station: 'bar', sub: 'Moëtcha', name: 'Moëtcha Zahr Glacé', desc: 'Matcha, fleur d\'oranger, glacé.', price: 46, image: '/images/dr-moetcha-zahr-glace.webp' },
+  // ---- Moëtcha (own top-level category, see CATEGORIES above) ----
+  { id: 'dr-moetcha-classic', cat: 'moetcha', station: 'bar', name: 'Moëtcha Classic', desc: 'Le pur matcha.', price: 38, image: '/images/dr-moetcha-classic.webp' },
+  { id: 'dr-moetcha-classic-glace', cat: 'moetcha', station: 'bar', name: 'Moëtcha Classic Glacé', desc: 'Le pur matcha, glacé.', price: 42, image: '/images/dr-moetcha-classic-glace.webp' },
+  { id: 'dr-moetcha-nana', cat: 'moetcha', station: 'bar', name: 'Moëtcha Nana', desc: 'Matcha et menthe fraîche.', price: 42, badge: 'populaire', image: '/images/dr-moetcha-nana.webp' },
+  { id: 'dr-moetcha-nana-glace', cat: 'moetcha', station: 'bar', name: 'Moëtcha Nana Glacé', desc: 'Matcha et menthe fraîche, glacé.', price: 46, image: '/images/dr-moetcha-nana-glace.webp' },
+  { id: 'dr-moetcha-amlou', cat: 'moetcha', station: 'bar', name: 'Moëtcha Amlou', desc: 'Matcha, amlou maison.', price: 48, image: '/images/dr-moetcha-amlou.webp' },
+  { id: 'dr-moetcha-amlou-glace', cat: 'moetcha', station: 'bar', name: 'Moëtcha Amlou Glacé', desc: 'Matcha, amlou maison, glacé.', price: 52, image: '/images/dr-moetcha-amlou-glace.webp' },
+  { id: 'dr-moetcha-zahr', cat: 'moetcha', station: 'bar', name: 'Moëtcha Zahr', desc: 'Matcha, fleur d’oranger.', price: 42, image: '/images/dr-moetcha-zahr.webp' },
+  { id: 'dr-moetcha-zahr-glace', cat: 'moetcha', station: 'bar', name: 'Moëtcha Zahr Glacé', desc: 'Matcha, fleur d\'oranger, glacé.', price: 46, image: '/images/dr-moetcha-zahr-glace.webp' },
 
   // ---- Boissons — Thés & Infusions ----
   { id: 'dr-the-vert-marocain', cat: 'drinks', station: 'bar', sub: 'Thés & Infusions', name: 'Thé Vert Marocain', desc: 'Thé vert à la menthe fraîche.', price: 28, tags: ['vegan'], image: '/images/the-vert-marocain.webp' },
