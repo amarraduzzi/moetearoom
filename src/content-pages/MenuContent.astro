@@ -4,13 +4,23 @@
 //
 // Browse-only menu (Amar, Sept 2026 — "de klant wil opeens de menu pagina
 // niet meer doorlinken naar het scherm. Het menu moet gewoon alleen
-// visueel zijn"): no "add to cart"/ordering here anymore — the in-site
-// cart + checkout (CartWidget.astro, src/lib/cart.ts) was removed
+// visueel zijn"): no "add to cart"/ordering IN this page anymore — the
+// in-site cart + checkout (CartWidget.astro, src/lib/cart.ts) was removed
 // sitewide. Prices still sync live from the staff screen's menu_items
 // table (see the fetch below) so a price change or sold-out flag set in
 // the restaurant still reaches this page — only the ability to actually
-// order from it is gone. Ordering/booking now happens by phone, WhatsApp,
-// or the reservation form (see ReservationContent.astro).
+// order from it is gone.
+//
+// Order-out banner added back (Amar, Sept 2026 — "op deze pagina moet een
+// verwijzing zoals op de commande site als een groene button dat als
+// mensen in het restaurant zijn of willen bestellen online dat ze dan
+// naar de /commande site worden doorgelinkt"): a single green banner
+// right under the hero, styled with /commande's own accent green rather
+// than the site's gold CTA color so it visually reads as "ordering",
+// linking out to the real QR table-ordering page. /commande is FR-only
+// (see its own src/pages/commande.astro — no localized route exists), so
+// this always links to plain "/commande" regardless of the current
+// language, same as Reservation/WhatsApp remain the other ways to order.
 import Layout from '../layouts/Layout.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
@@ -73,6 +83,12 @@ const copy = {
     ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة في المطعم.',
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
+  orderBannerKicker: { fr: 'Vous êtes au restaurant ?', en: 'Already at the restaurant?', ar: 'هل أنتم في المطعم؟' },
+  orderBannerText: {
+    fr: 'Commandez en ligne depuis votre table',
+    en: 'Order online from your table',
+    ar: 'اطلبوا عبر الإنترنت من طاولتكم',
+  },
   // Heading for dishes added from the staff screen (see the
   // menu-extra-dishes section below) — deliberately generic rather than
   // naming a specific category, since this section can hold dishes from
@@ -138,6 +154,35 @@ const path = localizedPath('/menu', lang);
         {t(copy.heroSubtitle, lang)}
       </p>
     </div>
+  </section>
+
+  <!-- Green "order now" banner — see this file's top comment (Amar, Sept
+       2026) for why this exists and why it's green instead of the site's
+       usual gold CTA. Plain <a>, not Button.astro: Button's variants are
+       all gold (var(--color-accent) on this page), and reusing that color
+       here would read as just another "En savoir plus" link instead of
+       the distinct "this one goes to ordering" signal the client asked
+       for — same green /commande itself uses for its own primary
+       actions. Always links to the bare "/commande" path (see the top
+       comment on why that's never localized). -->
+  <section class="max-w-7xl mx-auto px-5 sm:px-8 pt-6 sm:pt-8" data-reveal>
+    <a href="/commande" class="order-banner flex items-center justify-between gap-4 rounded-2xl px-5 py-4 sm:px-7 sm:py-5">
+      <span class="flex items-center gap-3 min-w-0">
+        <span class="order-banner-icon shrink-0" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h12a1 1 0 0 1 1 1v16l-3.5-2-2.5 2-2.5-2-2.5 2-2.5-2-3.5 2V4a1 1 0 0 1 1-1z" />
+            <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5" />
+          </svg>
+        </span>
+        <span class="min-w-0">
+          <span class="block text-[10px] font-bold uppercase tracking-[0.15em] order-banner-kicker">{t(copy.orderBannerKicker, lang)}</span>
+          <span class="block font-display text-base sm:text-lg font-semibold order-banner-text">{t(copy.orderBannerText, lang)}</span>
+        </span>
+      </span>
+      <svg class="order-banner-arrow shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6" />
+      </svg>
+    </a>
   </section>
 
   <!-- Category chips — a table-of-contents, not a filter: clicking one
@@ -360,6 +405,48 @@ const path = localizedPath('/menu', lang);
   }
   .back-to-menu-link:hover {
     color: var(--color-accent);
+  }
+  /* Deliberately NOT var(--color-accent) (gold, this page's usual CTA
+     color) — same dark green /commande itself uses (see
+     CommandeContent.astro's --accent token), so this banner reads as
+     "ordering" at a glance rather than blending into the gold CTAs
+     already on the page (hero button on Home, "Réserver" everywhere). */
+  .order-banner {
+    background-color: #3F5D45;
+    color: #FFFCF3;
+    box-shadow: 0 8px 20px -8px rgba(63, 93, 69, 0.55);
+    transition: filter 0.2s ease, transform 0.15s ease;
+  }
+  .order-banner:hover {
+    filter: brightness(1.08);
+  }
+  .order-banner:active {
+    transform: scale(0.99);
+  }
+  .order-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background-color: rgba(255, 252, 243, 0.16);
+  }
+  .order-banner-kicker {
+    color: rgba(255, 252, 243, 0.72);
+  }
+  .order-banner-arrow {
+    transition: transform 0.2s ease;
+  }
+  .order-banner:hover .order-banner-arrow {
+    transform: translateX(3px);
+  }
+  /* Same RTL mirror as Button.astro's amp-btn-arrow. */
+  [dir='rtl'] .order-banner-arrow {
+    transform: scaleX(-1);
+  }
+  [dir='rtl'] .order-banner:hover .order-banner-arrow {
+    transform: scaleX(-1) translateX(3px);
   }
 </style>
 
