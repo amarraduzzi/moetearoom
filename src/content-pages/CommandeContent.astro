@@ -1808,6 +1808,21 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       }
       window.addEventListener('resize', updateStickyOffsets);
       updateStickyOffsets();
+      // Re-measure once web fonts are actually in (Amar, Sept 2026 — "ik
+      // wil niet half zichtbaar de titel"): the very first
+      // updateStickyOffsets() call above can run before Bodoni
+      // Moda/Inter finish loading, while the filter row's search
+      // placeholder and diet chips are still rendering in a fallback
+      // font. Once the real font swaps in, the diet chips can wrap onto
+      // a second line and .catnav (which contains the filter row) grows
+      // taller — but nothing re-measured it, so --catnav-h (and the
+      // scroll-margin-top every .category section reads it from) stayed
+      // stuck at the smaller, pre-font-swap number, undershooting every
+      // scrollIntoView by the difference and leaving the category
+      // heading half tucked behind the filter row.
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateStickyOffsets);
+      }
 
       // Dismiss the "version test" pill — collapses the topbar by its
       // height, so the sticky offsets need re-measuring right after.
@@ -1913,6 +1928,12 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
           // script (including the `pills = [...]` assignment) has already
           // executed — safe despite the declaration order.
           isProgrammaticScroll = true;
+          // Re-measure right before scrolling, not just on load/resize —
+          // belt-and-suspenders against the stale-height bug above:
+          // whatever else may have shifted (a font, an image, the cart)
+          // since the last measurement, this guarantees scroll-margin-top
+          // is correct for THIS click.
+          updateStickyOffsets();
           if (typeof pills !== 'undefined') {
             pills.forEach(function (p) { p.classList.remove('is-active'); });
             btn.classList.add('is-active');
@@ -1974,6 +1995,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         promoBtn.addEventListener('click', function () {
           var catId = promoBtn.getAttribute('data-cat');
           isProgrammaticScroll = true;
+          updateStickyOffsets();
           if (typeof pills !== 'undefined') {
             var catIdx = CATEGORIES.findIndex(function (c) { return c.id === catId; });
             if (catIdx !== -1) {
