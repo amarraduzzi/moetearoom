@@ -89,6 +89,12 @@ const copy = {
     en: 'Order online from your table',
     ar: 'اطلبوا عبر الإنترنت من طاولتكم',
   },
+  // "Nouveau" badge on the Moëtcha category heading/pill — part of the
+  // Sept 2026 push (Amar: "we willen dit flink pushen in marketing"), see
+  // the matching dot on the filter pill and HomeContent.astro's spotlight
+  // band. Generic key (not "moetchaNouveau") since any future launch can
+  // reuse it.
+  nouveauBadge: { fr: 'Nouveau', en: 'New', ar: 'جديد' },
   // Heading for dishes added from the staff screen (see the
   // menu-extra-dishes section below) — deliberately generic rather than
   // naming a specific category, since this section can hold dishes from
@@ -203,7 +209,14 @@ const path = localizedPath('/menu', lang);
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
       {CATEGORIES.map((category, i) => (
-        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>{t(category.label, lang)}</button>
+        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>
+          {t(category.label, lang)}
+          {/* Small "new" dot on the Moëtcha pill only — same marketing push
+              as the homepage spotlight band and /commande's matching dot,
+              Amar Sept 2026. Remove this one condition once the launch has
+              run its course; nothing else needs to change. */}
+          {category.id === 'moetcha' && <span class="menu-filter-new-dot" aria-hidden="true"></span>}
+        </button>
       ))}
     </div>
   </section>
@@ -230,6 +243,11 @@ const path = localizedPath('/menu', lang);
               <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
                 <span class="text-xs font-bold" style="color: var(--color-accent)">{String(i + 1).padStart(2, '0')}</span>
                 {t(category.label, lang)}
+                {category.id === 'moetcha' && (
+                  <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style="color: var(--color-background); background-color: var(--color-primary)">
+                    {t(copy.nouveauBadge, lang)}
+                  </span>
+                )}
               </h2>
               {/* category.sub/combo are FR-only for now (see menu-catalog.ts's
                   TRANSLATION STATUS note) — shown as-is on every language
@@ -396,6 +414,19 @@ const path = localizedPath('/menu', lang);
   .menu-filter-btn:not(.is-active):hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+  .menu-filter-btn {
+    position: relative;
+  }
+  .menu-filter-new-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--color-primary);
+    border: 1.5px solid var(--color-surface, #fff);
   }
   .back-to-menu-link {
     color: var(--color-text-muted);

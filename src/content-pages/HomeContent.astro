@@ -53,6 +53,13 @@ const copy = {
   },
   selectionKicker: { fr: 'Sélection', en: 'Selection', ar: 'مختارات' },
   incontournablesTitle: { fr: 'Nos incontournables', en: 'Customer favorites', ar: 'أطباقنا المميزة' },
+  // Moëtcha homepage spotlight (Amar, Sept 2026: "we willen dit flink
+  // pushen ... prominent in beeld op de hoofdpagina") — its own full-width
+  // band right after the hero, see the section below. label/brandLine/
+  // intro are pulled straight from menu-highlights.ts's Moëtcha entry
+  // (moetchaHighlight below) so the copy lives in one place; only the CTA
+  // label is specific to this band.
+  moetchaCta: { fr: 'Découvrir Moëtcha', en: 'Discover Moëtcha', ar: 'اكتشفوا موتشا' },
   videoKicker: { fr: 'À l’intérieur', en: 'Step inside', ar: 'من الداخل' },
   videoTitle: { fr: 'Une immersion chez Moë', en: 'A glimpse inside Moë', ar: 'لمحة من داخل موي' },
   videoSubtitle: {
@@ -179,6 +186,18 @@ const highlightItems = ['Éclair Signature Moë', 'Thé Vert Marocain', 'Moëtch
   .map((name) => allMenuItems.find((item) => item.name === name))
   .filter((item): item is (typeof allMenuItems)[number] => Boolean(item));
 
+// Moëtcha spotlight band data — reuses the same menu-highlights.ts entry
+// as highlightItems above instead of duplicating the copy. Only the 4
+// non-glacé flavors are shown here (Classic, Nana, Amlou, Zahr) — the
+// "Glacé" variant of each is one tap away on /menu, no need to show all 8
+// in a homepage teaser.
+const moetchaHighlight = menuHighlights.find((c) => c.label.fr === 'Moëtcha');
+const moetchaPhotoItems = (moetchaHighlight?.items ?? []).filter((it) => !it.name.endsWith('Glacé')).slice(0, 4);
+// menu-catalog.ts's CATEGORIES order (Sept 2026: Moëtcha split out of
+// Boissons into its own category, 3rd in the list) — index 2 = moetcha.
+// If that order ever changes, update this index to match.
+const moetchaMenuHref = `${localizedPath('/menu', lang)}#cat-section-2`;
+
 const ratingRounded = Math.round(Number(aggregateRating.ratingValue));
 const ratingStars = '★'.repeat(ratingRounded) + '☆'.repeat(5 - ratingRounded);
 
@@ -236,6 +255,60 @@ const path = localizedPath('/', lang);
       </div>
     </div>
   </section>
+
+  <!-- Moëtcha spotlight — Amar, Sept 2026: "we willen in de toekomst
+       Moëtcha flink pushen in marketing ... het moet prominent in beeld
+       komen op de hoofdpagina". Own full-width band right after the hero
+       (the very first thing after the fold, ahead of "Nos incontournables"
+       where it was previously just one of four tiles), and its own color:
+       the same green /commande's order flow already uses (#3F5D45), not
+       the site's gold accent, so it reads as a distinct sub-brand moment
+       rather than another homepage section. Copy comes from
+       menu-highlights.ts's Moëtcha entry so it isn't duplicated here. -->
+  {moetchaHighlight && (
+    <section class="relative overflow-hidden" style="background-color: #3F5D45" data-reveal>
+      <div class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
+        <div class="grid lg:grid-cols-[1.05fr,1fr] gap-10 lg:gap-16 items-center">
+          <div>
+            {moetchaHighlight.brandLine && (
+              <span class="block text-[10px] font-bold uppercase tracking-[0.3em] mb-4" style="color: rgba(255,252,243,0.7)">
+                {t(moetchaHighlight.brandLine, lang)}
+              </span>
+            )}
+            <h2 class="font-display text-3xl sm:text-4xl font-semibold" style="color: #FFFCF3">
+              {t(moetchaHighlight.label, lang)}
+            </h2>
+            {moetchaHighlight.intro && (
+              <p class="mt-4 max-w-md text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.85)">
+                {t(moetchaHighlight.intro, lang)}
+              </p>
+            )}
+            <a href={moetchaMenuHref} class="moetcha-cta inline-flex items-center gap-2 mt-7 px-6 py-3.5 rounded-lg text-sm font-bold">
+              {t(copy.moetchaCta, lang)}
+              <svg class="moetcha-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+          <div class="grid grid-cols-2 gap-3 sm:gap-4">
+            {moetchaPhotoItems.map((item) => (
+              <a href={moetchaMenuHref} class="moetcha-item-card rounded-xl overflow-hidden block" data-reveal>
+                {item.image && (
+                  <div class="aspect-square">
+                    <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                )}
+                <div class="p-3">
+                  <p class="text-xs sm:text-sm font-bold leading-tight" style="color: #FFFCF3">{item.name}</p>
+                  <p class="text-[11px] mt-1" style="color: rgba(255,252,243,0.65)">{item.price} {siteConfig.identity.currency}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- Menu highlights -->
   <!-- Point 5: this section used to sit on the exact same cream as the
@@ -571,6 +644,33 @@ const path = localizedPath('/', lang);
   </section>
 
   <style>
+    /* Moëtcha spotlight band — cream-outline pill on the dark green
+       background, filling solid cream on hover (same fill-sweep idea as
+       Button.astro's outline variant, hand-rolled here since this band
+       doesn't use --color-accent). */
+    .moetcha-cta {
+      color: #FFFCF3;
+      border: 1.5px solid rgba(255, 252, 243, 0.55);
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .moetcha-cta:hover {
+      background-color: #FFFCF3;
+      color: #3F5D45;
+      border-color: #FFFCF3;
+    }
+    .moetcha-cta-arrow { transition: transform 0.2s ease; }
+    .moetcha-cta:hover .moetcha-cta-arrow { transform: translateX(3px); }
+    [dir='rtl'] .moetcha-cta-arrow { transform: scaleX(-1); }
+    [dir='rtl'] .moetcha-cta:hover .moetcha-cta-arrow { transform: scaleX(-1) translateX(3px); }
+    .moetcha-item-card {
+      background-color: rgba(255, 252, 243, 0.08);
+      transition: background-color 0.2s ease, transform 0.15s ease;
+    }
+    .moetcha-item-card:hover {
+      background-color: rgba(255, 252, 243, 0.14);
+      transform: translateY(-2px);
+    }
+
     /* No panel, no text-stroke — just a soft, tight drop-shadow so the
        near-white text keeps a hairline of separation from the photo in the
        few spots the vignette runs light (a bright plate edge, a highlight).

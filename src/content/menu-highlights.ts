@@ -207,11 +207,11 @@ export const menuHighlights: MenuHighlightCategory[] = [
   // chicest matcha in town (see matchai.ma) — accessible entry price,
   // Moroccan storytelling, quality sourcing as the actual selling point
   // (see `intro` below). Photos: `photoForward: true` below renders a
-  // photo next to each item once one is set — leave `image`/`imageAlt`
-  // unset until the real Nano Banana product shots + the Moëtcha logo
-  // arrive, a branded placeholder tile shows meanwhile. Suggested filenames
-  // once ready: /images/moetcha-classic.webp, -classic-glace, -nana,
-  // -nana-glace, -amlou, -amlou-glace, -zahr, -zahr-glace (all .webp).
+  // photo next to each item — the real product shots landed (Sept 2026,
+  // /public/images/dr-moetcha-*.webp, same files menu-catalog.ts uses),
+  // so every item below is wired to its own `image` now instead of the
+  // branded placeholder tile. No dedicated Moëtcha logo yet — this still
+  // leans on the brandLine text treatment below, not a mark.
   {
     label: { fr: 'Moëtcha', en: 'Moëtcha', ar: 'موتشا' },
     brandLine: { fr: 'MATCHA · BY MOË TEA ROOM', en: 'MATCHA · BY MOË TEA ROOM', ar: 'MATCHA · BY MOË TEA ROOM' },
@@ -232,6 +232,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 38,
         vegetarian: true,
+        image: '/images/dr-moetcha-classic.webp',
       },
       {
         name: 'Moëtcha Classic Glacé',
@@ -243,6 +244,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 42,
         vegetarian: true,
+        image: '/images/dr-moetcha-classic-glace.webp',
       },
       {
         name: 'Moëtcha Nana',
@@ -254,6 +256,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 42,
         vegetarian: true,
+        image: '/images/dr-moetcha-nana.webp',
       },
       {
         name: 'Moëtcha Nana Glacé',
@@ -265,6 +268,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 46,
         vegetarian: true,
+        image: '/images/dr-moetcha-nana-glace.webp',
       },
       {
         name: 'Moëtcha Amlou',
@@ -276,6 +280,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 48,
         vegetarian: true,
+        image: '/images/dr-moetcha-amlou.webp',
       },
       {
         name: 'Moëtcha Amlou Glacé',
@@ -287,6 +292,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 52,
         vegetarian: true,
+        image: '/images/dr-moetcha-amlou-glace.webp',
       },
       {
         name: 'Moëtcha Zahr',
@@ -298,6 +304,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 42,
         vegetarian: true,
+        image: '/images/dr-moetcha-zahr.webp',
       },
       {
         name: 'Moëtcha Zahr Glacé',
@@ -309,6 +316,7 @@ export const menuHighlights: MenuHighlightCategory[] = [
         },
         price: 46,
         vegetarian: true,
+        image: '/images/dr-moetcha-zahr-glace.webp',
       },
     ],
   },
