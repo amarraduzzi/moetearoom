@@ -27,6 +27,10 @@
 // (menu_items table), the old "menu-extra-dishes" staff-sync script and
 // section are gone too — they existed to merge live /commande data onto
 // this page, which no longer applies now the two pages have diverged.
+//
+// Green "order online" banner removed (Amar, Sept 2026 — "haal die
+// button weg met link naar commande site dat groene blok"): this page is
+// purely browse-only again, no CTA pointing at /commande anywhere on it.
 import Layout from '../layouts/Layout.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
@@ -74,12 +78,6 @@ const copy = {
     ar: 'تجربة طعام مدروسة بأدق التفاصيل، من الإفطار إلى برانشنا المميز.',
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
-  orderBannerKicker: { fr: 'Vous êtes au restaurant ?', en: 'Already at the restaurant?', ar: 'هل أنتم في المطعم؟' },
-  orderBannerText: {
-    fr: 'Commandez en ligne depuis votre table',
-    en: 'Order online from your table',
-    ar: 'اطلبوا عبر الإنترنت من طاولتكم',
-  },
   formuleBadge: { fr: 'Formule', en: 'Set menu', ar: 'تركيبة' },
   inclusionsLabel: { fr: 'Compris dans la formule', en: 'Included in the set menu', ar: 'ضمن التركيبة' },
   priceOnRequest: { fr: 'Tarif sur demande', en: 'Price on request', ar: 'السعر عند الطلب' },
@@ -207,37 +205,13 @@ const path = localizedPath('/menu', lang);
     </div>
   </section>
 
-  <!-- Green "order now" banner — kept as-is (Amar's scope answer: only
-       /menu's CONTENT changes; this banner still correctly sends anyone
-       at the restaurant to /commande for actual ordering). See this
-       file's top comment for why it's green instead of the site's usual
-       gold CTA. Always links to the bare "/commande" path (never
-       localized — see /commande's own src/pages/commande.astro). -->
-  <section class="max-w-7xl mx-auto px-5 sm:px-8 pt-6 pb-5 sm:pt-8 sm:pb-6" data-reveal>
-    <a href="/commande" class="order-banner flex items-center justify-between gap-4 rounded-2xl px-5 py-4 sm:px-7 sm:py-5">
-      <span class="flex items-center gap-3 min-w-0">
-        <span class="order-banner-icon shrink-0" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 3h12a1 1 0 0 1 1 1v16l-3.5-2-2.5 2-2.5-2-2.5 2-2.5-2-3.5 2V4a1 1 0 0 1 1-1z" />
-            <path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5" />
-          </svg>
-        </span>
-        <span class="min-w-0">
-          <span class="block text-[10px] font-bold uppercase tracking-[0.15em] order-banner-kicker">{t(copy.orderBannerKicker, lang)}</span>
-          <span class="block font-display text-base sm:text-lg font-semibold order-banner-text">{t(copy.orderBannerText, lang)}</span>
-        </span>
-      </span>
-      <svg class="order-banner-arrow shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M5 12h14M13 6l6 6-6 6" />
-      </svg>
-    </a>
-  </section>
-
   <!-- Table-of-contents pill row — jumps straight to a section further
        down the page. Five sections now, matching the owner's printed
        menu structure (see menu-formules.ts), instead of the old
-       menu-catalog.ts category list. -->
-  <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
+       menu-catalog.ts category list. Own top padding now that the green
+       order banner (Amar, Sept 2026 — "haal die button weg met link naar
+       commande site") no longer sits between it and the hero. -->
+  <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pt-8 pb-6 sm:pt-10 scroll-mt-24" data-reveal>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       {tocSections.map((section) => (
         <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={section.id}>
@@ -483,48 +457,6 @@ const path = localizedPath('/menu', lang);
   }
   .back-to-menu-link:hover {
     color: var(--color-accent);
-  }
-  /* Deliberately NOT var(--color-accent) (gold, this page's usual CTA
-     color) — same dark green /commande itself uses (see
-     CommandeContent.astro's --accent token), so this banner reads as
-     "ordering" at a glance rather than blending into the gold CTAs
-     already on the page (hero button on Home, "Réserver" everywhere). */
-  .order-banner {
-    background-color: #3F5D45;
-    color: #FFFCF3;
-    box-shadow: 0 8px 20px -8px rgba(63, 93, 69, 0.55);
-    transition: filter 0.2s ease, transform 0.15s ease;
-  }
-  .order-banner:hover {
-    filter: brightness(1.08);
-  }
-  .order-banner:active {
-    transform: scale(0.99);
-  }
-  .order-banner-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 999px;
-    background-color: rgba(255, 252, 243, 0.16);
-  }
-  .order-banner-kicker {
-    color: rgba(255, 252, 243, 0.72);
-  }
-  .order-banner-arrow {
-    transition: transform 0.2s ease;
-  }
-  .order-banner:hover .order-banner-arrow {
-    transform: translateX(3px);
-  }
-  /* Same RTL mirror as Button.astro's amp-btn-arrow. */
-  [dir='rtl'] .order-banner-arrow {
-    transform: scaleX(-1);
-  }
-  [dir='rtl'] .order-banner:hover .order-banner-arrow {
-    transform: scaleX(-1) translateX(3px);
   }
   /* Le Brunch Signature Moë — a vertical, numbered course list rather
      than a card grid, so it reads as a sequence (a tasting menu) instead
