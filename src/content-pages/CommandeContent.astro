@@ -1384,6 +1384,105 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       color: var(--text-muted);
       line-height: 1.5;
     }
+    /* ---------- gate: mode choice + delivery form (Amar, Sept 2026 —
+       "we willen de commande pagina ook gebruiken met een QR code dat
+       mensen van buitenaf met bezorging kunnen bestellen"). One QR code,
+       one page: the gate now asks HOW someone is ordering before it asks
+       WHERE, and branches to the existing table numpad or a new delivery
+       form. Both write to the same `orders` table with the order_type/
+       address_or_table columns the old CartWidget.astro already used —
+       those columns and the staff screen's "Livraison" rendering were
+       never removed, just unused since dine-in went QR-only, so this
+       reconnects to backend that was already there rather than adding
+       any of it. -->
+    .gate-mode-choices {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .gate-mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .gate-mode-btn:active { background: var(--surface-2); }
+    .gate-mode-btn:hover { border-color: var(--accent); }
+    .gate-mode-icon {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gate-mode-icon svg { width: 18px; height: 18px; }
+    .gate-mode-text { min-width: 0; }
+    .gate-mode-title {
+      display: block;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+    .gate-mode-sub {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .gate-field {
+      text-align: left;
+      margin-bottom: 12px;
+    }
+    .gate-field label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .gate-field input,
+    .gate-field textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 12px;
+      resize: none;
+      transition: border-color 0.15s ease;
+    }
+    .gate-field input:focus,
+    .gate-field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .gate-back-link {
+      display: block;
+      width: 100%;
+      text-align: center;
+      margin-top: 12px;
+      padding: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+    }
+    .gate-back-link:active { color: var(--accent); }
 
     /* ---------- cinematic hero intro ----------
        Shown once, right after the table number is confirmed: a full-bleed
@@ -1480,25 +1579,84 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
     <img class="gate-floral" src="/images/floral-sprig-flip.webp" alt="" aria-hidden="true" loading="eager" decoding="async">
     <div class="gate-card">
       <img class="gate-logo" src="/images/logo-moe.png" alt="Moë Tea Room">
-      <div class="gate-eyebrow">COMMANDE À TABLE</div>
-      <p class="gate-question">Quel est votre numéro de table ?</p>
-      <p class="gate-hint">Il est indiqué sur le socle du QR code, sur votre table.</p>
-      <div class="gate-display" id="gate-display" aria-live="polite">—</div>
-      <div class="gate-numpad" id="gate-numpad">
-        <button type="button" class="gate-key" data-num="1">1</button>
-        <button type="button" class="gate-key" data-num="2">2</button>
-        <button type="button" class="gate-key" data-num="3">3</button>
-        <button type="button" class="gate-key" data-num="4">4</button>
-        <button type="button" class="gate-key" data-num="5">5</button>
-        <button type="button" class="gate-key" data-num="6">6</button>
-        <button type="button" class="gate-key" data-num="7">7</button>
-        <button type="button" class="gate-key" data-num="8">8</button>
-        <button type="button" class="gate-key" data-num="9">9</button>
-        <button type="button" class="gate-key gate-key-clear" data-action="clear">Effacer</button>
-        <button type="button" class="gate-key" data-num="0">0</button>
-        <button type="button" class="gate-key gate-key-back" data-action="back" aria-label="Corriger">⌫</button>
+      <div class="gate-eyebrow">MOË TEA ROOM</div>
+
+      <!-- Step 1: how is this order fulfilled — asked before "where",
+           since the QR code is identical for every table and (now) for
+           any delivery flyer/link too. -->
+      <div class="gate-step" id="gate-step-mode">
+        <p class="gate-question">Comment souhaitez-vous commander ?</p>
+        <div class="gate-mode-choices">
+          <button type="button" class="gate-mode-btn" data-mode="dinein">
+            <span class="gate-mode-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-3 7-6.5 7-10.5A7 7 0 0 0 5 10.5C5 14.5 8 18 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg>
+            </span>
+            <span class="gate-mode-text">
+              <span class="gate-mode-title">Je suis à table</span>
+              <span class="gate-mode-sub">Je scanne depuis le restaurant</span>
+            </span>
+          </button>
+          <button type="button" class="gate-mode-btn" data-mode="delivery">
+            <span class="gate-mode-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            </span>
+            <span class="gate-mode-text">
+              <span class="gate-mode-title">Livraison à domicile</span>
+              <span class="gate-mode-sub">Je commande depuis chez moi</span>
+            </span>
+          </button>
+        </div>
       </div>
-      <button class="gate-btn" id="gate-btn" disabled>Voir le menu</button>
+
+      <!-- Step 2a: table number (unchanged from the original single-step
+           gate, just moved behind the mode choice). -->
+      <div class="gate-step" id="gate-step-table" hidden>
+        <p class="gate-question">Quel est votre numéro de table ?</p>
+        <p class="gate-hint">Il est indiqué sur le socle du QR code, sur votre table.</p>
+        <div class="gate-display" id="gate-display" aria-live="polite">—</div>
+        <div class="gate-numpad" id="gate-numpad">
+          <button type="button" class="gate-key" data-num="1">1</button>
+          <button type="button" class="gate-key" data-num="2">2</button>
+          <button type="button" class="gate-key" data-num="3">3</button>
+          <button type="button" class="gate-key" data-num="4">4</button>
+          <button type="button" class="gate-key" data-num="5">5</button>
+          <button type="button" class="gate-key" data-num="6">6</button>
+          <button type="button" class="gate-key" data-num="7">7</button>
+          <button type="button" class="gate-key" data-num="8">8</button>
+          <button type="button" class="gate-key" data-num="9">9</button>
+          <button type="button" class="gate-key gate-key-clear" data-action="clear">Effacer</button>
+          <button type="button" class="gate-key" data-num="0">0</button>
+          <button type="button" class="gate-key gate-key-back" data-action="back" aria-label="Corriger">⌫</button>
+        </div>
+        <button class="gate-btn" id="gate-btn-table" disabled>Voir le menu</button>
+        <button type="button" class="gate-back-link" data-gate-back>← Autre mode de commande</button>
+      </div>
+
+      <!-- Step 2b: delivery details — writes into the SAME `orders` table
+           and columns (order_type, address_or_table, customer_phone) the
+           old CartWidget.astro used for takeaway/delivery, and the staff
+           screen already renders (ORDER_TYPE_LABEL.delivery). No online
+           payment here (see sendBtn below) — same "team confirms by
+           phone/WhatsApp" pattern already used for table reservations. -->
+      <div class="gate-step" id="gate-step-delivery" hidden>
+        <p class="gate-question">Vos coordonnées de livraison</p>
+        <p class="gate-hint">L'équipe vous contacte pour confirmer votre commande et le paiement.</p>
+        <div class="gate-field">
+          <label for="gate-delivery-name">Nom complet</label>
+          <input type="text" id="gate-delivery-name" autocomplete="name" placeholder="Votre nom">
+        </div>
+        <div class="gate-field">
+          <label for="gate-delivery-phone">Téléphone (WhatsApp de préférence)</label>
+          <input type="tel" id="gate-delivery-phone" autocomplete="tel" placeholder="06 XX XX XX XX">
+        </div>
+        <div class="gate-field">
+          <label for="gate-delivery-address">Adresse de livraison</label>
+          <textarea id="gate-delivery-address" rows="2" placeholder="Rue, quartier, ville"></textarea>
+        </div>
+        <button class="gate-btn" id="gate-btn-delivery" disabled>Voir le menu</button>
+        <button type="button" class="gate-back-link" data-gate-back>← Autre mode de commande</button>
+      </div>
+
       <p class="gate-note">Version test : votre commande est envoyée en direct à l'équipe.</p>
     </div>
   </div>
@@ -1509,7 +1667,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
     <div class="hero-intro-content">
       <img class="hero-intro-logo" src="/images/logo-moe.png" alt="Moë Tea Room">
       <div>
-        <p class="hero-intro-tag">Bienvenue à votre table</p>
+        <p class="hero-intro-tag" id="hero-intro-tag">Bienvenue à votre table</p>
         <p class="hero-intro-title">Petites assiettes à partager, thés et matcha faits pour prendre son temps.</p>
         <button class="hero-intro-btn" id="hero-intro-btn" type="button">
           Découvrir le menu
@@ -2566,31 +2724,55 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       sendBtn.addEventListener('click', function () {
         if (sendBtn.disabled) return;
         var n = cartCount();
-        var tableLabel = document.getElementById('table-label').textContent;
-        var tableNumber = tableLabel.replace(/^Table\s*/, '');
         var ids = Object.keys(cart);
         var total = cartTotal();
         var now = new Date();
         var hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        var itemsPayload = ids.map(function (id) {
+          var it = ITEMS_BY_ID[id];
+          return { name: it.name, quantity: cart[id], price: it.price, station: it.station, note: itemNotes[id] || null };
+        });
 
-        var payload = {
-          order_ref: 'QR T' + tableNumber + ' · ' + hhmm,
-          customer_name: tableLabel,
-          customer_phone: null,
-          order_type: 'dinein',
-          address_or_table: tableLabel,
-          items: ids.map(function (id) {
-            var it = ITEMS_BY_ID[id];
-            return { name: it.name, quantity: cart[id], price: it.price, station: it.station, note: itemNotes[id] || null };
-          }),
-          total: total,
-          notes: null,
-          status: 'pending',
-        };
+        // Same `orders` row shape either way (order_type/address_or_table
+        // already exist in the schema and the staff screen already
+        // branches on them — see this file's top comment) — only the
+        // fulfilment fields differ between a table order and a delivery
+        // one.
+        var payload, confirmDetail;
+        if (orderMode === 'delivery') {
+          payload = {
+            order_ref: 'QR Livraison · ' + hhmm,
+            customer_name: deliveryInfo.name,
+            customer_phone: deliveryInfo.phone,
+            order_type: 'delivery',
+            address_or_table: deliveryInfo.address,
+            items: itemsPayload,
+            total: total,
+            notes: null,
+            status: 'pending',
+          };
+          confirmDetail = 'L’équipe a reçu votre commande (' + n + (n > 1 ? ' articles' : ' article') +
+            ') pour livraison au ' + deliveryInfo.address + '. Vous serez contacté au ' + deliveryInfo.phone +
+            ' pour confirmer et organiser le paiement.';
+        } else {
+          var tableLabel = document.getElementById('table-label').textContent;
+          var tableNumber = tableLabel.replace(/^Table\s*/, '');
+          payload = {
+            order_ref: 'QR T' + tableNumber + ' · ' + hhmm,
+            customer_name: tableLabel,
+            customer_phone: null,
+            order_type: 'dinein',
+            address_or_table: tableLabel,
+            items: itemsPayload,
+            total: total,
+            notes: null,
+            status: 'pending',
+          };
+          confirmDetail = 'L’équipe a reçu votre commande (' + n + (n > 1 ? ' articles' : ' article') + ') pour la ' + tableLabel.toLowerCase() + '.';
+        }
 
         function finishSuccess() {
-          document.getElementById('confirm-detail').textContent =
-            'L’équipe a reçu votre commande (' + n + (n > 1 ? ' articles' : ' article') + ') pour la ' + tableLabel.toLowerCase() + '.';
+          document.getElementById('confirm-detail').textContent = confirmDetail;
           sendErrorEl.hidden = true;
           orderView.hidden = true;
           confirmView.hidden = false;
@@ -2638,19 +2820,32 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       });
 
       // ---------------------------------------------------------------------
-      // Table number — one single QR code is printed for every table, so the
-      // page asks the customer to type their own table number on arrival
-      // instead of encoding it per table in the link. Kept in memory only
-      // (per visit); the chip in the header reopens this same step to
-      // correct a typo mid-session.
+      // Table number OR delivery details — one single QR code covers both
+      // (Amar, Sept 2026: "we willen de commande pagina ook gebruiken met
+      // een QR code dat mensen van buitenaf met bezorging kunnen
+      // bestellen"). The gate now asks HOW first (dinein vs delivery),
+      // then branches to the original numpad step or a new delivery-info
+      // step. `orderMode` drives both the header chip and sendBtn's
+      // payload further down. Kept in memory only (per visit); the chip
+      // in the header reopens the step the customer already picked, to
+      // correct a typo mid-session, same as before.
       // ---------------------------------------------------------------------
       var gate = document.getElementById('gate');
+      var gateStepMode = document.getElementById('gate-step-mode');
+      var gateStepTable = document.getElementById('gate-step-table');
+      var gateStepDelivery = document.getElementById('gate-step-delivery');
       var gateDisplay = document.getElementById('gate-display');
       var gateNumpad = document.getElementById('gate-numpad');
-      var gateBtn = document.getElementById('gate-btn');
+      var gateBtnTable = document.getElementById('gate-btn-table');
+      var gateBtnDelivery = document.getElementById('gate-btn-delivery');
+      var deliveryNameInput = document.getElementById('gate-delivery-name');
+      var deliveryPhoneInput = document.getElementById('gate-delivery-phone');
+      var deliveryAddressInput = document.getElementById('gate-delivery-address');
       var tableChipBtn = document.getElementById('table-chip-btn');
       var tableLabelEl = document.getElementById('table-label');
       var gateValue = '';
+      var orderMode = null; // 'dinein' | 'delivery'
+      var deliveryInfo = { name: '', phone: '', address: '' };
 
       function validGateValue() {
         return gateValue.length > 0 ? gateValue : null;
@@ -2658,7 +2853,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       function renderGateDisplay() {
         gateDisplay.textContent = gateValue.length > 0 ? gateValue : '—';
         gateDisplay.classList.toggle('has-value', gateValue.length > 0);
-        gateBtn.disabled = !validGateValue();
+        gateBtnTable.disabled = !validGateValue();
       }
       function confirmTable() {
         var v = validGateValue();
@@ -2667,11 +2862,67 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         gate.hidden = true;
         showHeroIntro();
       }
-      function openGate() {
-        gateValue = '';
-        renderGateDisplay();
-        gate.hidden = false;
+      function validDeliveryInfo() {
+        return deliveryNameInput.value.trim().length > 0 &&
+          deliveryPhoneInput.value.trim().length > 0 &&
+          deliveryAddressInput.value.trim().length > 0;
       }
+      function renderDeliveryBtn() {
+        gateBtnDelivery.disabled = !validDeliveryInfo();
+      }
+      function confirmDelivery() {
+        if (!validDeliveryInfo()) return;
+        deliveryInfo = {
+          name: deliveryNameInput.value.trim(),
+          phone: deliveryPhoneInput.value.trim(),
+          address: deliveryAddressInput.value.trim(),
+        };
+        // Short and stable in the header chip — the full name/address
+        // already live in `deliveryInfo` for the order payload and the
+        // confirmation screen below.
+        tableLabelEl.textContent = 'Livraison';
+        gate.hidden = true;
+        showHeroIntro();
+      }
+      function showGateStep(step) {
+        gateStepMode.hidden = step !== 'mode';
+        gateStepTable.hidden = step !== 'dinein';
+        gateStepDelivery.hidden = step !== 'delivery';
+      }
+      function chooseMode(mode) {
+        orderMode = mode;
+        if (mode === 'dinein') {
+          gateValue = '';
+          renderGateDisplay();
+          showGateStep('dinein');
+        } else {
+          showGateStep('delivery');
+        }
+      }
+      function openGate() {
+        gate.hidden = false;
+        // Reopening (via the header chip) skips straight back to whichever
+        // step the customer already picked instead of the mode choice
+        // again — same "fix a typo mid-session" intent as the original
+        // single-step gate, just extended to both modes. First time
+        // through (orderMode still null), show the mode choice.
+        if (orderMode === 'dinein') {
+          gateValue = '';
+          renderGateDisplay();
+          showGateStep('dinein');
+        } else if (orderMode === 'delivery') {
+          showGateStep('delivery');
+        } else {
+          showGateStep('mode');
+        }
+      }
+
+      document.querySelectorAll('.gate-mode-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { chooseMode(btn.dataset.mode); });
+      });
+      document.querySelectorAll('[data-gate-back]').forEach(function (btn) {
+        btn.addEventListener('click', function () { showGateStep('mode'); });
+      });
 
       gateNumpad.addEventListener('click', function (e) {
         var key = e.target.closest('.gate-key');
@@ -2686,28 +2937,38 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         renderGateDisplay();
       });
       // Physical keyboard support (handy for desktop / testing; the numpad
-      // above is the primary input on the actual table-side device).
+      // above is the primary input on the actual table-side device). Only
+      // wired while the table step is the one actually showing, so typing
+      // in the delivery form's text fields doesn't also feed the numpad.
       window.addEventListener('keydown', function (e) {
-        if (gate.hidden) return;
+        if (gate.hidden || gateStepTable.hidden) return;
         if (/^[0-9]$/.test(e.key)) { if (gateValue.length < 3) gateValue += e.key; renderGateDisplay(); }
         else if (e.key === 'Backspace') { gateValue = gateValue.slice(0, -1); renderGateDisplay(); }
         else if (e.key === 'Enter') { confirmTable(); }
       });
-      gateBtn.addEventListener('click', confirmTable);
+      gateBtnTable.addEventListener('click', confirmTable);
+      gateBtnDelivery.addEventListener('click', confirmDelivery);
+      [deliveryNameInput, deliveryPhoneInput, deliveryAddressInput].forEach(function (el) {
+        el.addEventListener('input', renderDeliveryBtn);
+      });
       tableChipBtn.addEventListener('click', openGate);
 
       // ---------------------------------------------------------------------
       // Cinematic hero intro — shown once per visit, right after the table
-      // number is confirmed. Re-opening the gate later (to fix a typo) does
-      // not replay it, so it stays a one-time "welcome" moment rather than
-      // an obstacle every time the table chip is tapped.
+      // number/delivery details are confirmed. Re-opening the gate later
+      // (to fix a typo) does not replay it, so it stays a one-time
+      // "welcome" moment rather than an obstacle every time the header
+      // chip is tapped. Copy swaps for delivery — "bienvenue à votre
+      // table" makes no sense to someone ordering from home.
       // ---------------------------------------------------------------------
       var heroIntro = document.getElementById('hero-intro');
+      var heroIntroTag = document.getElementById('hero-intro-tag');
       var heroIntroBtn = document.getElementById('hero-intro-btn');
       var heroIntroShown = false;
       function showHeroIntro() {
         if (heroIntroShown) return;
         heroIntroShown = true;
+        heroIntroTag.textContent = orderMode === 'delivery' ? 'Bienvenue chez Moë' : 'Bienvenue à votre table';
         heroIntro.hidden = false;
         requestAnimationFrame(function () { heroIntro.classList.add('is-visible'); });
       }
