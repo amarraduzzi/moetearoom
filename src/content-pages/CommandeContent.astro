@@ -1395,50 +1395,72 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
        never removed, just unused since dine-in went QR-only, so this
        reconnects to backend that was already there rather than adding
        any of it. -->
+    /* Same treatment as .order-banner on the marketing /menu page (solid
+       --accent green, cream text, translucent icon badge, sliding arrow)
+       instead of the original pale outline cards — both mode buttons are
+       equally primary here, there's no secondary/tertiary action on this
+       screen, so both get the full-strength "this is a real button" look.
+       The "delivery" button is told apart from "dine-in" with brightness
+       only (::hover already does this), not a second color, per Amar's
+       ask to reuse the exact /menu button rather than invent a new one. */
     .gate-mode-choices {
       display: grid;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 4px;
     }
     .gate-mode-btn {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       width: 100%;
       text-align: left;
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      transition: border-color 0.15s ease, background 0.15s ease;
+      background-color: var(--accent);
+      color: var(--surface);
+      border: none;
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 8px 20px -8px rgba(63, 93, 69, 0.55);
+      transition: filter 0.2s ease, transform 0.15s ease;
     }
-    .gate-mode-btn:active { background: var(--surface-2); }
-    .gate-mode-btn:hover { border-color: var(--accent); }
+    .gate-mode-btn:hover { filter: brightness(1.08); }
+    .gate-mode-btn:active { transform: scale(0.99); }
     .gate-mode-icon {
       flex-shrink: 0;
-      width: 38px;
-      height: 38px;
+      width: 2.75rem;
+      height: 2.75rem;
       border-radius: 999px;
-      background: var(--surface-2);
-      color: var(--accent);
+      background-color: rgba(255, 252, 243, 0.16);
+      color: var(--surface);
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .gate-mode-icon svg { width: 18px; height: 18px; }
-    .gate-mode-text { min-width: 0; }
+    /* Explicit, fixed size on the svg itself (not just the CSS) — an
+       inline <svg> with no width/height attribute falls back to the
+       browser's native 300x150 replaced-element default the moment CSS
+       fails to apply for any reason, which is exactly what made this
+       screen look broken before. Belt-and-suspenders with the CSS rule
+       below so that can't happen again. */
+    .gate-mode-icon svg { display: block; width: 20px; height: 20px; }
+    .gate-mode-text { min-width: 0; flex: 1; }
     .gate-mode-title {
       display: block;
       font-weight: 700;
-      font-size: 0.92rem;
-      color: var(--text);
+      font-size: 0.95rem;
+      color: var(--surface);
     }
     .gate-mode-sub {
       display: block;
-      font-size: 0.75rem;
-      color: var(--text-muted);
+      font-size: 0.76rem;
+      color: rgba(255, 252, 243, 0.72);
       margin-top: 2px;
     }
+    .gate-mode-arrow {
+      flex-shrink: 0;
+      color: rgba(255, 252, 243, 0.85);
+      transition: transform 0.2s ease;
+    }
+    .gate-mode-btn:hover .gate-mode-arrow { transform: translateX(3px); }
     .gate-field {
       text-align: left;
       margin-bottom: 12px;
@@ -1589,21 +1611,23 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         <div class="gate-mode-choices">
           <button type="button" class="gate-mode-btn" data-mode="dinein">
             <span class="gate-mode-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-3 7-6.5 7-10.5A7 7 0 0 0 5 10.5C5 14.5 8 18 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-3 7-6.5 7-10.5A7 7 0 0 0 5 10.5C5 14.5 8 18 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg>
             </span>
             <span class="gate-mode-text">
               <span class="gate-mode-title">Je suis à table</span>
               <span class="gate-mode-sub">Je scanne depuis le restaurant</span>
             </span>
+            <svg class="gate-mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
           <button type="button" class="gate-mode-btn" data-mode="delivery">
             <span class="gate-mode-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
             </span>
             <span class="gate-mode-text">
               <span class="gate-mode-title">Livraison à domicile</span>
               <span class="gate-mode-sub">Je commande depuis chez moi</span>
             </span>
+            <svg class="gate-mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </button>
         </div>
       </div>
