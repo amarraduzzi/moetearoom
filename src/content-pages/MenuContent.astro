@@ -12,10 +12,7 @@
 // order from it is gone. Ordering/booking now happens by phone, WhatsApp,
 // or the reservation form (see ReservationContent.astro).
 import Layout from '../layouts/Layout.astro';
-import Button from '../components/Button.astro';
-import LogoWatermark from '../components/LogoWatermark.astro';
 import FloralSprig from '../components/FloralSprig.astro';
-import FormuleSpotlight from '../components/FormuleSpotlight.astro';
 import { siteConfig } from '../config/site.config';
 // Same catalog as /commande now (Amar, Sept 2026 — "het menu wat de
 // hoofdsite staat moet hetzelfde worden" as the QR ordering page) — see
@@ -23,9 +20,8 @@ import { siteConfig } from '../config/site.config';
 // does not cover yet (translations, in particular). menu-highlights.ts
 // is retired; this page no longer imports it.
 import { CATEGORIES, ITEMS, type CatalogItem } from '../content/menu-catalog';
-import { menuFormules } from '../content/menu-formules';
 import { t, localizedPath, type Language } from '../i18n/languages';
-import { common, place, nav } from '../i18n/ui';
+import { common, place } from '../i18n/ui';
 
 // Group the flat item list by category, and — for the two 'list'-style
 // categories (Boissons, Pâtisserie), which are too long to browse as one
@@ -77,19 +73,12 @@ const copy = {
     ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة في المطعم.',
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
-  formulesTitle: { fr: 'Nos formules & moments', en: 'Our formules & moments', ar: 'عروضنا وأوقاتنا المميزة' },
-  formulesSubtitle: {
-    fr: "Selon le jour et l'heure — la réservation est recommandée.",
-    en: 'Depending on the day and time — reservation is recommended.',
-    ar: 'حسب اليوم والوقت — يُنصح بالحجز.',
-  },
   // Heading for dishes added from the staff screen (see the
   // menu-extra-dishes section below) — deliberately generic rather than
   // naming a specific category, since this section can hold dishes from
   // several different categories at once.
   nouveautesTitle: { fr: 'Nouveautés', en: 'New', ar: 'جديد' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
-const reservationPath = localizedPath('/reservation', lang);
 
 const menuJsonLd = {
   '@context': 'https://schema.org',
@@ -154,31 +143,25 @@ const path = localizedPath('/menu', lang);
   <!-- Category chips — a table-of-contents, not a filter: clicking one
        jumps straight to that section further down the page (the
        categories are always there in the normal page flow anyway). One
-       flat row now, matching /commande's own single-row category nav
-       instead of the old three-way "menu sur le pouce / boissons &
-       pâtisserie / formules" tab split — that grouping was built around
-       the old, now-retired category set (see menu-catalog.ts).
-       "Végétarien" and the free-text search that used to live here are
-       both gone: the client removed search on request (Sept 2026:
-       "Haal de functie rechercher un plat eruit"), and the new shared
-       catalog doesn't carry a vegetarian flag per item yet — re-add the
-       chip once that field exists on menu-catalog.ts rather than fake
-       it from here. -->
+       flat row, matching /commande's own single-row category nav.
+       "Nos formules & moments" (the client's old day/time-window offers)
+       is gone entirely (Amar, Sept 2026 — "we hebben alleen het menu wat
+       we hebben ontwikkeld, niet meer extra menu's etc"): no pill here,
+       no live spotlight card, no section further down — see
+       AboutContent.astro for the matching copy rewrite. "Végétarien" and
+       the free-text search that used to live here are both gone too: the
+       client removed search on request (Sept 2026: "Haal de functie
+       rechercher un plat eruit"), and the new shared catalog doesn't
+       carry a vegetarian flag per item yet — re-add the chip once that
+       field exists on menu-catalog.ts rather than fake it from here. -->
   <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
       <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
       {CATEGORIES.map((category, i) => (
         <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>{t(category.label, lang)}</button>
       ))}
-      <button type="button" class="menu-filter-btn shrink-0" data-scroll-to="formules-moments">{t(copy.formulesTitle, lang)}</button>
     </div>
   </section>
-
-  <!-- Live "what's on right now" spotlight for the formules below — option
-       1 of 3 presented to the client, approved. Fully standalone from the
-       à-la-carte menu (its own section, its own data), matching the
-       client's own framing that these day/time offers are "los staand". -->
-  <FormuleSpotlight formules={menuFormules} anchorId="formules-moments" lang={lang} />
 
   <!-- Alternating band now goes warm (--color-primary-dark) instead of
        plain grey — the deep wine tone from the order-engine, applied
@@ -330,47 +313,6 @@ const path = localizedPath('/menu', lang);
     <div id="menu-extra-dishes-grid" class="grid sm:grid-cols-2 gap-4"></div>
   </section>
 
-  <!-- Formules & moments — the client's day/time-window offers (Good
-       Morning brunch, Déjeuner Moë, Rfissa/Couscous, Soirées, weekend
-       brunch, Gastronomie Dima Maghreb). Deliberately NOT rendered inside
-       the CATEGORIES loop above: these carry no fixed item list or
-       price in the client's own PDF. Each card links to the reservation
-       form instead, matching the source PDF's own "réservation
-       recommandée" note (all the more true now the whole menu is
-       browse-only — see the top of this file). -->
-  <section id="formules-moments" class="relative max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-14 scroll-mt-24 overflow-hidden" data-reveal>
-    <LogoWatermark size="w-[22rem] h-[22rem]" />
-    <div class="mb-8 max-w-2xl">
-      <h2 class="font-display text-2xl sm:text-3xl font-semibold" style="color: var(--color-text-primary)">
-        {t(copy.formulesTitle, lang)}
-      </h2>
-      <p class="text-sm mt-2" style="color: var(--color-text-muted)">{t(copy.formulesSubtitle, lang)}</p>
-    </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {menuFormules.map((formule, i) => (
-        <div
-          class="card-lift rounded-xl p-5"
-          style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${i * 60}ms`}
-          data-reveal
-        >
-          <span
-            class="inline-block text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full mb-3"
-            style="color: var(--color-background); background-color: var(--color-accent)"
-          >
-            {t(formule.schedule, lang)}
-          </span>
-          <h3 class="font-display font-semibold text-lg" style="color: var(--color-text-primary)">{t(formule.name, lang)}</h3>
-          <p class="text-sm mt-2" style="color: var(--color-text-muted)">{t(formule.description, lang)}</p>
-          {formule.tagline && (
-            <p class="text-sm mt-2 italic" style="color: var(--color-primary)">{t(formule.tagline, lang)}</p>
-          )}
-        </div>
-      ))}
-    </div>
-    <div class="mt-8">
-      <Button href={reservationPath} variant="cta">{t(nav.reservation, lang)}</Button>
-    </div>
-  </section>
 </Layout>
 
 <style>

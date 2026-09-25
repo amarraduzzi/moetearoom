@@ -45,9 +45,10 @@ export interface MenuHighlightCategory {
 
 export const menuHighlights: MenuHighlightCategory[] = [
   // Transcribed from the client's "Menu sur le pouce" PDF (Sept 2026) —
-  // their savoury à-la-carte, distinct from the day/time-window formules
-  // (see src/content/menu-formules.ts) which have no fixed items/price and
-  // are shown separately, and from the drinks/pâtisserie card below.
+  // their savoury à-la-carte, distinct from the drinks/pâtisserie card
+  // below. The day/time-window "formules" concept this once sat beside
+  // (menu-formules.ts) was removed sitewide, Sept 2026 — the client only
+  // runs the one menu now (see MenuContent.astro / AboutContent.astro).
   {
     label: { fr: 'Menu sur le pouce', en: 'Quick Bites', ar: 'وجبات سريعة' },
     items: [

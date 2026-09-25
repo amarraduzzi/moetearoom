@@ -27,9 +27,9 @@ const copy = {
     ar: `من نحن — ${name}, ${primaryKeyword} في ${city}`,
   },
   metaDescription: {
-    fr: `${name}, salon de thé à ${city} ouvert tous les jours de 8h30 à 23h30 : formules selon l'heure, menu sur le pouce, boissons chaudes, thés, jus frais et notre expérience éclair signature.`,
-    en: `${name}, a tea room in ${city} open every day from 8:30 AM to 11:30 PM: time-of-day formules, quick bites, hot drinks, teas, fresh juices and our signature éclair experience.`,
-    ar: `${name}، صالون شاي في ${city}، مفتوح يوميًا من 8:30 صباحًا حتى 11:30 مساءً: عروض حسب الوقت، وجبات سريعة، مشروبات ساخنة، شاي، عصائر طازجة، وتجربة الإكلير المميزة لدينا.`,
+    fr: `${name}, salon de thé à ${city} ouvert tous les jours de 8h30 à 23h30 : petit-déjeuner, brunch, sandwichs, pâtisserie et notre expérience éclair signature.`,
+    en: `${name}, a tea room in ${city} open every day from 8:30 AM to 11:30 PM: breakfast, brunch, sandwiches, pastry and our signature éclair experience.`,
+    ar: `${name}، صالون شاي في ${city}، مفتوح يوميًا من 8:30 صباحًا حتى 11:30 مساءً: إفطار، برانش، ساندويتشات، حلويات وتجربة الإكلير المميزة لدينا.`,
   },
   kicker: { fr: 'Notre histoire', en: 'Our story', ar: 'قصتنا' },
   heroTitle: { fr: `À propos de ${name}`, en: `About ${name}`, ar: `عن ${name}` },
@@ -38,32 +38,36 @@ const copy = {
     en: `Interior of ${name}, ${primaryKeyword}`,
     ar: `داخل ${name}, ${primaryKeyword}`,
   },
-  // Real copy, grounded in what's actually on the site (menu-highlights.ts,
-  // menu-formules.ts, site.config.ts) rather than invented history — no
-  // founding date, no "years of experience" figure, no sourcing claim has
-  // been confirmed with the client, so none of those appear below. Same
-  // honesty standard as testimonials.ts: everything here is either a
-  // description of the concept itself (the day/time formules, the éclair
-  // counter, the three-menus structure) or pulled straight from
-  // site.config's own verified fields (city, hours). REPLACE only if the
-  // client gives a different founding story to tell.
+  // Real copy, grounded in what's actually on the site (menu-catalog.ts,
+  // site.config.ts) rather than invented history — no founding date, no
+  // "years of experience" figure, no sourcing claim has been confirmed
+  // with the client, so none of those appear below. Same honesty standard
+  // as testimonials.ts. REPLACE only if the client gives a different
+  // founding story to tell.
+  //
+  // The old "day/time formules" narrative (Good Morning Moë, Rfissa du
+  // mercredi, Gastronomie Dima Maghreb, etc.) was removed sitewide, Sept
+  // 2026 (Amar: "we hebben alleen het menu wat we hebben ontwikkeld, niet
+  // meer extra menu's etc") — p1-p3 below now describe the one, single,
+  // always-available carte instead. See MenuContent.astro for the matching
+  // removal of the "Nos formules & moments" section.
   p1: {
-    fr: `Niché au cœur de ${city}, ${name} est un salon de thé pensé pour se vivre du matin jusqu'au soir : un café pour démarrer la journée, une pause déjeuner, une douceur l'après-midi, une adresse où prolonger la soirée. Ici, la tradition marocaine — thé à la menthe, rfissa du mercredi, couscous du vendredi — côtoie une carte plus contemporaine, entre pâtisserie fine et expérience éclair signature.`,
-    en: `Tucked in the heart of ${city}, ${name} is a tea room built to be visited from morning to night: a coffee to start the day, a lunch break, a sweet afternoon treat, a place to linger into the evening. Here, Moroccan tradition — mint tea, Wednesday's rfissa, Friday's couscous — sits alongside a more contemporary menu, from fine pastry to our signature éclair experience.`,
-    ar: `يقع ${name} في قلب ${city}، وهو صالون شاي صُمم ليُزار من الصباح إلى المساء: قهوة لبدء اليوم، وقفة غداء، حلوى بعد الظهر، ومكان لإطالة السهرة. هنا يلتقي التقليد المغربي — شاي بالنعناع، رفيسة الأربعاء، كسكس الجمعة — بقائمة أكثر عصرية، من الحلويات الراقية إلى تجربة الإكلير المميزة.`,
+    fr: `Niché au cœur de ${city}, ${name} est un salon de thé pensé pour se vivre du matin jusqu'au soir : un café pour démarrer la journée, une pause déjeuner, une douceur l'après-midi, une adresse où prolonger la soirée. Ici, la tradition marocaine — thé à la menthe, pâtisseries maison — côtoie une carte plus contemporaine, entre brunch, sandwichs et notre expérience éclair signature.`,
+    en: `Tucked in the heart of ${city}, ${name} is a tea room built to be visited from morning to night: a coffee to start the day, a lunch break, a sweet afternoon treat, a place to linger into the evening. Here, Moroccan tradition — mint tea, home-made pastries — sits alongside a more contemporary menu, from brunch and sandwiches to our signature éclair experience.`,
+    ar: `يقع ${name} في قلب ${city}، وهو صالون شاي صُمم ليُزار من الصباح إلى المساء: قهوة لبدء اليوم، وقفة غداء، حلوى بعد الظهر، ومكان لإطالة السهرة. هنا يلتقي التقليد المغربي — شاي بالنعناع، حلويات منزلية — بقائمة أكثر عصرية، من البرانش والساندويتشات إلى تجربة الإكلير المميزة.`,
   },
   p2: {
-    fr: "Notre carte change avec les heures. Chaque moment de la journée a sa propre formule, pensée pour lui : le panier du boulanger de Good Morning Moë au réveil, deux entrées signature et deux suggestions du jour au déjeuner, le Rfissa du mercredi, le Couscous du vendredi, la Gastronomie Dima Maghreb le vendredi soir, et le Brunch signature du week-end. Rien n'est figé à l'avance : ces formules suivent le rythme naturel d'une vraie journée, pas un menu unique servi à toute heure.",
-    en: "Our menu changes with the hours. Every moment of the day has its own formule, designed for it: the baker's basket of Good Morning Moë at sunrise, two signature starters and two daily suggestions at lunch, Wednesday's Rfissa, Friday's Couscous, Friday evening's Gastronomie Dima Maghreb, and the weekend's signature brunch. Nothing is fixed in advance — these formules follow the natural rhythm of a real day, not one menu served around the clock.",
-    ar: "قائمتنا تتغير مع ساعات اليوم. لكل لحظة من اليوم عرضها الخاص المصمم لها: سلة الخباز في صباح الخير موي عند الاستيقاظ، مقبلتان من توقيعنا واقتراحان يوميان عند الغداء، رفيسة الأربعاء، كسكس الجمعة، غاسترونومي ديما مغرب مساء الجمعة، وبرانش نهاية الأسبوع المميز. لا شيء ثابت مسبقًا: هذه العروض تتبع إيقاع يوم حقيقي، وليست قائمة واحدة تُقدَّم في كل الأوقات.",
+    fr: `Une seule carte, disponible à toute heure : petit-déjeuner, brunch & lunch, sandwichs, pancakes, boissons et pâtisserie se composent librement, du matin jusqu'au soir. Pas de formule figée ni d'horaire imposé : chacun compose son moment comme il l'entend.`,
+    en: `One single menu, available at any hour: breakfast, brunch & lunch, sandwiches, pancakes, drinks and pastries can all be mixed and matched, from morning to night. No fixed formula, no set time slot: everyone puts together their own moment.`,
+    ar: `قائمة واحدة، متوفرة في كل الأوقات: الإفطار، البرانش والغداء، الساندويتشات، البان كيك، المشروبات والحلويات يمكن تركيبها بحرية، من الصباح حتى المساء. لا عرض ثابت ولا وقت محدد، كل شخص ينسّق لحظته كما يشاء.`,
   },
   p3: {
-    fr: `Entre deux formules, la carte reste ouverte à tout moment : un encas du Menu sur le pouce, un thé ou une infusion, un café ou une boisson chaude, un jus frais ou un milkshake — et notre vitrine d'éclairs, préparés avec soin et renouvelés au fil des créations du chef pâtissier. Trois menus, un seul endroit, ouvert tous les jours de 8h30 à 23h30.`,
-    en: `Between formules, the menu stays open at any time: a quick bite from the Menu Sur Le Pouce, a tea or infusion, a hot drink, a fresh juice or milkshake — and our éclair counter, prepared with care and renewed with the pastry chef's own creations. Three menus, one place, open every day from 8:30 AM to 11:30 PM.`,
-    ar: `بين عرض وآخر، تبقى القائمة مفتوحة في كل وقت: وجبة سريعة من قائمة وجبات سريعة، شاي أو أعشاب، مشروب ساخن، عصير طازج أو ميلك شيك — وواجهة الإكلير لدينا، المُحضّرة بعناية والمتجددة مع إبداعات شيف الحلويات. ثلاث قوائم في مكان واحد، مفتوح كل يوم من 8:30 صباحًا حتى 11:30 مساءً.`,
+    fr: `Notre vitrine d'éclairs, préparée avec soin et renouvelée au fil des créations du chef pâtissier, reste la signature de la maison. Thé, infusion, café, jus frais ou milkshake : tout est disponible en continu, tous les jours de 8h30 à 23h30.`,
+    en: `Our éclair counter, prepared with care and renewed with the pastry chef's own creations, remains the house signature. Tea, infusion, coffee, fresh juice or milkshake: everything is available continuously, every day from 8:30 AM to 11:30 PM.`,
+    ar: `واجهة الإكلير لدينا، المُحضّرة بعناية والمتجددة مع إبداعات شيف الحلويات، تبقى توقيع البيت. شاي، أعشاب، قهوة، عصير طازج أو ميلك شيك: كل شيء متوفر باستمرار، كل يوم من 8:30 صباحًا حتى 11:30 مساءً.`,
   },
   statOuvert: { fr: 'ouvert du matin au soir', en: 'open morning to night', ar: 'مفتوح من الصباح حتى المساء' },
-  statMenus: { fr: 'menus réunis en un seul lieu', en: 'menus, all in one place', ar: 'قوائم في مكان واحد' },
+  statCreations: { fr: 'créations à la carte', en: 'dishes & drinks on the menu', ar: 'طبقًا ومشروبًا في القائمة' },
   statAvis: { fr: 'avis Tripadvisor', en: 'Tripadvisor reviews', ar: 'تقييم على Tripadvisor' },
   noteMoyenne: { fr: 'note moyenne', en: 'average rating', ar: 'متوسط التقييم' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
@@ -121,8 +125,8 @@ const path = localizedPath('/a-propos', lang);
             icon: 'M12 21a9 9 0 100-18 9 9 0 000 18z M12 7v5l3.5 2',
           },
           {
-            n: '3', // verified — Menu sur le pouce, Boissons & Pâtisserie, Formules & Moments (see MenuContent.astro's group tabs)
-            l: t(copy.statMenus, lang),
+            n: '85', // verified — src/content/menu-catalog.ts ITEMS.length
+            l: t(copy.statCreations, lang),
             icon: 'M12 2 2 7l10 5 10-5-10-5zM2 12l10 5 10-5M2 17l10 5 10-5',
           },
           {
