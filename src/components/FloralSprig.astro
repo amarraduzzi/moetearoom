@@ -19,8 +19,15 @@ interface Props {
   corner?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   size?: string; // Tailwind width/height pair, e.g. 'w-40 sm:w-56'
   opacity?: number;
+  // Extra class(es) on the <img> — added for the Moëtcha spotlight band
+  // (HomeContent.astro, Sept 2026), which sits on a dark green background
+  // instead of the cream every other usage assumes: a `filter` class there
+  // turns this green line-art cream/white so it's visible instead of
+  // disappearing into a same-color background. Optional, every existing
+  // usage is unaffected.
+  class?: string;
 }
-const { corner = 'top-right', size = 'w-36 sm:w-52', opacity = 0.16 } = Astro.props;
+const { corner = 'top-right', size = 'w-36 sm:w-52', opacity = 0.16, class: className = '' } = Astro.props;
 
 const flip = corner === 'top-left' || corner === 'bottom-right';
 const src = flip ? '/images/floral-sprig-flip.webp' : '/images/floral-sprig.webp';
@@ -44,7 +51,7 @@ const positionClass =
   src={src}
   alt=""
   aria-hidden="true"
-  class={`floral-sprig pointer-events-none select-none absolute ${size} ${positionClass}`}
+  class={`floral-sprig pointer-events-none select-none absolute ${size} ${positionClass} ${className}`}
   style={`opacity: ${opacity}`}
   loading="lazy"
   decoding="async"

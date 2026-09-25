@@ -193,6 +193,13 @@ const highlightItems = ['Éclair Signature Moë', 'Thé Vert Marocain', 'Moëtch
 // in a homepage teaser.
 const moetchaHighlight = menuHighlights.find((c) => c.label.fr === 'Moëtcha');
 const moetchaPhotoItems = (moetchaHighlight?.items ?? []).filter((it) => !it.name.endsWith('Glacé')).slice(0, 4);
+// MenuHighlightItem has no `badge` field (that's menu-catalog.ts's thing,
+// used on /commande's item cards) — matches menu-catalog.ts's own
+// dr-moetcha-nana badge: 'populaire' so the two stay consistent instead
+// of duplicating a badge field here just for one homepage tile.
+const moetchaBadges: Record<string, LocalizedText> = {
+  'Moëtcha Nana': { fr: 'Populaire', en: 'Popular', ar: 'الأكثر طلبًا' },
+};
 // menu-catalog.ts's CATEGORIES order (Sept 2026: Moëtcha split out of
 // Boissons into its own category, 3rd in the list) — index 2 = moetcha.
 // If that order ever changes, update this index to match.
@@ -266,10 +273,19 @@ const path = localizedPath('/', lang);
        rather than another homepage section. Copy comes from
        menu-highlights.ts's Moëtcha entry so it isn't duplicated here. -->
   {moetchaHighlight && (
-    <section class="relative overflow-hidden" style="background-color: #3F5D45" data-reveal>
+    <section class="relative overflow-hidden" style="background: linear-gradient(135deg, #4C6E4E 0%, #3F5D45 45%, #2E452F 100%)" data-reveal>
+      {/* Soft glow instead of a flat fill — same section-glow pattern used
+          on About/Avis/further down this page, just a lighter sage tone so
+          it reads against the green instead of needing --color-accent. */}
+      <div class="section-glow" style="width: 420px; height: 420px; background: #C9DCC2; opacity: 0.16; right: -140px; top: -120px;"></div>
+      {/* Same printed-menu sprig used elsewhere on the site (see
+          FloralSprig.astro), brightened via CSS filter to read as a cream
+          flourish on this dark green instead of the usual green-on-cream —
+          the first use of this asset outside a light background. */}
+      <FloralSprig corner="bottom-left" size="w-64 sm:w-96" opacity={0.14} class="moetcha-sprig" />
       <div class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
         <div class="grid lg:grid-cols-[1.05fr,1fr] gap-10 lg:gap-16 items-center">
-          <div>
+          <div class="relative">
             {moetchaHighlight.brandLine && (
               <span class="block text-[10px] font-bold uppercase tracking-[0.3em] mb-4" style="color: rgba(255,252,243,0.7)">
                 {t(moetchaHighlight.brandLine, lang)}
@@ -290,9 +306,22 @@ const path = localizedPath('/', lang);
               </svg>
             </a>
           </div>
+          {/* Staggered 2-col grid (second column nudged down on larger
+              screens) instead of a flush, identical grid — a small move
+              that stops 4 same-size tiles from reading as a spreadsheet. */}
           <div class="grid grid-cols-2 gap-3 sm:gap-4">
-            {moetchaPhotoItems.map((item) => (
-              <a href={moetchaMenuHref} class="moetcha-item-card rounded-xl overflow-hidden block" data-reveal>
+            {moetchaPhotoItems.map((item, i) => (
+              <a
+                href={moetchaMenuHref}
+                class={`moetcha-item-card relative rounded-xl overflow-hidden block ${i % 2 === 1 ? 'sm:mt-8' : ''}`}
+                data-reveal
+                style={`transition-delay: ${i * 70}ms`}
+              >
+                {moetchaBadges[item.name] && (
+                  <span class="moetcha-item-badge absolute top-2.5 z-10 text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded-full" style="inset-inline-start: 0.625rem">
+                    {t(moetchaBadges[item.name], lang)}
+                  </span>
+                )}
                 {item.image && (
                   <div class="aspect-square">
                     <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
@@ -664,11 +693,24 @@ const path = localizedPath('/', lang);
     [dir='rtl'] .moetcha-cta:hover .moetcha-cta-arrow { transform: scaleX(-1) translateX(3px); }
     .moetcha-item-card {
       background-color: rgba(255, 252, 243, 0.08);
-      transition: background-color 0.2s ease, transform 0.15s ease;
+      box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.4);
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
     }
     .moetcha-item-card:hover {
       background-color: rgba(255, 252, 243, 0.14);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.5);
+    }
+    .moetcha-item-badge {
+      color: #3F5D45;
+      background-color: #FFFCF3;
+    }
+    /* Green line-art sprig (see FloralSprig.astro) inverted to read as a
+       quiet cream flourish on this dark background instead of vanishing
+       into it — every other usage of this asset sits on cream and never
+       gets this filter. */
+    :global(.moetcha-sprig) {
+      filter: brightness(0) invert(1);
     }
 
     /* No panel, no text-stroke — just a soft, tight drop-shadow so the
