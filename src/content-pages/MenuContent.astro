@@ -4,59 +4,42 @@
 //
 // Browse-only menu (Amar, Sept 2026 — "de klant wil opeens de menu pagina
 // niet meer doorlinken naar het scherm. Het menu moet gewoon alleen
-// visueel zijn"): no "add to cart"/ordering IN this page anymore — the
-// in-site cart + checkout (CartWidget.astro, src/lib/cart.ts) was removed
-// sitewide. Prices still sync live from the staff screen's menu_items
-// table (see the fetch below) so a price change or sold-out flag set in
-// the restaurant still reaches this page — only the ability to actually
-// order from it is gone.
+// visueel zijn"): no "add to cart"/ordering IN this page — the in-site
+// cart + checkout (CartWidget.astro, src/lib/cart.ts) was removed
+// sitewide long ago.
 //
-// Order-out banner added back (Amar, Sept 2026 — "op deze pagina moet een
-// verwijzing zoals op de commande site als een groene button dat als
-// mensen in het restaurant zijn of willen bestellen online dat ze dan
-// naar de /commande site worden doorgelinkt"): a single green banner
-// right under the hero, styled with /commande's own accent green rather
-// than the site's gold CTA color so it visually reads as "ordering",
-// linking out to the real QR table-ordering page. /commande is FR-only
-// (see its own src/pages/commande.astro — no localized route exists), so
-// this always links to plain "/commande" regardless of the current
-// language, same as Reservation/WhatsApp remain the other ways to order.
+// FULL CONTENT REPLACEMENT (Amar, Sept 2026 — pasted the owner's actual
+// printed-menu text and asked: "Verwijder alle content wat er nu staat
+// bij /menu/ zet er dit op een overzichtelijke manier. dit wilt de
+// eigenaar graag"): this page used to render the exact same live catalog
+// as /commande (src/content/menu-catalog.ts). It now renders its own
+// content from src/content/menu-formules.ts instead — see that file's
+// top comment for the full reasoning, confirmed with Amar before
+// building this:
+//   - Scope is /menu ONLY. /commande (QR in-restaurant ordering) is
+//     UNCHANGED and keeps using menu-catalog.ts — the two pages now
+//     intentionally show different things. Don't "fix" that by pointing
+//     this page back at menu-catalog.ts.
+//   - This content is translated FR/EN/AR up front (Amar: "nu al EN/AR
+//     vertalen"), unlike menu-catalog.ts's own deliberately FR-only
+//     items — don't copy that shortcut here.
+// Because this content no longer maps to the in-restaurant POS
+// (menu_items table), the old "menu-extra-dishes" staff-sync script and
+// section are gone too — they existed to merge live /commande data onto
+// this page, which no longer applies now the two pages have diverged.
 import Layout from '../layouts/Layout.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
-// Same catalog as /commande now (Amar, Sept 2026 — "het menu wat de
-// hoofdsite staat moet hetzelfde worden" as the QR ordering page) — see
-// menu-catalog.ts's own top comment for what that unification does and
-// does not cover yet (translations, in particular). menu-highlights.ts
-// is retired; this page no longer imports it.
-import { CATEGORIES, ITEMS, type CatalogItem } from '../content/menu-catalog';
+import { goodMorningMoe, brunchLunch, brunchSignature, pancakes, matchaSignature } from '../content/menu-formules';
 import { t, localizedPath, type Language } from '../i18n/languages';
-import { common, place } from '../i18n/ui';
-
-// Group the flat item list by category, and — for the two 'list'-style
-// categories (Boissons, Pâtisserie), which are too long to browse as one
-// undifferentiated block — by each item's `sub` within it, in first-seen
-// order (matches how /commande groups the exact same data).
-function itemsForCategory(catId: string): CatalogItem[] {
-  return ITEMS.filter((it) => it.cat === catId);
-}
-function subGroups(items: CatalogItem[]): { sub: string; items: CatalogItem[] }[] {
-  const order: string[] = [];
-  const map = new Map<string, CatalogItem[]>();
-  items.forEach((it) => {
-    const key = it.sub || '';
-    if (!map.has(key)) { map.set(key, []); order.push(key); }
-    map.get(key)!.push(it);
-  });
-  return order.map((sub) => ({ sub, items: map.get(sub)! }));
-}
+import { place } from '../i18n/ui';
 
 interface Props {
   lang?: Language;
 }
 const { lang = 'fr' } = Astro.props;
 
-const { name } = siteConfig.identity;
+const { name, currency } = siteConfig.identity;
 const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
 const city = t(place.city, lang);
 
@@ -67,20 +50,28 @@ const copy = {
     ar: `القائمة — ${primaryKeyword} في ${city} | ${name}`,
   },
   metaDescription: {
-    fr: `Découvrez le menu complet de ${name}, ${primaryKeyword} à ${city}.`,
-    en: `Discover the full menu of ${name}, ${primaryKeyword} in ${city}.`,
-    ar: `اكتشف القائمة الكاملة لـ${name}, ${primaryKeyword} في ${city}.`,
+    fr: `Formules petit-déjeuner, brunch & lunch, brunch signature et Matcha Moë : découvrez le menu complet de ${name}, ${primaryKeyword} à ${city}.`,
+    en: `Breakfast set menus, brunch & lunch, signature brunch and Moë Matcha: discover the full menu of ${name}, ${primaryKeyword} in ${city}.`,
+    ar: `تركيبات الإفطار، البرانش والغداء، البرانش المميز وماتشا موي: اكتشف القائمة الكاملة لـ${name}, ${primaryKeyword} في ${city}.`,
   },
   heroAlt: {
     fr: `Plats du menu de ${name}`,
     en: `Dishes from ${name}'s menu`,
     ar: `أطباق من قائمة ${name}`,
   },
-  heroTitle: { fr: `Le menu de notre ${primaryKeyword}`, en: `Our ${primaryKeyword}'s menu`, ar: `قائمة ${primaryKeyword} الخاص بنا` },
+  // "Majestueux • Élégant • Opulent" is the owner's own brand wordplay on
+  // the letters of MOË — kept verbatim/untranslated in every language,
+  // same established convention as ReservationContent.astro's own
+  // formTagline ("MOË — Majestueux, Élégant, Opulent").
+  heroTagline: {
+    fr: 'Majestueux • Élégant • Opulent',
+    en: 'Majestueux • Élégant • Opulent',
+    ar: 'Majestueux • Élégant • Opulent',
+  },
   heroSubtitle: {
-    fr: 'Une sélection de nos plats signature. Le menu complet, avec toutes les options et suppléments, est disponible sur place.',
-    en: 'A selection of our signature dishes. The full menu, with all options and extras, is available in the restaurant.',
-    ar: 'تشكيلة من أطباقنا المميزة. القائمة الكاملة، بجميع الخيارات والإضافات، متوفرة في المطعم.',
+    fr: 'Une expérience culinaire pensée dans les moindres détails, du petit-déjeuner à notre brunch signature.',
+    en: 'A dining experience considered down to the smallest detail, from breakfast to our signature brunch.',
+    ar: 'تجربة طعام مدروسة بأدق التفاصيل، من الإفطار إلى برانشنا المميز.',
   },
   backToMenu: { fr: '↑ Retour au menu', en: '↑ Back to menu', ar: '↑ العودة إلى القائمة' },
   orderBannerKicker: { fr: 'Vous êtes au restaurant ?', en: 'Already at the restaurant?', ar: 'هل أنتم في المطعم؟' },
@@ -89,33 +80,84 @@ const copy = {
     en: 'Order online from your table',
     ar: 'اطلبوا عبر الإنترنت من طاولتكم',
   },
-  // "Nouveau" badge on the Moëtcha category heading/pill — part of the
-  // Sept 2026 push (Amar: "we willen dit flink pushen in marketing"), see
-  // the matching dot on the filter pill and HomeContent.astro's spotlight
-  // band. Generic key (not "moetchaNouveau") since any future launch can
-  // reuse it.
-  nouveauBadge: { fr: 'Nouveau', en: 'New', ar: 'جديد' },
-  // Heading for dishes added from the staff screen (see the
-  // menu-extra-dishes section below) — deliberately generic rather than
-  // naming a specific category, since this section can hold dishes from
-  // several different categories at once.
-  nouveautesTitle: { fr: 'Nouveautés', en: 'New', ar: 'جديد' },
+  formuleBadge: { fr: 'Formule', en: 'Set menu', ar: 'تركيبة' },
+  inclusionsLabel: { fr: 'Compris dans la formule', en: 'Included in the set menu', ar: 'ضمن التركيبة' },
+  priceOnRequest: { fr: 'Tarif sur demande', en: 'Price on request', ar: 'السعر عند الطلب' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
+
+// The five sections, in page order — drives the table-of-contents pill
+// row and the anchor each section renders under. Stable string ids
+// (not indices, unlike the old menu-catalog.ts-driven loop) so
+// HomeContent.astro's Moëtcha CTA and any other cross-page link can
+// point at a specific section without breaking if a section is ever
+// reordered.
+const tocSections = [
+  { id: goodMorningMoe.id, label: goodMorningMoe.title },
+  { id: brunchLunch.id, label: brunchLunch.title },
+  { id: brunchSignature.id, label: brunchSignature.title },
+  { id: pancakes.id, label: pancakes.title },
+  { id: matchaSignature.id, label: matchaSignature.title },
+];
 
 const menuJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Menu',
   name: `Menu — ${name}`,
-  hasMenuSection: CATEGORIES.map((cat) => ({
-    '@type': 'MenuSection',
-    name: t(cat.label, lang),
-    hasMenuItem: itemsForCategory(cat.id).map((item) => ({
-      '@type': 'MenuItem',
-      name: item.name,
-      description: item.desc ?? undefined,
-      offers: { '@type': 'Offer', price: item.price, priceCurrency: siteConfig.identity.currency },
-    })),
-  })),
+  hasMenuSection: [
+    {
+      '@type': 'MenuSection',
+      name: t(goodMorningMoe.title, lang),
+      hasMenuItem: goodMorningMoe.formules.map((f) => ({
+        '@type': 'MenuItem',
+        name: t(f.name, lang),
+        description: t(f.tagline, lang),
+        offers: { '@type': 'Offer', price: f.price, priceCurrency: currency },
+      })),
+    },
+    {
+      '@type': 'MenuSection',
+      name: t(brunchLunch.title, lang),
+      hasMenuItem: brunchLunch.subsections.flatMap((sub) =>
+        sub.items.map((item) => ({
+          '@type': 'MenuItem',
+          name: t(item.name, lang),
+          description: item.desc ? t(item.desc, lang) : undefined,
+          offers: { '@type': 'Offer', price: item.price, priceCurrency: currency },
+        }))
+      ),
+    },
+    {
+      '@type': 'MenuSection',
+      name: t(brunchSignature.title, lang),
+      description: t(brunchSignature.intro, lang),
+      hasMenuItem: brunchSignature.courses.flatMap((course) =>
+        course.options.map((option) => ({
+          '@type': 'MenuItem',
+          name: t(option.name, lang),
+          description: option.desc ? t(option.desc, lang) : undefined,
+        }))
+      ),
+    },
+    {
+      '@type': 'MenuSection',
+      name: t(pancakes.title, lang),
+      hasMenuItem: pancakes.items.map((item) => ({
+        '@type': 'MenuItem',
+        name: t(item.name, lang),
+        description: item.desc ? t(item.desc, lang) : undefined,
+        offers: { '@type': 'Offer', price: item.price, priceCurrency: currency },
+      })),
+    },
+    {
+      '@type': 'MenuSection',
+      name: t(matchaSignature.title, lang),
+      hasMenuItem: matchaSignature.items.map((item) => ({
+        '@type': 'MenuItem',
+        name: t(item.name, lang),
+        offers: { '@type': 'Offer', price: item.price, priceCurrency: currency },
+      })),
+    },
+  ],
 };
 
 const path = localizedPath('/menu', lang);
@@ -154,23 +196,23 @@ const path = localizedPath('/menu', lang);
     <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-12 sm:pb-16 w-full">
       <span class="hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
       <h1 class="hero-shadow font-display text-3xl sm:text-5xl lg:text-6xl font-semibold" style="color: #FFFCF3">
-        {t(copy.heroTitle, lang)}
+        {name}
       </h1>
+      <p class="hero-shadow mt-2 text-sm sm:text-base font-semibold tracking-wide" style="color: #E8C875">
+        {t(copy.heroTagline, lang)}
+      </p>
       <p class="hero-shadow mt-4 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.9)">
         {t(copy.heroSubtitle, lang)}
       </p>
     </div>
   </section>
 
-  <!-- Green "order now" banner — see this file's top comment (Amar, Sept
-       2026) for why this exists and why it's green instead of the site's
-       usual gold CTA. Plain <a>, not Button.astro: Button's variants are
-       all gold (var(--color-accent) on this page), and reusing that color
-       here would read as just another "En savoir plus" link instead of
-       the distinct "this one goes to ordering" signal the client asked
-       for — same green /commande itself uses for its own primary
-       actions. Always links to the bare "/commande" path (see the top
-       comment on why that's never localized). -->
+  <!-- Green "order now" banner — kept as-is (Amar's scope answer: only
+       /menu's CONTENT changes; this banner still correctly sends anyone
+       at the restaurant to /commande for actual ordering). See this
+       file's top comment for why it's green instead of the site's usual
+       gold CTA. Always links to the bare "/commande" path (never
+       localized — see /commande's own src/pages/commande.astro). -->
   <section class="max-w-7xl mx-auto px-5 sm:px-8 pt-6 pb-5 sm:pt-8 sm:pb-6" data-reveal>
     <a href="/commande" class="order-banner flex items-center justify-between gap-4 rounded-2xl px-5 py-4 sm:px-7 sm:py-5">
       <span class="flex items-center gap-3 min-w-0">
@@ -191,190 +233,208 @@ const path = localizedPath('/menu', lang);
     </a>
   </section>
 
-  <!-- Category chips — a table-of-contents, not a filter: clicking one
-       jumps straight to that section further down the page (the
-       categories are always there in the normal page flow anyway). One
-       flat row, matching /commande's own single-row category nav.
-       "Nos formules & moments" (the client's old day/time-window offers)
-       is gone entirely (Amar, Sept 2026 — "we hebben alleen het menu wat
-       we hebben ontwikkeld, niet meer extra menu's etc"): no pill here,
-       no live spotlight card, no section further down — see
-       AboutContent.astro for the matching copy rewrite. "Végétarien" and
-       the free-text search that used to live here are both gone too: the
-       client removed search on request (Sept 2026: "Haal de functie
-       rechercher un plat eruit"), and the new shared catalog doesn't
-       carry a vegetarian flag per item yet — re-add the chip once that
-       field exists on menu-catalog.ts rather than fake it from here. -->
+  <!-- Table-of-contents pill row — jumps straight to a section further
+       down the page. Five sections now, matching the owner's printed
+       menu structure (see menu-formules.ts), instead of the old
+       menu-catalog.ts category list. -->
   <section id="menu-list" class="max-w-7xl mx-auto px-5 sm:px-8 pb-6 scroll-mt-24" data-reveal>
     <div class="menu-filter-row flex items-center gap-2 overflow-x-auto">
-      <button type="button" class="menu-filter-btn is-active shrink-0" data-filter="all">{t(common.toutLeMenu, lang)}</button>
-      {CATEGORIES.map((category, i) => (
-        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={`cat-section-${i}`}>
-          {t(category.label, lang)}
-          {/* Small "new" dot on the Moëtcha pill only — same marketing push
-              as the homepage spotlight band and /commande's matching dot,
-              Amar Sept 2026. Remove this one condition once the launch has
-              run its course; nothing else needs to change. */}
-          {category.id === 'moetcha' && <span class="menu-filter-new-dot" aria-hidden="true"></span>}
+      {tocSections.map((section) => (
+        <button type="button" class="menu-filter-btn shrink-0" data-scroll-to={section.id}>
+          {t(section.label, lang)}
         </button>
       ))}
     </div>
   </section>
 
-  <!-- Alternating band now goes warm (--color-primary-dark) instead of
-       plain grey — the deep wine tone from the order-engine, applied
-       here rather than À propos/Avis because it's food, and warmth fits
-       a menu the way it doesn't fit an editorial about-page. -->
-  {CATEGORIES.map((category, i) => {
-    const items = itemsForCategory(category.id);
-    const groups = category.style === 'list' ? subGroups(items) : null;
-    return (
-    <div id={`cat-section-${i}`} class={`scroll-mt-24 ${i % 2 === 1 ? 'section-tint-warm' : ''}`} data-menu-category data-cat-index={i}>
-      <section class={`relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 ${i === 0 || i === CATEGORIES.length - 1 ? 'overflow-hidden' : ''}`}>
-        {/* The client's own printed-menu sprig (see FloralSprig.astro), used
-            just twice — opening and closing the à-la-carte list like a
-            printed card's own corner flourish, not repeated on every
-            category, which would turn a quiet accent into wallpaper. */}
-        {i === 0 && <FloralSprig corner="top-right" />}
-        {i === CATEGORIES.length - 1 && <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />}
-        <div class="relative">
-          <div>
-            <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
-              <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
-                <span class="text-xs font-bold" style="color: var(--color-accent)">{String(i + 1).padStart(2, '0')}</span>
-                {t(category.label, lang)}
-                {category.id === 'moetcha' && (
-                  <span class="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style="color: var(--color-background); background-color: var(--color-primary)">
-                    {t(copy.nouveauBadge, lang)}
-                  </span>
-                )}
-              </h2>
-              {/* category.sub/combo are FR-only for now (see menu-catalog.ts's
-                  TRANSLATION STATUS note) — shown as-is on every language
-                  until translated, same tradeoff as every item name/desc
-                  below. */}
-              {category.sub && (
-                <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{category.sub}</p>
-              )}
-              {category.combo && (
-                <p class="mt-2 text-sm max-w-2xl leading-relaxed italic" style="color: var(--color-primary)">{category.combo}</p>
-              )}
-            </div>
-
-            {category.style === 'cards' ? (
-              <div class="grid sm:grid-cols-2 gap-4">
-                {items.map((item, j) => (
-                  <div
-                    class="js-menu-item card-lift rounded-xl overflow-hidden"
-                    style={`background-color: ${i % 2 === 1 ? 'color-mix(in srgb, var(--color-primary-dark) 14%, var(--color-surface-muted))' : 'var(--color-surface)'}; border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
-                    data-reveal
-                    data-item-key={item.name}
-                    data-cat={i}
-                    data-search={`${item.name} ${item.desc ?? ''}`.toLowerCase()}
-                  >
-                    {/* Photo-forward card — the real shot when Amar has
-                        produced it (see menu-catalog.ts), a quiet branded
-                        placeholder tile otherwise so an unphotographed dish
-                        never looks broken, just "photo coming". */}
-                    <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
-                      {item.image ? (
-                        <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <span class="w-full h-full flex items-center justify-center text-3xl" aria-hidden="true">🍽️</span>
-                      )}
-                    </div>
-                    <div class="p-4">
-                      <div class="flex items-start justify-between gap-3">
-                        <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
-                          <span class="js-item-name">{item.name}</span>
-                          <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
-                            {t(common.epuise, lang)}
-                          </span>
-                        </h3>
-                        <span class="js-item-price menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
-                      </div>
-                      {item.desc && (
-                        <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{item.desc}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div class="space-y-6">
-                {groups!.map((group) => (
-                  <div>
-                    {group.sub && (
-                      <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{group.sub}</h3>
-                    )}
-                    <div class="grid sm:grid-cols-2 gap-4">
-                      {group.items.map((item, j) => (
-                        <div
-                          class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4"
-                          style={`background-color: ${i % 2 === 1 ? 'color-mix(in srgb, var(--color-primary-dark) 14%, var(--color-surface-muted))' : 'var(--color-surface)'}; border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
-                          data-reveal
-                          data-item-key={item.name}
-                          data-cat={i}
-                          data-search={`${item.name} ${item.desc ?? ''}`.toLowerCase()}
-                        >
-                          {/* Thumbnail only once a real photo exists for this
-                              item — most drinks/pâtisserie rows don't have
-                              one yet (see menu-catalog.ts), so this stays a
-                              plain text row until Amar's photography lands,
-                              same upgrade-when-photographed pattern used on
-                              /commande. */}
-                          {item.image && (
-                            <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0">
-                              <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
-                            </div>
-                          )}
-                          <div class="min-w-0 flex-1">
-                            <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">
-                              <span class="js-item-name">{item.name}</span>
-                              <span class="js-sold-out-badge hidden text-[10px] font-bold uppercase tracking-wide ml-2 px-2 py-0.5 rounded-full align-middle" style="background-color: var(--color-primary-dark); color: var(--color-surface)">
-                                {t(common.epuise, lang)}
-                              </span>
-                            </h3>
-                            {item.desc && (
-                              <p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">{item.desc}</p>
-                            )}
-                          </div>
-                          <div class="flex flex-col items-end gap-2 shrink-0">
-                            <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">{item.price} {siteConfig.identity.currency}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">
-              {t(copy.backToMenu, lang)}
-            </a>
-          </div>
+  <!-- 1. GOOD MORNING MOË — three fixed-price breakfast formules, each
+       with a tagline and a bulleted list of what's included (no per-item
+       price inside a formule — the formule itself is what's priced). -->
+  <div id={goodMorningMoe.id} class="scroll-mt-24" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 overflow-hidden">
+      <FloralSprig corner="top-right" />
+      <div class="relative">
+        <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">01</span>
+            {t(goodMorningMoe.title, lang)}
+          </h2>
+          <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{t(goodMorningMoe.hours, lang)}</p>
         </div>
-      </section>
-    </div>
-    );
-  })}
+        <div class="grid sm:grid-cols-3 gap-4">
+          {goodMorningMoe.formules.map((formule, j) => (
+            <div
+              class="card-lift rounded-xl p-5 flex flex-col"
+              style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+              data-reveal
+            >
+              <span class="self-start text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full mb-3" style="color: var(--color-background); background-color: var(--color-primary)">
+                {t(copy.formuleBadge, lang)}
+              </span>
+              <div class="flex items-start justify-between gap-3 mb-1.5">
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(formule.name, lang)}</h3>
+                <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{formule.price} {currency}</span>
+              </div>
+              <p class="text-sm italic mb-3" style="color: var(--color-text-muted)">{t(formule.tagline, lang)}</p>
+              <p class="text-[10px] font-bold uppercase tracking-wide mb-2" style="color: var(--color-accent)">{t(copy.inclusionsLabel, lang)}</p>
+              <ul class="text-sm space-y-1.5 mt-auto" style="color: var(--color-text-muted)">
+                {formule.inclusions.map((line) => (
+                  <li class="flex items-start gap-2">
+                    <span class="mt-1.5 w-1 h-1 rounded-full shrink-0" style="background-color: var(--color-accent)"></span>
+                    <span>{t(line, lang)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
 
-  <!-- Dishes added from the in-restaurant staff screen (menu_items rows
-       with no matching static item_key — see supabase/schema.sql's
-       comment on that table) — populated client-side by the
-       menu-items-sync script below. Deliberately its own section outside
-       the categories above rather than injected into one of the
-       CATEGORIES.map(...) sections (see menu-catalog.ts): those categories
-       are static, built at build time, while this content can appear
-       seconds after a staff member adds it. Hidden until the sync script
-       finds at least one row. -->
-  <section id="menu-extra-dishes" class="hidden max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 scroll-mt-24">
-    <h2 class="font-display text-2xl font-semibold mb-5 pb-3" style="color: var(--color-text-primary); border-bottom: 1px solid var(--color-border)">
-      {t(copy.nouveautesTitle, lang)}
-    </h2>
-    <div id="menu-extra-dishes-grid" class="grid sm:grid-cols-2 gap-4"></div>
-  </section>
+  <!-- 2. BRUNCH & LUNCH — à-la-carte, grouped by subsection (Tartines,
+       Incontournables, Fraîcheurs, À Partager, Sandwichs Moë). -->
+  <div id={brunchLunch.id} class="scroll-mt-24 section-tint-warm" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+      <div class="relative">
+        <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">02</span>
+            {t(brunchLunch.title, lang)}
+          </h2>
+          <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{t(brunchLunch.hours, lang)}</p>
+        </div>
+        <div class="space-y-6">
+          {brunchLunch.subsections.map((sub) => (
+            <div>
+              <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{t(sub.title, lang)}</h3>
+              <div class="grid sm:grid-cols-2 gap-4">
+                {sub.items.map((item, j) => (
+                  <div
+                    class="card-lift flex items-start gap-4 rounded-xl p-4"
+                    style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+                    data-reveal
+                  >
+                    <div class="min-w-0 flex-1">
+                      <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h4>
+                      {item.desc && (
+                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{t(item.desc, lang)}</p>
+                      )}
+                    </div>
+                    <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- 3. LE BRUNCH SIGNATURE MOË — the owner's multi-course tasting
+       experience. Distinct layout from everything above: a sequential
+       course list (not a grid of cards), with two courses offering a
+       choice between two dishes ("Au choix"). No price is shown — the
+       owner's own text doesn't list one for this experience. -->
+  <div id={brunchSignature.id} class="scroll-mt-24" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+      <div class="relative">
+        <div class="mb-6 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">03</span>
+            {t(brunchSignature.title, lang)}
+          </h2>
+          <p class="mt-1.5 text-xs font-semibold tracking-wide" style="color: var(--color-primary)">{t(copy.heroTagline, lang)}</p>
+          <p class="mt-2 text-sm max-w-2xl leading-relaxed" style="color: var(--color-text-muted)">{t(brunchSignature.intro, lang)}</p>
+          <p class="mt-2 text-xs italic" style="color: var(--color-text-muted)">{t(copy.priceOnRequest, lang)}</p>
+        </div>
+        <ol class="signature-course-list">
+          {brunchSignature.courses.map((course, j) => (
+            <li class="signature-course" data-reveal style={`transition-delay: ${j * 60}ms`}>
+              <span class="signature-course-index" aria-hidden="true">{String(j + 1).padStart(2, '0')}</span>
+              <div class="min-w-0 flex-1">
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(course.title, lang)}</h3>
+                {course.choiceLabel && (
+                  <p class="text-[10px] font-bold uppercase tracking-wide mt-1 mb-2" style="color: var(--color-accent)">{t(course.choiceLabel, lang)}</p>
+                )}
+                <div class={course.options.length > 1 ? 'grid sm:grid-cols-2 gap-3 mt-2' : 'mt-1.5'}>
+                  {course.options.map((option) => (
+                    <div class={course.options.length > 1 ? 'rounded-lg p-3' : ''} style={course.options.length > 1 ? 'background-color: var(--color-surface-muted); border: 1px solid var(--color-border)' : ''}>
+                      <p class="text-sm font-semibold" style="color: var(--color-text-primary)">{t(option.name, lang)}</p>
+                      {option.desc && <p class="text-sm mt-0.5" style="color: var(--color-text-muted)">{t(option.desc, lang)}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- 4. LES PANCAKES -->
+  <div id={pancakes.id} class="scroll-mt-24 section-tint-warm" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
+      <div class="relative">
+        <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">04</span>
+            {t(pancakes.title, lang)}
+          </h2>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-4">
+          {pancakes.items.map((item, j) => (
+            <div
+              class="card-lift rounded-xl p-4"
+              style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+              data-reveal
+            >
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h3>
+                <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+              </div>
+              {item.desc && <p class="text-sm mt-1" style="color: var(--color-text-muted)">{t(item.desc, lang)}</p>}
+            </div>
+          ))}
+        </div>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- 5. MATCHA SIGNATURE MOË — simple priced list, no descriptions in
+       the owner's own text. -->
+  <div id={matchaSignature.id} class="scroll-mt-24" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 overflow-hidden">
+      <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />
+      <div class="relative">
+        <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">05</span>
+            {t(matchaSignature.title, lang)}
+          </h2>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          {matchaSignature.items.map((item, j) => (
+            <div
+              class="card-lift flex items-center justify-between gap-4 rounded-xl p-4"
+              style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
+              data-reveal
+            >
+              <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h3>
+              <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+            </div>
+          ))}
+        </div>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
 
 </Layout>
 
@@ -414,19 +474,6 @@ const path = localizedPath('/menu', lang);
   .menu-filter-btn:not(.is-active):hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
-  }
-  .menu-filter-btn {
-    position: relative;
-  }
-  .menu-filter-new-dot {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background-color: var(--color-primary);
-    border: 1.5px solid var(--color-surface, #fff);
   }
   .back-to-menu-link {
     color: var(--color-text-muted);
@@ -479,6 +526,42 @@ const path = localizedPath('/menu', lang);
   [dir='rtl'] .order-banner:hover .order-banner-arrow {
     transform: scaleX(-1) translateX(3px);
   }
+  /* Le Brunch Signature Moë — a vertical, numbered course list rather
+     than a card grid, so it reads as a sequence (a tasting menu) instead
+     of a set of interchangeable dishes. A left rule threads the courses
+     together; each course's own index sits on it like a station marker. */
+  .signature-course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .signature-course {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .signature-course:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .signature-course-index {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+  }
 </style>
 
 <script>
@@ -487,14 +570,10 @@ const path = localizedPath('/menu', lang);
   // correctly if the Menu page is reached via a View Transitions
   // client-side navigation, not just a hard load.
   //
-  // Simplified alongside the menu-catalog.ts unification (Sept 2026):
-  // every chip here is a table-of-contents link now (scroll straight to
-  // its section), never a show/hide filter — the old "Végétarien" chip
-  // was the one real filter and is gone along with it (the shared
-  // catalog doesn't carry that flag yet, see menu-catalog.ts), so there
-  // is nothing left to actually filter and no "no results" state to
-  // handle. What's left: scroll-to-section on click, with the clicked
-  // chip marked active for orientation.
+  // Every pill is a table-of-contents link: scroll straight to its
+  // section, mark it active for orientation. No filtering (the old
+  // "Végétarien" chip and free-text search were both already removed
+  // long before this rewrite).
   document.addEventListener('astro:page-load', () => {
     const filterButtons = document.querySelectorAll('.menu-filter-btn');
     if (!filterButtons.length) return;
@@ -519,132 +598,5 @@ const path = localizedPath('/menu', lang);
         document.getElementById('menu-list')?.scrollIntoView({ behavior: scrollBehavior });
       });
     });
-  });
-</script>
-
-<script
-  define:vars={{
-    supabaseUrl: siteConfig.ordering.supabaseUrl,
-    supabaseAnonKey: siteConfig.ordering.supabaseAnonKey,
-    currency: siteConfig.identity.currency,
-  }}
->
-  // Applies staff-screen changes from the `menu_items` table on top of the
-  // statically-rendered menu — see the long comment on that table in
-  // supabase/schema.sql. Two different kinds of row, both fetched in one
-  // request:
-  //   1. Overrides of an EXISTING static dish (item_key matches a card
-  //      already on the page, row.name is null) — sold-out / price edits,
-  //      applied onto that card in place, same as before.
-  //   2. Brand new dishes ADDED from the staff screen (row.name is set,
-  //      item_key is a slug the staff screen generated, doesn't match any
-  //      static card) — rendered as extra cards in the #menu-extra-dishes
-  //      section below the normal categories (see that section's own
-  //      comment for why it's separate from the search/filter system).
-  //
-  // Safe no-op until siteConfig.ordering.supabaseUrl/supabaseAnonKey are
-  // set, and safe to fail silently on a flaky connection: worst case the
-  // customer just sees the site's normal static menu with no staff-screen
-  // changes applied.
-  document.addEventListener('astro:page-load', () => {
-    if (!supabaseUrl || !supabaseAnonKey) return;
-
-    fetch(`${supabaseUrl}/rest/v1/menu_items?select=item_key,name,description,category,price,available,station`, {
-      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
-    })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((rows) => {
-        // Which rows are an OVERRIDE of a dish this page already rendered
-        // vs a BRAND NEW dish added from the staff screen used to be "does
-        // it carry a name" — an override never used to set one. Now the
-        // staff screen also lets staff rename/re-describe an existing
-        // dish, so an override row carries a name too; the real
-        // distinguisher is whether its item_key matches a card already on
-        // this page (a real static item_key), read straight from the DOM
-        // this page just rendered rather than duplicating that list here.
-        const staticKeys = new Set(
-          [...document.querySelectorAll('.js-menu-item[data-item-key]')].map((el) => el.getAttribute('data-item-key'))
-        );
-        applyStaticOverrides(rows.filter((r) => staticKeys.has(r.item_key)));
-        renderExtraDishes(rows.filter((r) => !staticKeys.has(r.item_key)));
-      })
-      .catch(() => {
-        // Network hiccup or Supabase not reachable — site keeps working
-        // with its normal static prices, deliberately no error shown.
-      });
-
-    function applyStaticOverrides(overrideRows) {
-      const cards = document.querySelectorAll('.js-menu-item');
-      if (!cards.length) return;
-      const overrides = new Map(overrideRows.map((row) => [row.item_key, row]));
-      cards.forEach((card) => {
-        const key = card.getAttribute('data-item-key');
-        const override = key ? overrides.get(key) : null;
-        if (!override) return;
-
-        if (override.available === false) {
-          card.querySelector('.js-sold-out-badge')?.classList.remove('hidden');
-          card.style.opacity = '0.55';
-        }
-        if (override.price != null) {
-          const priceEl = card.querySelector('.js-item-price');
-          if (priceEl) priceEl.textContent = `${override.price} ${currency}`;
-        }
-        // Renamed/re-described from the staff screen — the join key
-        // (data-item-key) never changes, only what's displayed.
-        let nameText = null;
-        let descText = null;
-        if (override.name) {
-          const nameEl = card.querySelector('.js-item-name');
-          if (nameEl) nameEl.textContent = override.name;
-          nameText = override.name;
-        }
-        if (override.description != null) {
-          const descEl = card.querySelector('.js-item-desc');
-          if (descEl) descEl.textContent = override.description;
-          descText = override.description;
-        }
-        if (nameText || descText) {
-          // Keep the search box matching the text actually on screen —
-          // it was built from the static copy at render time and won't
-          // otherwise know a title/description changed.
-          const currentName = card.querySelector('.js-item-name')?.textContent || '';
-          const currentDesc = card.querySelector('.js-item-desc')?.textContent || '';
-          card.setAttribute('data-search', `${currentName} ${currentDesc}`.toLowerCase());
-        }
-      });
-    }
-
-    function escapeHtml(str) {
-      return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    }
-
-    function renderExtraDishes(customRows) {
-      const available = customRows.filter((r) => r.available !== false);
-      if (!available.length) return;
-      const section = document.getElementById('menu-extra-dishes');
-      const grid = document.getElementById('menu-extra-dishes-grid');
-      if (!section || !grid) return;
-
-      grid.innerHTML = available
-        .map((row) => {
-          const search = `${row.name} ${row.description || ''}`.toLowerCase();
-          return `
-            <div class="js-menu-item card-lift flex items-start gap-4 rounded-xl p-4" style="background-color: var(--color-surface); border: 1px solid var(--color-border)" data-item-key="${escapeHtml(row.item_key)}" data-search="${escapeHtml(search)}">
-              <div class="min-w-0 flex-1">
-                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)"><span class="js-item-name">${escapeHtml(row.name)}</span></h3>
-                ${row.description ? `<p class="js-item-desc text-sm mt-1" style="color: var(--color-text-muted)">${escapeHtml(row.description)}</p>` : ''}
-                ${row.category ? `<p class="text-xs mt-1 uppercase tracking-wide" style="color: var(--color-accent)">${escapeHtml(row.category)}</p>` : ''}
-              </div>
-              <div class="flex flex-col items-end gap-2 shrink-0">
-                <span class="js-item-price menu-item-price font-bold" style="color: var(--color-accent)">${row.price != null ? row.price : '—'} ${currency}</span>
-              </div>
-            </div>
-          `;
-        })
-        .join('');
-
-      section.classList.remove('hidden');
-    }
   });
 </script>

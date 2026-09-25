@@ -203,7 +203,13 @@ const moetchaBadges: Record<string, LocalizedText> = {
 // menu-catalog.ts's CATEGORIES order (Sept 2026: Moëtcha split out of
 // Boissons into its own category, 3rd in the list) — index 2 = moetcha.
 // If that order ever changes, update this index to match.
-const moetchaMenuHref = `${localizedPath('/menu', lang)}#cat-section-2`;
+// /menu's content was fully replaced (Amar, Sept 2026 — see
+// menu-formules.ts's top comment) and no longer has a "Moëtcha" category
+// at index 2 — the closest thing left on /menu is its own "Matcha
+// Signature Moë" section (different flavor names/prices, see that
+// file's comment; flagged to Amar). Anchor updated so this CTA doesn't
+// silently scroll to the wrong place.
+const moetchaMenuHref = `${localizedPath('/menu', lang)}#matcha-signature`;
 
 const ratingRounded = Math.round(Number(aggregateRating.ratingValue));
 const ratingStars = '★'.repeat(ratingRounded) + '☆'.repeat(5 - ratingRounded);
