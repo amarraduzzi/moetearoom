@@ -1874,8 +1874,28 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         fab.classList.add('is-pulsing');
       }
 
+      // Set while a pill/promo click is driving a smooth scrollIntoView, so
+      // the scroll-position-based highlighter below doesn't fight the
+      // just-clicked pill mid-animation (it was overwriting the clicked
+      // pill's "is-active" back to the old one for the ~1s the smooth
+      // scroll takes to settle, since the real scroll position hadn't
+      // caught up yet). Cleared by clearProgrammaticScrollFlag() below.
+      var isProgrammaticScroll = false;
+      function clearProgrammaticScrollFlag() {
+        function done() {
+          isProgrammaticScroll = false;
+          updateActivePill();
+          window.removeEventListener('scrollend', done);
+        }
+        if ('onscrollend' in window) {
+          window.addEventListener('scrollend', done, { once: true });
+        } else {
+          setTimeout(done, 700);
+        }
+      }
+
       var catnavEl = document.getElementById('catnav');
-      CATEGORIES.forEach(function (cat) {
+      CATEGORIES.forEach(function (cat, catIdx) {
         var btn = document.createElement('button');
         btn.className = 'catpill';
         btn.dataset.target = cat.id;
@@ -1884,7 +1904,26 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
           : '<span class="catpill-thumb catpill-thumb-icon">' + cat.icon + '</span>';
         btn.innerHTML = thumb + '<span>' + cat.label + '</span>';
         btn.addEventListener('click', function () {
-          document.getElementById('cat-' + cat.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Mark this pill active immediately instead of waiting for the
+          // scroll listener to catch up (Amar, Sept 2026 — "als ik op
+          // sandwich druk wordt het niet groen"): `pills`/`lastActiveIdx`
+          // are declared with `var` further down this same script, so
+          // they're still `undefined` at parse time, but this closure only
+          // ever RUNS on a later user click, by which point the whole
+          // script (including the `pills = [...]` assignment) has already
+          // executed — safe despite the declaration order.
+          isProgrammaticScroll = true;
+          if (typeof pills !== 'undefined') {
+            pills.forEach(function (p) { p.classList.remove('is-active'); });
+            btn.classList.add('is-active');
+            btn.classList.remove('is-pop');
+            void btn.offsetWidth;
+            btn.classList.add('is-pop');
+            lastActiveIdx = catIdx;
+          }
+          var target = document.getElementById('cat-' + cat.id);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          clearProgrammaticScrollFlag();
         });
         catnavEl.appendChild(btn);
       });
@@ -1934,8 +1973,24 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
 
         promoBtn.addEventListener('click', function () {
           var catId = promoBtn.getAttribute('data-cat');
+          isProgrammaticScroll = true;
+          if (typeof pills !== 'undefined') {
+            var catIdx = CATEGORIES.findIndex(function (c) { return c.id === catId; });
+            if (catIdx !== -1) {
+              pills.forEach(function (p) { p.classList.remove('is-active'); });
+              var pill = pills[catIdx];
+              if (pill) {
+                pill.classList.add('is-active');
+                pill.classList.remove('is-pop');
+                void pill.offsetWidth;
+                pill.classList.add('is-pop');
+              }
+              lastActiveIdx = catIdx;
+            }
+          }
           var target = document.getElementById('cat-' + catId);
           if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          clearProgrammaticScrollFlag();
         });
 
         // Toggle with the cart: once the table has ordered something, the
@@ -2214,7 +2269,23 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       var pills = Array.prototype.slice.call(document.querySelectorAll('.catpill'));
       var lastActiveIdx = 0;
       function updateActivePill() {
-        var probeY = 150;
+        // Was a hardcoded 150 — that matched the sticky stack's height
+        // before this page grew a promo strip, thumbnailed pills and a
+        // filter row (Sept 2026). Once the real stack got taller, 150 sat
+        // ABOVE the actual header, so a section could pass this shorter
+        // probe well before it was visibly clear of the sticky bars,
+        // and the pill highlight lagged a category behind the content
+        // actually on screen (Amar: "als ik op sandwich druk... bij
+        // anderen ook niet dat klopt niet"). Read the same --topbar-h /
+        // --strip-h / --catnav-h custom properties updateStickyOffsets()
+        // keeps live, so this always matches the real header height
+        // instead of drifting out of sync with it again next redesign.
+        var headerCs = getComputedStyle(document.documentElement);
+        var headerStackH =
+          (parseFloat(headerCs.getPropertyValue('--topbar-h')) || 62) +
+          (parseFloat(headerCs.getPropertyValue('--strip-h')) || 0) +
+          (parseFloat(headerCs.getPropertyValue('--catnav-h')) || 54);
+        var probeY = headerStackH + 20;
         var activeIdx = 0;
         sections.forEach(function (sec, i) {
           if (sec.getBoundingClientRect().top - probeY <= 0) activeIdx = i;
@@ -2231,7 +2302,10 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         }
         updatePlateDock(CATEGORIES[activeIdx]);
       }
-      window.addEventListener('scroll', updateActivePill, { passive: true });
+      window.addEventListener('scroll', function () {
+        if (isProgrammaticScroll) return;
+        updateActivePill();
+      }, { passive: true });
       window.addEventListener('resize', updateActivePill);
 
       // ---------------------------------------------------------------------
