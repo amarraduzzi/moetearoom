@@ -108,7 +108,11 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       top: env(safe-area-inset-top, 0px);
       z-index: 30;
       background: var(--bg);
-      border-bottom: 1px solid var(--border);
+      /* Was a flat 1px border — the whole point of this pass is that the
+         sticky header should read as its own branded band instead of
+         blending into the page underneath it, so the seam gets actual
+         weight (accent-tinted, not just --border grey). */
+      border-bottom: 2px solid color-mix(in srgb, var(--accent) 28%, var(--border));
       overflow: hidden;
     }
     /* Same printed-menu sprig used sitewide (see FloralSprig.astro on the
@@ -144,21 +148,36 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 4px;
+      gap: 5px;
       line-height: 1;
     }
     .wordmark-logo {
-      height: 26px;
+      height: 34px;
       width: auto;
       display: block;
     }
     .wordmark small {
       display: block;
       font-family: 'Inter', sans-serif;
-      font-size: 0.55rem;
-      font-weight: 700;
+      font-size: 0.58rem;
+      font-weight: 800;
       letter-spacing: 0.28em;
       color: var(--accent);
+      position: relative;
+      padding-left: 11px;
+    }
+    /* A short accent tick instead of plain letter-spaced text — a small,
+       cheap way to make "COMMANDE À TABLE" read as a designed label
+       rather than a system caption. */
+    .wordmark small::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 2px;
+      background: var(--accent);
     }
     .table-chip {
       display: flex;
@@ -180,6 +199,84 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       background: var(--accent);
       flex-shrink: 0;
     }
+    /* ---------- promo strip ----------
+       Rotates through the catalog's `badge` items (populaire/chef) right
+       under the wordmark — the first thing a guest's eye lands on after
+       the logo now sells something instead of just navigating. Lives
+       inside .topbar (not its own sticky layer) so it folds into the
+       existing --topbar-h measurement for free, and hides itself once
+       the cart has items — the order-strip below takes over that job. */
+    .promo-strip {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 16px 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .promo-strip[hidden] { display: none; }
+    .promo-strip-inner {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      border-radius: 14px;
+      padding: 7px 12px 7px 7px;
+      text-align: left;
+      animation: promoFade 0.35s ease;
+    }
+    @keyframes promoFade {
+      from { opacity: 0; transform: translateY(-3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .promo-strip-inner { animation: none; }
+    }
+    .promo-strip-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .promo-strip-text {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .promo-strip-badge {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--surface);
+      opacity: 0.75;
+    }
+    .promo-strip-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--surface);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .promo-strip-price {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--surface);
+      font-family: 'Bodoni Moda', Georgia, serif;
+      flex-shrink: 0;
+    }
+    .promo-strip-arrow {
+      width: 15px;
+      height: 15px;
+      color: var(--surface);
+      opacity: 0.75;
+      flex-shrink: 0;
+    }
+
     /* Was a full-weight paragraph sitting first on the page, right where a
        customer's eye lands — read as an internal QA note, not hospitality.
        Now a quiet, dismissible pill: one line, low visual weight, closes
@@ -301,8 +398,14 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       position: sticky;
       top: calc(env(safe-area-inset-top, 0px) + var(--topbar-h, 62px) + var(--strip-h, 0px));
       z-index: 28;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
+      /* A quiet 8-point-star lattice (the same motif as the zellige tiles
+         on the physical menu/tables) instead of a flat cream fill — low
+         enough contrast to stay out of the way of the pills sitting on
+         top, but enough for the bar to read as "Moë" rather than as
+         generic app chrome. Inlined as a data-URI SVG so it costs one
+         extra CSS rule, no image request. */
+      background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%233F5D45' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M20 2l4.7 4.7L20 11.4l-4.7-4.7L20 2zM38 20l-4.7 4.7L28.6 20l4.7-4.7L38 20zM20 38l-4.7-4.7L20 28.6l4.7 4.7L20 38zM2 20l4.7-4.7L11.4 20l-4.7 4.7L2 20z'/%3E%3Ccircle cx='20' cy='20' r='7'/%3E%3C/g%3E%3C/svg%3E") repeat;
+      border-bottom: 2px solid color-mix(in srgb, var(--accent) 22%, var(--border));
       padding-block: 10px;
     }
     .catnav-scroll {
@@ -446,22 +549,59 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
+      gap: 7px;
+      padding: 6px 16px 6px 6px;
       border-radius: 999px;
       border: 1px solid var(--border);
       background: var(--surface);
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
+    /* The active pill now carries real weight (bigger thumb, shadow-lift)
+       instead of just swapping to a flat accent fill — this is the row a
+       guest looks at on every single screen of the visit, so "which
+       category am I in" should read at a glance, not just on close look. */
     .catpill.is-active {
       background: var(--accent);
       border-color: var(--accent);
       color: var(--surface);
+      box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+    .catpill.is-active .catpill-thumb {
+      width: 30px;
+      height: 30px;
+      border-color: var(--surface);
+    }
+    .catpill.is-pop { animation: catpillPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes catpillPop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .catpill.is-pop { animation: none; }
     }
     .catpill svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .catpill-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1.5px solid var(--surface);
+      box-shadow: 0 0 0 1px var(--border);
+      transition: width 0.15s ease, height 0.15s ease, border-color 0.15s ease;
+    }
+    .catpill-thumb-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      box-shadow: none;
+    }
+    .catpill-thumb-icon svg { width: 13px; height: 13px; color: var(--accent); }
 
     /* ---------- main ---------- */
     main {
@@ -1385,7 +1525,23 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       <div class="wordmark"><img class="wordmark-logo" src="/images/logo-moe.png" alt="Moë Tea Room"><small>COMMANDE À TABLE</small></div>
       <button class="table-chip" id="table-chip-btn" type="button"><span class="dot"></span><span id="table-label">Table —</span></button>
     </div>
-    <div class="draft-banner" id="draft-banner">
+    <!-- Internal-only note (Amar, Sept 2026 — hide from guests, this read
+         like an unfinished product to a paying customer). Left in the DOM
+         with `hidden` rather than deleted, so it's one attribute away from
+         coming back for internal test tables if that's ever useful. -->
+    <div class="promo-strip" id="promo-strip">
+      <button type="button" class="promo-strip-inner" id="promo-strip-btn">
+        <img class="promo-strip-thumb" id="promo-strip-thumb" src="" alt="">
+        <span class="promo-strip-text">
+          <span class="promo-strip-badge" id="promo-strip-badge"></span>
+          <span class="promo-strip-name" id="promo-strip-name"></span>
+        </span>
+        <span class="promo-strip-price tabular" id="promo-strip-price"></span>
+        <svg class="promo-strip-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <div class="draft-banner" id="draft-banner" hidden>
       <div class="draft-banner-inner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>
         <span><strong>Version test.</strong> Les commandes arrivent en direct chez l'équipe. Photos à venir pour certaines sections.</span>
@@ -1517,8 +1673,21 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         drinks: ICONS.drinks,
         patisserie: ICONS.patisserie,
       };
+      // One real dish photo per category, hand-picked (not just "first
+      // item with an image") — used as the catnav pill's thumbnail now
+      // that every category actually has photography to draw from. The
+      // line-icon stays as ICON_BY_CAT: still used as the img's fallback
+      // tile inside item cards that have no photo of their own yet.
+      var THUMB_BY_CAT = {
+        breakfast: '/images/bf-msemen-amlou.webp',
+        brunch: '/images/br-shakshuka.webp',
+        sandwichs: '/images/sw-club.webp',
+        pancakes: '/images/pc-marocaine.webp',
+        drinks: '/images/dr-moetcha-nana.webp',
+        patisserie: '/images/eclair-signature.webp',
+      };
       var CATEGORIES = window.__moeCatalog.categories.map(function (c) {
-        return { id: c.id, label: c.label, icon: ICON_BY_CAT[c.id], style: c.style, sub: c.sub, combo: c.combo };
+        return { id: c.id, label: c.label, icon: ICON_BY_CAT[c.id], thumb: THUMB_BY_CAT[c.id], style: c.style, sub: c.sub, combo: c.combo };
       });
       var CATEGORIES_BY_ID = {};
       CATEGORIES.forEach(function (c) { CATEGORIES_BY_ID[c.id] = c; });
@@ -1604,6 +1773,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
 
       function renderOrderStrip() {
         var ids = Object.keys(cart);
+        if (window.__updatePromoStripVisibility) window.__updatePromoStripVisibility(ids.length > 0);
         if (ids.length === 0) {
           orderStripEl.hidden = true;
         } else {
@@ -1709,12 +1879,72 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
         var btn = document.createElement('button');
         btn.className = 'catpill';
         btn.dataset.target = cat.id;
-        btn.innerHTML = cat.icon + '<span>' + cat.label + '</span>';
+        var thumb = cat.thumb
+          ? '<img class="catpill-thumb" src="' + cat.thumb + '" alt="" loading="eager">'
+          : '<span class="catpill-thumb catpill-thumb-icon">' + cat.icon + '</span>';
+        btn.innerHTML = thumb + '<span>' + cat.label + '</span>';
         btn.addEventListener('click', function () {
           document.getElementById('cat-' + cat.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
         catnavEl.appendChild(btn);
       });
+
+      // ---------------------------------------------------------------------
+      // Promo strip — rotates through the catalog's badged items (see
+      // .promo-strip CSS above for why it lives inside .topbar). Self
+      // -contained: doesn't rely on anything the main render loop below
+      // sets up, so it's safe to run this early.
+      // ---------------------------------------------------------------------
+      (function initPromoStrip() {
+        var PROMO_BADGE_LABELS = { populaire: 'Populaire', chef: 'Coup de cœur' };
+        var promoItems = ITEMS.filter(function (it) { return !!it.badge; });
+        var promoStripEl = document.getElementById('promo-strip');
+        if (!promoItems.length) { promoStripEl.hidden = true; return; }
+
+        var promoBtn = document.getElementById('promo-strip-btn');
+        var promoThumb = document.getElementById('promo-strip-thumb');
+        var promoBadge = document.getElementById('promo-strip-badge');
+        var promoName = document.getElementById('promo-strip-name');
+        var promoPrice = document.getElementById('promo-strip-price');
+        var promoIdx = 0;
+
+        function renderPromo() {
+          var it = promoItems[promoIdx];
+          promoThumb.src = it.image || '';
+          promoThumb.hidden = !it.image;
+          promoBadge.textContent = PROMO_BADGE_LABELS[it.badge] || '';
+          promoName.textContent = it.name;
+          promoPrice.textContent = currency(it.price);
+          // Retrigger the fade-in on every rotation (remove the class that
+          // carries the animation, force a reflow, add it back) rather
+          // than just swapping text under a static box.
+          promoBtn.classList.remove('promo-strip-inner');
+          void promoBtn.offsetWidth;
+          promoBtn.classList.add('promo-strip-inner');
+          promoBtn.setAttribute('data-cat', it.cat);
+        }
+        renderPromo();
+
+        if (promoItems.length > 1 && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+          setInterval(function () {
+            promoIdx = (promoIdx + 1) % promoItems.length;
+            renderPromo();
+          }, 4500);
+        }
+
+        promoBtn.addEventListener('click', function () {
+          var catId = promoBtn.getAttribute('data-cat');
+          var target = document.getElementById('cat-' + catId);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        // Toggle with the cart: once the table has ordered something, the
+        // order-strip (same slot in the sticky stack) takes over and the
+        // upsell strip steps aside rather than competing for the same row.
+        window.__updatePromoStripVisibility = function (cartHasItems) {
+          promoStripEl.hidden = cartHasItems;
+        };
+      })();
 
       var mainEl = document.getElementById('main');
 
@@ -1982,6 +2212,7 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
       // ---------------------------------------------------------------------
       var sections = CATEGORIES.map(function (c) { return document.getElementById('cat-' + c.id); });
       var pills = Array.prototype.slice.call(document.querySelectorAll('.catpill'));
+      var lastActiveIdx = 0;
       function updateActivePill() {
         var probeY = 150;
         var activeIdx = 0;
@@ -1989,6 +2220,15 @@ const catalogCategories = CATALOG_CATEGORIES.map((c) => ({
           if (sec.getBoundingClientRect().top - probeY <= 0) activeIdx = i;
         });
         pills.forEach(function (p, i) { p.classList.toggle('is-active', i === activeIdx); });
+        if (activeIdx !== lastActiveIdx) {
+          var newPill = pills[activeIdx];
+          if (newPill) {
+            newPill.classList.remove('is-pop');
+            void newPill.offsetWidth;
+            newPill.classList.add('is-pop');
+          }
+          lastActiveIdx = activeIdx;
+        }
         updatePlateDock(CATEGORIES[activeIdx]);
       }
       window.addEventListener('scroll', updateActivePill, { passive: true });
