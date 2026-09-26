@@ -34,6 +34,14 @@ export interface MenuLineItem {
   name: LocalizedText;
   price: number;
   desc?: LocalizedText;
+  // Optional — only matchaSignature's items use this so far (Amar, Sept
+  // 2026: "er staan 4 matcha op de menu site daar zijn ook foto van te
+  // vinden op de commande site. Zet die er ook op"), reusing the real
+  // photos already shot for /commande's own 'moetcha' catalog category
+  // (menu-catalog.ts) rather than new ones — see matchaSignature's own
+  // comment for which photo maps to which of these four flavors, and the
+  // one flavor that has no matching photo.
+  image?: string;
 }
 
 export interface MenuSubsection {
@@ -429,13 +437,28 @@ export const pancakes = {
   ] satisfies MenuLineItem[],
 };
 
+// Photos reused from /commande's own 'moetcha' catalog category
+// (menu-catalog.ts) — Amar: "er staan 4 matcha op de menu site daar zijn
+// ook foto van te vinden op de commande site. Zet die er ook op." Three
+// of these four flavor names line up closely enough with an existing
+// /commande photo to reuse honestly:
+//   - "Fleur d'Oranger" ↔ dr-moetcha-zahr ("zahr" = orange blossom water
+//     — menu-catalog.ts's own desc for it is literally "Matcha, fleur
+//     d'oranger").
+//   - "Amlou" ↔ dr-moetcha-amlou — same flavor name, direct match.
+//   - "Matcha Glacé" (no flavor specified, just "iced") ↔
+//     dr-moetcha-classic-glace, the plain iced matcha.
+// "Rose" has NO photo here on purpose — /commande's moetcha lineup has
+// no rose flavor (only Classic/Nana/Amlou/Zahr), so there is no real
+// photo of it to borrow; using another flavor's photo would show the
+// wrong drink. Flagged to Amar rather than faked.
 export const matchaSignature = {
   id: 'matcha-signature',
   title: { fr: 'Matcha Signature Moë', en: 'The Moë Signature Matcha', ar: 'ماتشا موي المميزة' },
   items: [
-    { id: 'matcha-fleur-oranger', name: { fr: "Fleur d'Oranger", en: 'Orange Blossom', ar: 'زهر البرتقال' }, price: 42 },
-    { id: 'matcha-amlou', name: { fr: 'Amlou', en: 'Amlou', ar: 'أملو' }, price: 50 },
+    { id: 'matcha-fleur-oranger', name: { fr: "Fleur d'Oranger", en: 'Orange Blossom', ar: 'زهر البرتقال' }, price: 42, image: '/images/dr-moetcha-zahr.webp' },
+    { id: 'matcha-amlou', name: { fr: 'Amlou', en: 'Amlou', ar: 'أملو' }, price: 50, image: '/images/dr-moetcha-amlou.webp' },
     { id: 'matcha-rose', name: { fr: 'Rose', en: 'Rose', ar: 'الورد' }, price: 42 },
-    { id: 'matcha-glace', name: { fr: 'Matcha Glacé', en: 'Iced Matcha', ar: 'ماتشا مثلجة' }, price: 45 },
+    { id: 'matcha-glace', name: { fr: 'Matcha Glacé', en: 'Iced Matcha', ar: 'ماتشا مثلجة' }, price: 45, image: '/images/dr-moetcha-classic-glace.webp' },
   ] satisfies MenuLineItem[],
 };

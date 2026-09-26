@@ -475,8 +475,14 @@ const path = localizedPath('/menu', lang);
     </section>
   </div>
 
-  <!-- 5. MATCHA SIGNATURE MOË — simple priced list, no descriptions in
-       the owner's own text. -->
+  <!-- 5. MATCHA SIGNATURE MOË — photo cards (Amar, Sept 2026: "er staan
+       4 matcha op de menu site daar zijn ook foto van te vinden op de
+       commande site. Zet die er ook op") — three of the four flavors
+       reuse a real /commande photo, see matchaSignature's own comment in
+       menu-formules.ts for the mapping and why "Rose" has none; that one
+       gets a quiet placeholder tile instead of a wrong photo, same
+       pattern used everywhere else on this site for an unphotographed
+       dish. -->
   <div id={matchaSignature.id} class="scroll-mt-24" data-menu-category>
     <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
       <div class="relative">
@@ -486,15 +492,22 @@ const path = localizedPath('/menu', lang);
             {t(matchaSignature.title, lang)}
           </h2>
         </div>
-        <div class="grid sm:grid-cols-2 gap-4">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {matchaSignature.items.map((item, j) => (
             <div
-              class="card-lift flex items-center justify-between gap-4 rounded-xl p-4"
+              class="card-lift rounded-xl overflow-hidden"
               style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
               data-reveal
             >
-              <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h3>
-              <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+              <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
+                {item.image && (
+                  <img src={item.image} alt={t(item.name, lang)} class="w-full h-full object-cover" loading="lazy" />
+                )}
+              </div>
+              <div class="p-4 flex items-center justify-between gap-3">
+                <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h3>
+                <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+              </div>
             </div>
           ))}
         </div>
