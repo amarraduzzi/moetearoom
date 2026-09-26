@@ -57,6 +57,7 @@ export const catalogTranslations: Record<string, { en: CatalogItemTranslation; a
   'dr-sunrise': { en: { name: 'Sunrise', desc: 'Orange, grenadine, seasonal fruits.' }, ar: { name: 'صنرايز', desc: 'برتقال، غرينادين، فواكه الموسم.' } },
   'dr-red-mood': { en: { name: 'Red Mood', desc: 'Red berries, refreshing mocktail.' }, ar: { name: 'ريد مود', desc: 'فواكه حمراء، موكتيل منعش.' } },
   'dr-blue-mood': { en: { name: 'Blue Mood', desc: 'Blue curaçao, lemon, signature mocktail.' }, ar: { name: 'بلو مود', desc: 'كوراساو أزرق، ليمون، موكتيل مميز.' } },
+  'dr-bissap-moe': { en: { name: 'Bissap Moë', desc: 'House-made hibiscus infusion, fresh and lightly sweetened.' }, ar: { name: 'بيساب موي', desc: 'نقيع الكركديه المنزلي، منعش ومحلى بلطف.' } },
 
   // ---- Boissons — Frappés & Glacés ----
   'dr-milkshake-vanille': { en: { name: 'Vanilla Milkshake', desc: 'Vanilla ice cream, milk, whipped cream.' }, ar: { name: 'ميلك شيك بالفانيليا', desc: 'آيس كريم فانيليا، حليب، كريمة مخفوقة.' } },

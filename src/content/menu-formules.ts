@@ -289,6 +289,18 @@ export const brunchLunch = {
           price: 52,
           desc: { fr: 'Chèvre, amlou & roquette fraîche.', en: 'Goat cheese, amlou & fresh arugula.', ar: 'جبن ماعز، أملو وجرجير طازج.' },
         },
+        // Added (Amar, Sept 2026): "Nieuwe Sandwich: Toast Avocat & Ton
+        // Spicy. Avocat, thon a la tomate spicy, jalapenos&pesto. 55DH."
+        {
+          id: 'toast-avocat-thon-spicy',
+          name: { fr: 'Toast Avocat & Thon Spicy', en: 'Spicy Tuna & Avocado Toast', ar: 'توست أفوكادو وتونة حارة' },
+          price: 55,
+          desc: {
+            fr: 'Avocat, thon à la tomate spicy, jalapeños & pesto.',
+            en: 'Avocado, spicy tomato tuna, jalapeños & pesto.',
+            ar: 'أفوكادو، تونة بالطماطم الحارة، هالبينو وبيستو.',
+          },
+        },
       ],
     },
   ] satisfies MenuSubsection[],
@@ -302,6 +314,14 @@ export const brunchSignature = {
   id: 'brunch-signature',
   title: { fr: 'Le Brunch Signature Moë', en: 'The Moë Signature Brunch', ar: 'برانش موي المميز' },
   tagline: { fr: 'MAJESTUEUX • ÉLÉGANT • OPULENT', en: 'MAJESTUEUX • ÉLÉGANT • OPULENT', ar: 'MAJESTUEUX • ÉLÉGANT • OPULENT' },
+  // Amar, Sept 2026: "en de brunch signature MOE is tussen 10.00-16.00"
+  // — same window, and same translated phrasing, as brunchLunch's own
+  // hours above (10h–16h).
+  hours: {
+    fr: 'Tous les jours • 10h – 16h',
+    en: 'Every day • 10 AM – 4 PM',
+    ar: 'يوميًا • من 10 صباحًا إلى 4 مساءً',
+  },
   intro: {
     fr: 'Une expérience généreuse pensée comme un véritable parcours gourmand.',
     en: 'A generous experience, designed as a true gourmet journey.',
@@ -448,17 +468,18 @@ export const pancakes = {
 //   - "Amlou" ↔ dr-moetcha-amlou — same flavor name, direct match.
 //   - "Matcha Glacé" (no flavor specified, just "iced") ↔
 //     dr-moetcha-classic-glace, the plain iced matcha.
-// "Rose" has NO photo here on purpose — /commande's moetcha lineup has
-// no rose flavor (only Classic/Nana/Amlou/Zahr), so there is no real
-// photo of it to borrow; using another flavor's photo would show the
-// wrong drink. Flagged to Amar rather than faked.
+// "Rose" was replaced by "Matcha Latte" (Amar, Sept 2026: gave corrected
+// pricing for "matcha fleur/amlou/glace/latte" with no mention of Rose
+// any more) — matcha-latte.webp already existed in public/images
+// unused, so this is presumably the flavor the owner actually wanted
+// there instead of the never-photographable Rose.
 export const matchaSignature = {
   id: 'matcha-signature',
   title: { fr: 'Matcha Signature Moë', en: 'The Moë Signature Matcha', ar: 'ماتشا موي المميزة' },
   items: [
-    { id: 'matcha-fleur-oranger', name: { fr: "Fleur d'Oranger", en: 'Orange Blossom', ar: 'زهر البرتقال' }, price: 42, image: '/images/dr-moetcha-zahr.webp' },
-    { id: 'matcha-amlou', name: { fr: 'Amlou', en: 'Amlou', ar: 'أملو' }, price: 50, image: '/images/dr-moetcha-amlou.webp' },
-    { id: 'matcha-rose', name: { fr: 'Rose', en: 'Rose', ar: 'الورد' }, price: 42 },
-    { id: 'matcha-glace', name: { fr: 'Matcha Glacé', en: 'Iced Matcha', ar: 'ماتشا مثلجة' }, price: 45, image: '/images/dr-moetcha-classic-glace.webp' },
+    { id: 'matcha-fleur-oranger', name: { fr: "Fleur d'Oranger", en: 'Orange Blossom', ar: 'زهر البرتقال' }, price: 45, image: '/images/dr-moetcha-zahr.webp' },
+    { id: 'matcha-amlou', name: { fr: 'Amlou', en: 'Amlou', ar: 'أملو' }, price: 55, image: '/images/dr-moetcha-amlou.webp' },
+    { id: 'matcha-latte', name: { fr: 'Matcha Latte', en: 'Matcha Latte', ar: 'لاتيه ماتشا' }, price: 45, image: '/images/matcha-latte.webp' },
+    { id: 'matcha-glace', name: { fr: 'Matcha Glacé', en: 'Iced Matcha', ar: 'ماتشا مثلجة' }, price: 55, image: '/images/dr-moetcha-classic-glace.webp' },
   ] satisfies MenuLineItem[],
 };

@@ -191,6 +191,10 @@ export const ITEMS: CatalogItem[] = [
   { id: 'dr-sunrise', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Sunrise', desc: 'Orange, grenadine, fruits de saison.', price: 45, tags: ['vegan'], image: '/images/sunrise.webp' },
   { id: 'dr-red-mood', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Red Mood', desc: 'Fruits rouges, mocktail rafraîchissant.', price: 45, tags: ['vegan'], image: '/images/red-mood.webp' },
   { id: 'dr-blue-mood', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Blue Mood', desc: 'Curaçao bleu, citron, mocktail signature.', price: 45, tags: ['vegan'], image: '/images/blue-mood.webp' },
+  // Amar, Sept 2026: "Boisson extra / Bissap MOE 50DH" — nieuwe echte
+  // drank, geen foto beschikbaar (geen image-veld, net als andere
+  // items zonder foto elders in deze catalogus).
+  { id: 'dr-bissap-moe', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Bissap Moë', desc: 'Infusion d\'hibiscus maison, fraîche et légèrement sucrée.', price: 50, tags: ['vegan'] },
 
   // ---- Boissons — Frappés & Glacés ----
   { id: 'dr-milkshake-vanille', cat: 'drinks', station: 'bar', sub: 'Frappés & Glacés', name: 'Milk Shake Vanille', desc: 'Glace vanille, lait, chantilly.', price: 45, image: '/images/milkshake-vanille.webp' },
