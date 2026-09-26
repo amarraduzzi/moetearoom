@@ -241,34 +241,14 @@ export const brunchLunch = {
             ar: 'زعلوك، حمص وتكتوكة، يقدَّم مع خبز منزلي.',
           },
         },
-        {
-          id: 'salade-de-saison',
-          name: { fr: 'Salade de Saison', en: 'Seasonal Salad', ar: 'سلطة الموسم' },
-          price: 42,
-          desc: {
-            fr: 'Légumes frais, jeunes pousses & vinaigrette à l’orange.',
-            en: 'Fresh vegetables, baby greens & orange vinaigrette.',
-            ar: 'خضار طازجة، براعم خضراء وصلصة فينيغريت بالبرتقال.',
-          },
-        },
       ],
     },
-    {
-      id: 'a-partager',
-      title: { fr: 'À Partager', en: 'To Share', ar: 'للمشاركة' },
-      items: [
-        {
-          id: 'planche-moe',
-          name: { fr: 'La Planche Moë', en: 'The Moë Board', ar: 'لوح موي' },
-          price: 90,
-          desc: {
-            fr: "Sélection sucrée-salée à partager selon l'inspiration du moment.",
-            en: "A sweet-and-savory selection to share, following the moment's inspiration.",
-            ar: 'تشكيلة حلوة ومالحة للمشاركة، حسب إلهام اللحظة.',
-          },
-        },
-      ],
-    },
+    // "Salade de Saison" (was in Entrées & Salades) and the entire
+    // "À Partager" subsection (its only item was "La Planche Moë") were
+    // both removed sitewide (Amar, Sept 2026: "verwijder deze 2 in het
+    // menu", with a screenshot of exactly these two items) — the
+    // "À Partager" heading is dropped along with it since it had no
+    // other item left to show.
     {
       id: 'sandwichs-moe',
       title: { fr: 'Les Sandwichs Moë', en: 'The Moë Sandwiches', ar: 'ساندويتشات موي' },
