@@ -32,31 +32,34 @@
 // button weg met link naar commande site dat groene blok"): this page is
 // purely browse-only again, no CTA pointing at /commande anywhere on it.
 //
-// BOISSONS section added back (Amar, Sept 2026 — "zet aub op de pagina
-// .../menu/ de boissons van .../commande/ met foto erop"): the one
-// exception to "this page no longer reads menu-catalog.ts" above — pulled
-// straight from the live 'drinks' category so a price/name edit made for
-// /commande's ordering screen shows up here too, WITH each item's photo
-// (every drinks item in menu-catalog.ts already has one). Those item
-// names/descriptions are plain strings, not translated LocalizedText —
-// same deliberately-FR-only tradeoff menu-catalog.ts's own top comment
-// documents for /commande — so they render identically on every /menu
-// language for now, unlike the rest of this page's own EN/AR-translated
-// content in menu-formules.ts.
+// BOISSONS + PÂTISSERIE sections added back (Amar, Sept 2026 — first
+// "zet aub op de pagina .../menu/ de boissons van .../commande/ met foto
+// erop", then "De patisserie van de commande site moet ook op ... de
+// menu pagina met foto erbij. doe maar in alle talen vertalen ook de
+// boissons maak het maar compleet"): the one exception to "this page no
+// longer reads menu-catalog.ts" above — both pulled straight from their
+// live catalog categories so a price/name edit made for /commande's
+// ordering screen shows up here too, WITH each item's photo (every item
+// in both categories already has one). Unlike menu-catalog.ts's own
+// deliberately FR-only fields (still correct for /commande, which is
+// FR-only), Amar explicitly asked for these to be "compleet" in every
+// language — see menu-catalog-translations.ts for the EN/AR overlay this
+// page reads on top of the catalog's FR text. /commande itself is
+// untouched and keeps reading the catalog's plain FR strings directly.
 import Layout from '../layouts/Layout.astro';
 import FloralSprig from '../components/FloralSprig.astro';
 import { siteConfig } from '../config/site.config';
 import { goodMorningMoe, brunchLunch, brunchSignature, pancakes, matchaSignature } from '../content/menu-formules';
-import { ITEMS as CATALOG_ITEMS } from '../content/menu-catalog';
+import { ITEMS as CATALOG_ITEMS, type CatalogItem } from '../content/menu-catalog';
+import { catalogTranslations } from '../content/menu-catalog-translations';
 import { t, localizedPath, type Language } from '../i18n/languages';
 import { place } from '../i18n/ui';
 
 // Same grouping the old catalog-driven version of this page (and
 // /commande) used: preserve first-seen order of each item's `sub`.
-const boissonsItems = CATALOG_ITEMS.filter((it) => it.cat === 'drinks');
-function groupBySub(items: typeof boissonsItems): { sub: string; items: typeof boissonsItems }[] {
+function groupBySub(items: CatalogItem[]): { sub: string; items: CatalogItem[] }[] {
   const order: string[] = [];
-  const map = new Map<string, typeof boissonsItems>();
+  const map = new Map<string, CatalogItem[]>();
   items.forEach((it) => {
     const key = it.sub || '';
     if (!map.has(key)) { map.set(key, []); order.push(key); }
@@ -64,7 +67,6 @@ function groupBySub(items: typeof boissonsItems): { sub: string; items: typeof b
   });
   return order.map((sub) => ({ sub, items: map.get(sub)! }));
 }
-const boissonsGroups = groupBySub(boissonsItems);
 
 interface Props {
   lang?: Language;
@@ -74,6 +76,41 @@ const { lang = 'fr' } = Astro.props;
 const { name, currency } = siteConfig.identity;
 const primaryKeyword = t(siteConfig.identity.primaryKeyword, lang);
 const city = t(place.city, lang);
+
+// EN/AR overlay on top of menu-catalog.ts's FR-only fields — see this
+// file's import comment and menu-catalog-translations.ts's own top
+// comment for why. Falls back to the FR text itself if a translation is
+// ever missing (e.g. a new catalog item added without updating that
+// file) rather than rendering blank.
+function catalogName(item: CatalogItem): string {
+  if (lang === 'fr') return item.name;
+  return catalogTranslations[item.id]?.[lang]?.name ?? item.name;
+}
+function catalogDesc(item: CatalogItem): string | undefined {
+  if (lang === 'fr') return item.desc;
+  return catalogTranslations[item.id]?.[lang]?.desc ?? item.desc;
+}
+
+// Same EN/AR overlay, for the `sub` group headings (Chaud, Éclairs, …)
+// rather than individual items — small enough to inline rather than
+// giving it its own file next to menu-catalog-translations.ts.
+const catalogSubLabels: Record<string, { en: string; ar: string }> = {
+  'Chaud': { en: 'Hot', ar: 'ساخن' },
+  'Thés & Infusions': { en: 'Teas & Infusions', ar: 'الشاي والمنقوعات' },
+  'Jus & Mocktails': { en: 'Juices & Mocktails', ar: 'العصائر والموكتيل' },
+  'Frappés & Glacés': { en: 'Frappés & Iced', ar: 'المشروبات المثلجة' },
+  'Éclairs': { en: 'Éclairs', ar: 'إكلير' },
+  'Boulangerie': { en: 'Bakery', ar: 'المخبوزات' },
+};
+function catalogSubLabel(sub: string): string {
+  if (lang === 'fr' || !sub) return sub;
+  return catalogSubLabels[sub]?.[lang] ?? sub;
+}
+
+const boissonsItems = CATALOG_ITEMS.filter((it) => it.cat === 'drinks');
+const boissonsGroups = groupBySub(boissonsItems);
+const patisserieItems = CATALOG_ITEMS.filter((it) => it.cat === 'patisserie');
+const patisserieGroups = groupBySub(patisserieItems);
 
 const copy = {
   metaTitle: {
@@ -109,14 +146,16 @@ const copy = {
   formuleBadge: { fr: 'Formule', en: 'Set menu', ar: 'تركيبة' },
   inclusionsLabel: { fr: 'Compris dans la formule', en: 'Included in the set menu', ar: 'ضمن التركيبة' },
   priceOnRequest: { fr: 'Tarif sur demande', en: 'Price on request', ar: 'السعر عند الطلب' },
-  // Page furniture around the catalog-sourced Boissons section — this
-  // label itself IS translated (unlike the item names/descriptions
-  // below it, see the import comment above), matching the equivalent
-  // label already used on /commande (menu-catalog.ts's own CATEGORIES).
+  // Page furniture around the two catalog-sourced sections — these
+  // labels themselves ARE translated (unlike the item names/descriptions
+  // below them, which now also have their own EN/AR overlay — see the
+  // import comment above), matching the equivalent labels already used
+  // on /commande (menu-catalog.ts's own CATEGORIES).
   boissonsTitle: { fr: 'Boissons', en: 'Drinks', ar: 'المشروبات' },
+  patisserieTitle: { fr: 'Pâtisserie', en: 'Pastries', ar: 'الحلويات' },
 } satisfies Record<string, { fr: string; en: string; ar: string }>;
 
-// The six sections, in page order — drives the table-of-contents pill
+// The seven sections, in page order — drives the table-of-contents pill
 // row and the anchor each section renders under. Stable string ids
 // (not indices, unlike the old menu-catalog.ts-driven loop) so
 // HomeContent.astro's Moëtcha CTA and any other cross-page link can
@@ -129,6 +168,7 @@ const tocSections = [
   { id: pancakes.id, label: pancakes.title },
   { id: matchaSignature.id, label: matchaSignature.title },
   { id: 'boissons', label: copy.boissonsTitle },
+  { id: 'patisserie', label: copy.patisserieTitle },
 ];
 
 const menuJsonLd = {
@@ -194,8 +234,18 @@ const menuJsonLd = {
       name: t(copy.boissonsTitle, lang),
       hasMenuItem: boissonsItems.map((item) => ({
         '@type': 'MenuItem',
-        name: item.name,
-        description: item.desc ?? undefined,
+        name: catalogName(item),
+        description: catalogDesc(item),
+        offers: { '@type': 'Offer', price: item.price, priceCurrency: currency },
+      })),
+    },
+    {
+      '@type': 'MenuSection',
+      name: t(copy.patisserieTitle, lang),
+      hasMenuItem: patisserieItems.map((item) => ({
+        '@type': 'MenuItem',
+        name: catalogName(item),
+        description: catalogDesc(item),
         offers: { '@type': 'Offer', price: item.price, priceCurrency: currency },
       })),
     },
@@ -454,14 +504,14 @@ const path = localizedPath('/menu', lang);
   </div>
 
   <!-- 6. BOISSONS — same live catalog /commande uses (menu-catalog.ts),
-       grouped by sub exactly like /commande's own list, but photo-forward
-       here since every drinks item already has a real photo (Amar, Sept
-       2026: "de boissons van .../commande/ met foto erop"). See this
-       file's import comment for why the names/descriptions stay FR-only
-       on every language. -->
+       grouped by sub exactly like /commande's own list, photo-forward
+       since every drinks item already has a real photo (Amar, Sept 2026:
+       "de boissons van .../commande/ met foto erop"), and now fully
+       translated via menu-catalog-translations.ts ("doe maar in alle
+       talen vertalen ook de boissons maak het maar compleet") — see this
+       file's import comment. -->
   <div id="boissons" class="scroll-mt-24 section-tint-warm" data-menu-category>
-    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 overflow-hidden">
-      <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
       <div class="relative">
         <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
           <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
@@ -473,7 +523,7 @@ const path = localizedPath('/menu', lang);
           {boissonsGroups.map((group) => (
             <div>
               {group.sub && (
-                <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{group.sub}</h3>
+                <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{catalogSubLabel(group.sub)}</h3>
               )}
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {group.items.map((item, j) => (
@@ -484,16 +534,70 @@ const path = localizedPath('/menu', lang);
                   >
                     <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
                       {item.image && (
-                        <img src={item.image} alt={item.name} class="w-full h-full object-cover" loading="lazy" />
+                        <img src={item.image} alt={catalogName(item)} class="w-full h-full object-cover" loading="lazy" />
                       )}
                     </div>
                     <div class="p-4">
                       <div class="flex items-start justify-between gap-3">
-                        <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{item.name}</h4>
+                        <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
                         <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
                       </div>
-                      {item.desc && (
-                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{item.desc}</p>
+                      {catalogDesc(item) && (
+                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <a href="#menu-list" class="back-to-menu-link inline-block mt-5 text-xs font-bold">{t(copy.backToMenu, lang)}</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- 7. PÂTISSERIE — same idea as Boissons above: live 'patisserie'
+       catalog category, grouped by sub (Éclairs, Boulangerie), photos,
+       fully translated (Amar, Sept 2026: "De patisserie van de commande
+       site moet ook op ... de menu pagina met foto erbij ... maak het
+       maar compleet"). Last section on the page, so it gets the closing
+       FloralSprig flourish that used to sit on Boissons. -->
+  <div id="patisserie" class="scroll-mt-24" data-menu-category>
+    <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 overflow-hidden">
+      <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />
+      <div class="relative">
+        <div class="mb-5 pb-3" style="border-bottom: 1px solid var(--color-border)">
+          <h2 class="font-display text-2xl font-semibold flex items-baseline gap-3" style="color: var(--color-text-primary)">
+            <span class="text-xs font-bold" style="color: var(--color-accent)">07</span>
+            {t(copy.patisserieTitle, lang)}
+          </h2>
+        </div>
+        <div class="space-y-6">
+          {patisserieGroups.map((group) => (
+            <div>
+              {group.sub && (
+                <h3 class="text-[11px] font-bold uppercase tracking-[0.14em] mb-2.5" style="color: var(--color-accent)">{catalogSubLabel(group.sub)}</h3>
+              )}
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.items.map((item, j) => (
+                  <div
+                    class="card-lift rounded-xl overflow-hidden"
+                    style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 50}ms`}
+                    data-reveal
+                  >
+                    <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
+                      {item.image && (
+                        <img src={item.image} alt={catalogName(item)} class="w-full h-full object-cover" loading="lazy" />
+                      )}
+                    </div>
+                    <div class="p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
+                        <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
+                      </div>
+                      {catalogDesc(item) && (
+                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
                       )}
                     </div>
                   </div>
