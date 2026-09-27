@@ -53,13 +53,20 @@ const copy = {
   },
   selectionKicker: { fr: 'Sélection', en: 'Selection', ar: 'مختارات' },
   incontournablesTitle: { fr: 'Nos incontournables', en: 'Customer favorites', ar: 'أطباقنا المميزة' },
-  // Moëtcha homepage spotlight (Amar, Sept 2026: "we willen dit flink
-  // pushen ... prominent in beeld op de hoofdpagina") — its own full-width
-  // band right after the hero, see the section below. label/brandLine/
-  // intro are pulled straight from menu-highlights.ts's Moëtcha entry
-  // (moetchaHighlight below) so the copy lives in one place; only the CTA
-  // label is specific to this band.
-  moetchaCta: { fr: 'Découvrir Moëtcha', en: 'Discover Moëtcha', ar: 'اكتشفوا موتشا' },
+  // Pâtisserie & Brunch homepage spotlight (Amar, Sept 2026: "de moetcha
+  // sectie weg en vervang die met sectie Patisserie & Brunch en voeg daar
+  // alleen maar foto's bij die ik je aanlever") — replaces the old
+  // Moëtcha spotlight band in the same full-width slot right after the
+  // hero (see the section below). Amar supplied 9 photos directly for
+  // this; they carry no item names/prices since they're atmosphere/
+  // gallery shots, not catalog items — just the title, subtitle and the
+  // photos themselves.
+  patisserieBrunchTitle: { fr: 'Pâtisserie & Brunch', en: 'Pastries & Brunch', ar: 'الحلويات والبرانش' },
+  patisserieBrunchSubtitle: {
+    fr: 'Un aperçu en images de nos pâtisseries maison et de notre brunch, tels qu’ils arrivent à table.',
+    en: 'A visual taste of our house-made pastries and brunch, just as they arrive at the table.',
+    ar: 'لمحة بالصور عن حلوياتنا المصنوعة منزليًا وبرانشنا، كما تصل إلى الطاولة.',
+  },
   videoKicker: { fr: 'À l’intérieur', en: 'Step inside', ar: 'من الداخل' },
   videoTitle: { fr: 'Une immersion chez Moë', en: 'A glimpse inside Moë', ar: 'لمحة من داخل موي' },
   videoSubtitle: {
@@ -186,30 +193,23 @@ const highlightItems = ['Éclair Signature Moë', 'Thé Vert Marocain', 'Moëtch
   .map((name) => allMenuItems.find((item) => item.name === name))
   .filter((item): item is (typeof allMenuItems)[number] => Boolean(item));
 
-// Moëtcha spotlight band data — reuses the same menu-highlights.ts entry
-// as highlightItems above instead of duplicating the copy. Only the 4
-// non-glacé flavors are shown here (Classic, Nana, Amlou, Zahr) — the
-// "Glacé" variant of each is one tap away on /menu, no need to show all 8
-// in a homepage teaser.
-const moetchaHighlight = menuHighlights.find((c) => c.label.fr === 'Moëtcha');
-const moetchaPhotoItems = (moetchaHighlight?.items ?? []).filter((it) => !it.name.endsWith('Glacé')).slice(0, 4);
-// MenuHighlightItem has no `badge` field (that's menu-catalog.ts's thing,
-// used on /commande's item cards) — matches menu-catalog.ts's own
-// dr-moetcha-nana badge: 'populaire' so the two stay consistent instead
-// of duplicating a badge field here just for one homepage tile.
-const moetchaBadges: Record<string, LocalizedText> = {
-  'Moëtcha Nana': { fr: 'Populaire', en: 'Popular', ar: 'الأكثر طلبًا' },
-};
-// menu-catalog.ts's CATEGORIES order (Sept 2026: Moëtcha split out of
-// Boissons into its own category, 3rd in the list) — index 2 = moetcha.
-// If that order ever changes, update this index to match.
-// /menu's content was fully replaced (Amar, Sept 2026 — see
-// menu-formules.ts's top comment) and no longer has a "Moëtcha" category
-// at index 2 — the closest thing left on /menu is its own "Matcha
-// Signature Moë" section (different flavor names/prices, see that
-// file's comment; flagged to Amar). Anchor updated so this CTA doesn't
-// silently scroll to the wrong place.
-const moetchaMenuHref = `${localizedPath('/menu', lang)}#matcha-signature`;
+// Pâtisserie & Brunch homepage gallery — 9 real photos Amar supplied
+// directly for this section (Sept 2026), saved into public/images with
+// descriptive names. No catalog/menu-item data behind these (unlike the
+// old Moëtcha band, which pulled from menu-highlights.ts) — they're
+// atmosphere shots, not tied to specific priced items, so this is just a
+// plain photo list, each with an alt text describing what's in frame.
+const patisserieBrunchPhotos: { src: string; alt: LocalizedText }[] = [
+  { src: '/images/brunch-salade-crevettes.webp', alt: { fr: 'Salade de crevettes, avocat et grenade', en: 'Shrimp, avocado & pomegranate salad', ar: 'سلطة الروبيان والأفوكادو والرمان' } },
+  { src: '/images/brunch-croissant-gratin.webp', alt: { fr: 'Croissant gratiné, sauce onctueuse', en: 'Gratinéed croissant in a creamy sauce', ar: 'كرواسون مغطى بالجبن في صلصة كريمية' } },
+  { src: '/images/patisserie-comptoir.webp', alt: { fr: 'Tartelettes meringuées et mille-feuilles', en: 'Meringue tarts and mille-feuille slices', ar: 'تارت الميرانغ وقطع ميل فوي' } },
+  { src: '/images/brunch-toast-saumon.webp', alt: { fr: 'Toast avocat et saumon fumé', en: 'Avocado & smoked salmon toast', ar: 'توست الأفوكادو والسلمون المدخن' } },
+  { src: '/images/brunch-plateau.webp', alt: { fr: 'Plateau brunch : riz, mijoté et salade César', en: 'Brunch tray: rice, stew and Caesar salad', ar: 'صينية برانش: أرز ويخنة وسلطة سيزر' } },
+  { src: '/images/patisserie-cheesecake.webp', alt: { fr: 'Parts de cheesecake basque et café', en: 'Basque cheesecake slices and coffee', ar: 'قطع تشيز كيك باسكي وقهوة' } },
+  { src: '/images/brunch-toast-avocat-fleurs.webp', alt: { fr: 'Toast avocat, fleurs comestibles', en: 'Avocado toast with edible flowers', ar: 'توست الأفوكادو بالزهور الصالحة للأكل' } },
+  { src: '/images/brunch-burrata-croissant.webp', alt: { fr: 'Burrata sur croissant, tomates confites', en: 'Burrata on croissant, roasted tomatoes', ar: 'بوراتا على الكرواسون مع طماطم مشوية' } },
+  { src: '/images/patisserie-choux.webp', alt: { fr: 'Choux pâtissiers signature Moë', en: 'Signature Moë choux pastries', ar: 'حلوى الشو المميزة من موي' } },
+];
 
 const ratingRounded = Math.round(Number(aggregateRating.ratingValue));
 const ratingStars = '★'.repeat(ratingRounded) + '☆'.repeat(5 - ratingRounded);
@@ -269,81 +269,40 @@ const path = localizedPath('/', lang);
     </div>
   </section>
 
-  <!-- Moëtcha spotlight — Amar, Sept 2026: "we willen in de toekomst
-       Moëtcha flink pushen in marketing ... het moet prominent in beeld
-       komen op de hoofdpagina". Own full-width band right after the hero
-       (the very first thing after the fold, ahead of "Nos incontournables"
-       where it was previously just one of four tiles), and its own color:
-       the same green /commande's order flow already uses (#3F5D45), not
-       the site's gold accent, so it reads as a distinct sub-brand moment
-       rather than another homepage section. Copy comes from
-       menu-highlights.ts's Moëtcha entry so it isn't duplicated here. -->
-  {moetchaHighlight && (
-    <section class="relative overflow-hidden" style="background: linear-gradient(135deg, #4C6E4E 0%, #3F5D45 45%, #2E452F 100%)" data-reveal>
-      {/* Soft glow instead of a flat fill — same section-glow pattern used
-          on About/Avis/further down this page, just a lighter sage tone so
-          it reads against the green instead of needing --color-accent. */}
-      <div class="section-glow" style="width: 420px; height: 420px; background: #C9DCC2; opacity: 0.16; right: -140px; top: -120px;"></div>
-      {/* Same printed-menu sprig used elsewhere on the site (see
-          FloralSprig.astro), brightened via CSS filter to read as a cream
-          flourish on this dark green instead of the usual green-on-cream —
-          the first use of this asset outside a light background. */}
-      <FloralSprig corner="bottom-left" size="w-64 sm:w-96" opacity={0.14} class="moetcha-sprig" />
-      <div class="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
-        <div class="grid lg:grid-cols-[1.05fr,1fr] gap-10 lg:gap-16 items-center">
-          <div class="relative">
-            {moetchaHighlight.brandLine && (
-              <span class="block text-[10px] font-bold uppercase tracking-[0.3em] mb-4" style="color: rgba(255,252,243,0.7)">
-                {t(moetchaHighlight.brandLine, lang)}
-              </span>
-            )}
-            <h2 class="font-display text-3xl sm:text-4xl font-semibold" style="color: #FFFCF3">
-              {t(moetchaHighlight.label, lang)}
-            </h2>
-            {moetchaHighlight.intro && (
-              <p class="mt-4 max-w-md text-sm sm:text-base leading-relaxed" style="color: rgba(255,252,243,0.85)">
-                {t(moetchaHighlight.intro, lang)}
-              </p>
-            )}
-            <a href={moetchaMenuHref} class="moetcha-cta inline-flex items-center gap-2 mt-7 px-6 py-3.5 rounded-lg text-sm font-bold">
-              {t(copy.moetchaCta, lang)}
-              <svg class="moetcha-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </a>
-          </div>
-          {/* Staggered 2-col grid (second column nudged down on larger
-              screens) instead of a flush, identical grid — a small move
-              that stops 4 same-size tiles from reading as a spreadsheet. */}
-          <div class="grid grid-cols-2 gap-3 sm:gap-4">
-            {moetchaPhotoItems.map((item, i) => (
-              <a
-                href={moetchaMenuHref}
-                class={`moetcha-item-card relative rounded-xl overflow-hidden block ${i % 2 === 1 ? 'sm:mt-8' : ''}`}
-                data-reveal
-                style={`transition-delay: ${i * 70}ms`}
-              >
-                {moetchaBadges[item.name] && (
-                  <span class="moetcha-item-badge absolute top-2.5 z-10 text-[9px] font-bold uppercase tracking-wide px-2 py-1 rounded-full" style="inset-inline-start: 0.625rem">
-                    {t(moetchaBadges[item.name], lang)}
-                  </span>
-                )}
-                {item.image && (
-                  <div class="aspect-square">
-                    <img src={item.image} alt={item.imageAlt ? t(item.imageAlt, lang) : item.name} class="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                )}
-                <div class="p-3">
-                  <p class="text-xs sm:text-sm font-bold leading-tight" style="color: #FFFCF3">{item.name}</p>
-                  <p class="text-[11px] mt-1" style="color: rgba(255,252,243,0.65)">{item.price} {siteConfig.identity.currency}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+  <!-- Pâtisserie & Brunch spotlight — Amar, Sept 2026: "de moetcha sectie
+       weg en vervang die met sectie Patisserie & Brunch en voeg daar
+       alleen maar foto's bij die ik je aanlever". Replaces the old
+       Moëtcha spotlight band in the exact same slot (own full-width
+       section right after the hero). Just a title, subtitle and a photo
+       gallery of the 9 images Amar supplied — no item names/prices,
+       these aren't catalog entries. -->
+  <div class="section-tint-warm">
+    <section class="relative overflow-hidden py-16 sm:py-24" data-reveal>
+      <FloralSprig corner="top-right" size="w-56 sm:w-80" opacity={0.16} />
+      <div class="relative max-w-7xl mx-auto px-5 sm:px-8">
+        <div class="mb-8 sm:mb-10 max-w-2xl">
+          <span class="block text-[10px] font-bold uppercase tracking-[0.3em] mb-3" style="color: var(--color-accent)">{t(copy.selectionKicker, lang)}</span>
+          <h2 class="font-display text-3xl sm:text-4xl font-semibold" style="color: var(--color-text-primary)">
+            {t(copy.patisserieBrunchTitle, lang)}
+          </h2>
+          <p class="mt-4 text-sm sm:text-base leading-relaxed" style="color: var(--color-text-muted)">
+            {t(copy.patisserieBrunchSubtitle, lang)}
+          </p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          {patisserieBrunchPhotos.map((photo, i) => (
+            <div
+              class="photo-frame rounded-2xl aspect-square"
+              data-reveal="scale"
+              style={`transition-delay: ${(i % 6) * 70}ms`}
+            >
+              <img src={photo.src} alt={t(photo.alt, lang)} class="w-full h-full object-cover" loading="lazy" />
+            </div>
+          ))}
         </div>
       </div>
     </section>
-  )}
+  </div>
 
   <!-- Menu highlights -->
   <!-- Point 5: this section used to sit on the exact same cream as the
@@ -679,46 +638,6 @@ const path = localizedPath('/', lang);
   </section>
 
   <style>
-    /* Moëtcha spotlight band — cream-outline pill on the dark green
-       background, filling solid cream on hover (same fill-sweep idea as
-       Button.astro's outline variant, hand-rolled here since this band
-       doesn't use --color-accent). */
-    .moetcha-cta {
-      color: #FFFCF3;
-      border: 1.5px solid rgba(255, 252, 243, 0.55);
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    }
-    .moetcha-cta:hover {
-      background-color: #FFFCF3;
-      color: #3F5D45;
-      border-color: #FFFCF3;
-    }
-    .moetcha-cta-arrow { transition: transform 0.2s ease; }
-    .moetcha-cta:hover .moetcha-cta-arrow { transform: translateX(3px); }
-    [dir='rtl'] .moetcha-cta-arrow { transform: scaleX(-1); }
-    [dir='rtl'] .moetcha-cta:hover .moetcha-cta-arrow { transform: scaleX(-1) translateX(3px); }
-    .moetcha-item-card {
-      background-color: rgba(255, 252, 243, 0.08);
-      box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.4);
-      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-    }
-    .moetcha-item-card:hover {
-      background-color: rgba(255, 252, 243, 0.14);
-      transform: translateY(-3px);
-      box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.5);
-    }
-    .moetcha-item-badge {
-      color: #3F5D45;
-      background-color: #FFFCF3;
-    }
-    /* Green line-art sprig (see FloralSprig.astro) inverted to read as a
-       quiet cream flourish on this dark background instead of vanishing
-       into it — every other usage of this asset sits on cream and never
-       gets this filter. */
-    :global(.moetcha-sprig) {
-      filter: brightness(0) invert(1);
-    }
-
     /* No panel, no text-stroke — just a soft, tight drop-shadow so the
        near-white text keeps a hairline of separation from the photo in the
        few spots the vignette runs light (a bright plate edge, a highlight).

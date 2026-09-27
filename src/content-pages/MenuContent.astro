@@ -261,39 +261,23 @@ const path = localizedPath('/menu', lang);
   lang={lang}
   jsonLd={menuJsonLd}
 >
-  <!-- Menu's own bolder opening moment — every interior page used the same
-       compact PageHero, which made the whole site feel like one page
-       repeated. Menu gets the exception: taller, with the same Ken Burns
-       drift as the Home spotlight, since this is the page people actually
-       linger on. Home stays the one full-height "big" hero — this is a
-       step up from PageHero, not a rival to Home. -->
-  <section class="relative min-h-[420px] sm:h-[64vh] flex items-end overflow-hidden" data-reveal="scale">
-    <div class="ken-burns absolute inset-0">
-      <img
-        src="/images/gallery-3.webp"
-        alt={t(copy.heroAlt, lang)}
-        class="absolute inset-0 w-full h-full object-cover"
-      />
-    </div>
-    <!-- Same fix already proven on Home's own hero (see HomeContent.astro's
-         comment above its vignette): this photo is naturally pale (white
-         box, light background), so a light cream tint on top of it just
-         washed the whole thing out instead of darkening it — the text
-         color was the wrong half of the fix too, since dark-brown heading
-         text only reads against that same light wash. Switching to a dark
-         photographic vignette + near-white text keeps the photo crisp and
-         still guarantees contrast for the title, the same approach used on
-         Home instead of a one-off. -->
-    <div class="absolute inset-0" style="background: linear-gradient(0deg, rgba(58,42,30,0.78) 0%, rgba(58,42,30,0.4) 45%, rgba(58,42,30,0.08) 75%, transparent 100%)"></div>
-    <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 pb-12 sm:pb-16 w-full">
-      <span class="hero-shadow block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
-      <h1 class="hero-shadow font-display text-3xl sm:text-5xl lg:text-6xl font-semibold" style="color: #FFFCF3">
+  <!-- Menu hero — Amar, Sept 2026: "haal alle foto's in het menu pagina
+       eruit" (remove every photo from this page). This used to be a
+       full-bleed photo hero (gallery-3.webp) with a dark vignette tuned
+       for that image; both are gone now. A plain brand-color panel
+       (primary → primary-dark, the same pair Header/Footer already use)
+       replaces it so the page still opens with a considered title
+       moment instead of just starting flat at the ToC row. -->
+  <section class="relative flex items-end overflow-hidden" data-reveal="scale" style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)">
+    <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 py-14 sm:py-20 w-full">
+      <span class="block text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style="color: #F7F0DC">{city}</span>
+      <h1 class="font-display text-3xl sm:text-5xl lg:text-6xl font-semibold" style="color: #FFFCF3">
         {name}
       </h1>
-      <p class="hero-shadow mt-2 text-sm sm:text-base font-semibold tracking-wide" style="color: #E8C875">
+      <p class="mt-2 text-sm sm:text-base font-semibold tracking-wide" style="color: #E8C875">
         {t(copy.heroTagline, lang)}
       </p>
-      <p class="hero-shadow mt-4 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.9)">
+      <p class="mt-4 max-w-xl text-sm sm:text-base" style="color: rgba(255,252,243,0.9)">
         {t(copy.heroSubtitle, lang)}
       </p>
     </div>
@@ -476,14 +460,10 @@ const path = localizedPath('/menu', lang);
     </section>
   </div>
 
-  <!-- 5. MATCHA SIGNATURE MOË — photo cards (Amar, Sept 2026: "er staan
-       4 matcha op de menu site daar zijn ook foto van te vinden op de
-       commande site. Zet die er ook op") — three of the four flavors
-       reuse a real /commande photo, see matchaSignature's own comment in
-       menu-formules.ts for the mapping and why "Rose" has none; that one
-       gets a quiet placeholder tile instead of a wrong photo, same
-       pattern used everywhere else on this site for an unphotographed
-       dish. -->
+  <!-- 5. MATCHA SIGNATURE MOË — was a photo-card grid, now plain text
+       rows (Amar, Sept 2026: "haal alle foto's in het menu pagina
+       eruit" — no photos anywhere on this page any more), same simple
+       card style as Pancakes/Good Morning Moë above. -->
   <div id={matchaSignature.id} class="scroll-mt-24" data-menu-category>
     <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
       <div class="relative">
@@ -496,16 +476,11 @@ const path = localizedPath('/menu', lang);
         <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {matchaSignature.items.map((item, j) => (
             <div
-              class="card-lift rounded-xl overflow-hidden"
+              class="card-lift rounded-xl p-4"
               style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 70}ms`}
               data-reveal
             >
-              <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
-                {item.image && (
-                  <img src={item.image} alt={t(item.name, lang)} class="w-full h-full object-cover" loading="lazy" />
-                )}
-              </div>
-              <div class="p-4 flex items-center justify-between gap-3">
+              <div class="flex items-center justify-between gap-3">
                 <h3 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{t(item.name, lang)}</h3>
                 <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
               </div>
@@ -518,12 +493,10 @@ const path = localizedPath('/menu', lang);
   </div>
 
   <!-- 6. BOISSONS — same live catalog /commande uses (menu-catalog.ts),
-       grouped by sub exactly like /commande's own list, photo-forward
-       since every drinks item already has a real photo (Amar, Sept 2026:
-       "de boissons van .../commande/ met foto erop"), and now fully
-       translated via menu-catalog-translations.ts ("doe maar in alle
-       talen vertalen ook de boissons maak het maar compleet") — see this
-       file's import comment. -->
+       grouped by sub exactly like /commande's own list. Was photo-forward,
+       now plain text rows (Amar, Sept 2026: "haal alle foto's in het menu
+       pagina eruit") — still fully translated via
+       menu-catalog-translations.ts, only the photo boxes are gone. -->
   <div id="boissons" class="scroll-mt-24 section-tint-warm" data-menu-category>
     <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10">
       <div class="relative">
@@ -542,24 +515,17 @@ const path = localizedPath('/menu', lang);
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {group.items.map((item, j) => (
                   <div
-                    class="card-lift rounded-xl overflow-hidden"
+                    class="card-lift rounded-xl p-4"
                     style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 50}ms`}
                     data-reveal
                   >
-                    <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
-                      {item.image && (
-                        <img src={item.image} alt={catalogName(item)} class="w-full h-full object-cover" loading="lazy" />
-                      )}
+                    <div class="flex items-start justify-between gap-3">
+                      <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
+                      <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
                     </div>
-                    <div class="p-4">
-                      <div class="flex items-start justify-between gap-3">
-                        <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
-                        <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
-                      </div>
-                      {catalogDesc(item) && (
-                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
-                      )}
-                    </div>
+                    {catalogDesc(item) && (
+                      <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -572,11 +538,11 @@ const path = localizedPath('/menu', lang);
   </div>
 
   <!-- 7. PÂTISSERIE — same idea as Boissons above: live 'patisserie'
-       catalog category, grouped by sub (Éclairs, Boulangerie), photos,
-       fully translated (Amar, Sept 2026: "De patisserie van de commande
-       site moet ook op ... de menu pagina met foto erbij ... maak het
-       maar compleet"). Last section on the page, so it gets the closing
-       FloralSprig flourish that used to sit on Boissons. -->
+       catalog category, grouped by sub (Éclairs, Boulangerie), fully
+       translated. Was photo-forward, now plain text rows (Amar, Sept
+       2026: "haal alle foto's in het menu pagina eruit"). Last section
+       on the page, so it gets the closing FloralSprig flourish that
+       used to sit on Boissons. -->
   <div id="patisserie" class="scroll-mt-24" data-menu-category>
     <section class="relative max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-10 overflow-hidden">
       <FloralSprig corner="bottom-left" size="w-40 sm:w-56" />
@@ -596,24 +562,17 @@ const path = localizedPath('/menu', lang);
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {group.items.map((item, j) => (
                   <div
-                    class="card-lift rounded-xl overflow-hidden"
+                    class="card-lift rounded-xl p-4"
                     style={`background-color: var(--color-surface); border: 1px solid var(--color-border); transition-delay: ${j * 50}ms`}
                     data-reveal
                   >
-                    <div class="aspect-[4/3] w-full" style="background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, var(--color-surface-muted)), var(--color-surface-muted))">
-                      {item.image && (
-                        <img src={item.image} alt={catalogName(item)} class="w-full h-full object-cover" loading="lazy" />
-                      )}
+                    <div class="flex items-start justify-between gap-3">
+                      <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
+                      <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
                     </div>
-                    <div class="p-4">
-                      <div class="flex items-start justify-between gap-3">
-                        <h4 class="menu-item-name font-display font-semibold" style="color: var(--color-text-primary)">{catalogName(item)}</h4>
-                        <span class="menu-item-price font-bold shrink-0" style="color: var(--color-accent)">{item.price} {currency}</span>
-                      </div>
-                      {catalogDesc(item) && (
-                        <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
-                      )}
-                    </div>
+                    {catalogDesc(item) && (
+                      <p class="text-sm mt-1" style="color: var(--color-text-muted)">{catalogDesc(item)}</p>
+                    )}
                   </div>
                 ))}
               </div>
