@@ -58,6 +58,9 @@ export const catalogTranslations: Record<string, { en: CatalogItemTranslation; a
   'dr-red-mood': { en: { name: 'Red Mood', desc: 'Red berries, refreshing mocktail.' }, ar: { name: 'ريد مود', desc: 'فواكه حمراء، موكتيل منعش.' } },
   'dr-blue-mood': { en: { name: 'Blue Mood', desc: 'Blue curaçao, lemon, signature mocktail.' }, ar: { name: 'بلو مود', desc: 'كوراساو أزرق، ليمون، موكتيل مميز.' } },
   'dr-bissap-moe': { en: { name: 'Bissap Moë', desc: 'House-made hibiscus infusion, fresh and lightly sweetened.' }, ar: { name: 'بيساب موي', desc: 'نقيع الكركديه المنزلي، منعش ومحلى بلطف.' } },
+  'dr-pina-colada': { en: { name: 'Pina Colada', desc: 'Pineapple, coconut, creamy mocktail (non-alcoholic).' }, ar: { name: 'بينا كولادا', desc: 'أناناس وجوز الهند، موكتيل كريمي (بدون كحول).' } },
+  'dr-mango-colada': { en: { name: 'Mango Colada', desc: 'Mango, coconut, creamy mocktail (non-alcoholic).' }, ar: { name: 'مانجو كولادا', desc: 'مانجو وجوز الهند، موكتيل كريمي (بدون كحول).' } },
+  'dr-ice-tea': { en: { name: 'Ice Tea', desc: 'House-made iced tea, refreshing.' }, ar: { name: 'شاي مثلج', desc: 'شاي مثلج منزلي، منعش.' } },
 
   // ---- Boissons — Frappés & Glacés ----
   'dr-milkshake-vanille': { en: { name: 'Vanilla Milkshake', desc: 'Vanilla ice cream, milk, whipped cream.' }, ar: { name: 'ميلك شيك بالفانيليا', desc: 'آيس كريم فانيليا، حليب، كريمة مخفوقة.' } },

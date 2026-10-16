@@ -286,13 +286,14 @@ export const brunchLunch = {
   ] satisfies MenuSubsection[],
 };
 
-// No price shown for this one — the owner's own text doesn't list one
-// (fixed formules above and à-la-carte items below all carry a price;
-// this multi-course experience deliberately doesn't). Left blank rather
-// than invented.
+// Amar, Oct 2026: "en de prijs van le brunch Signature Moe is 170dh" —
+// previously shown as "Tarif sur demande" since the owner's printed menu
+// didn't list a price for this one; now a real price, wired into
+// MenuContent.astro's header block in place of that placeholder text.
 export const brunchSignature = {
   id: 'brunch-signature',
   title: { fr: 'Le Brunch Signature Moë', en: 'The Moë Signature Brunch', ar: 'برانش موي المميز' },
+  price: 170,
   tagline: { fr: 'MAJESTUEUX • ÉLÉGANT • OPULENT', en: 'MAJESTUEUX • ÉLÉGANT • OPULENT', ar: 'MAJESTUEUX • ÉLÉGANT • OPULENT' },
   // Amar, Sept 2026: "en de brunch signature MOE is tussen 10.00-16.00"
   // — same window, and same translated phrasing, as brunchLunch's own

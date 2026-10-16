@@ -195,6 +195,13 @@ export const ITEMS: CatalogItem[] = [
   // drank, geen foto beschikbaar (geen image-veld, net als andere
   // items zonder foto elders in deze catalogus).
   { id: 'dr-bissap-moe', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Bissap Moë', desc: 'Infusion d\'hibiscus maison, fraîche et légèrement sucrée.', price: 50, tags: ['vegan'] },
+  // Amar, Oct 2026: "Voeg bij dranken jus & mocktails toe / Pina Colada
+  // 50dh / Mango Colada 50dh / Ice Tea 50dh" — 3 nieuwe dranken, geen
+  // foto's aangeleverd (geen image-veld, zelfde patroon als Bissap Moë
+  // hierboven).
+  { id: 'dr-pina-colada', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Pina Colada', desc: 'Ananas, noix de coco, mocktail crémeux (sans alcool).', price: 50, tags: ['vegan'] },
+  { id: 'dr-mango-colada', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Mango Colada', desc: 'Mangue, noix de coco, mocktail crémeux (sans alcool).', price: 50, tags: ['vegan'] },
+  { id: 'dr-ice-tea', cat: 'drinks', station: 'bar', sub: 'Jus & Mocktails', name: 'Ice Tea', desc: 'Thé glacé maison, rafraîchissant.', price: 50, tags: ['vegan'] },
 
   // ---- Boissons — Frappés & Glacés ----
   { id: 'dr-milkshake-vanille', cat: 'drinks', station: 'bar', sub: 'Frappés & Glacés', name: 'Milk Shake Vanille', desc: 'Glace vanille, lait, chantilly.', price: 45, image: '/images/milkshake-vanille.webp' },
